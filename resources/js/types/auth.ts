@@ -12,6 +12,9 @@ export type User = {
 
 export type Auth = {
     user: User;
+    primarySite: string | null;
+    roles: string[];
+    allPermissions: string[];
 };
 
 export type TwoFactorSetupData = {

@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Helpers\NavigationHelper;
+use App\Models\Site;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -40,8 +42,19 @@ class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'auth' => [
                 'user' => $request->user(),
+                'primarySite' =>
+                    $request->user()?->primarySite->site_code ?? null,
+                'roles' => $request->user()?->roles->pluck('name') ?? [],
+                'allPermissions' =>
+                    $request->user()?->getAllPermissions()->pluck('name') ?? [],
             ],
-            'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'navigation' => $request->user()
+                ? NavigationHelper::getFilteredNavigation()
+                : [],
+            'sites' => $request->user()?->sites->toArray() ?? null,
+            'sidebarOpen' =>
+                !$request->hasCookie('sidebar_state') ||
+                $request->cookie('sidebar_state') === 'true',
         ];
     }
 }

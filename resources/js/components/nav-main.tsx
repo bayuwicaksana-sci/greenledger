@@ -6,31 +6,35 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { useCurrentUrl } from '@/hooks/use-current-url';
-import type { NavItem } from '@/types';
+import type { NavGroup } from '@/types';
 import { Link } from '@inertiajs/react';
 
-export function NavMain({ items = [] }: { items: NavItem[] }) {
+export function NavMain({ items = [] }: { items: NavGroup[] }) {
     const { isCurrentUrl } = useCurrentUrl();
 
-    return (
-        <SidebarGroup className="px-2 py-0">
-            <SidebarGroupLabel>Platform</SidebarGroupLabel>
+    return items.map((item, index) => (
+        <SidebarGroup className="px-2 py-0" key={`sidebar-group-${index}`}>
+            {item.title && (
+                <SidebarGroupLabel className="mt-4">
+                    {item.title}
+                </SidebarGroupLabel>
+            )}
             <SidebarMenu>
-                {items.map((item) => (
-                    <SidebarMenuItem key={item.title}>
+                {item.navItems.map((navItem) => (
+                    <SidebarMenuItem key={navItem.title}>
                         <SidebarMenuButton
                             asChild
-                            isActive={isCurrentUrl(item.href)}
-                            tooltip={{ children: item.title }}
+                            isActive={isCurrentUrl(navItem.href)}
+                            tooltip={{ children: navItem.title }}
                         >
-                            <Link href={item.href} prefetch>
-                                {item.icon && <item.icon />}
-                                <span>{item.title}</span>
+                            <Link href={navItem.href} prefetch>
+                                {navItem.icon && <navItem.icon />}
+                                <span>{navItem.title}</span>
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 ))}
             </SidebarMenu>
         </SidebarGroup>
-    );
+    ));
 }

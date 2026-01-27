@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -15,10 +14,22 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
+            $table->string('type')->nullable();
+            $table
+                ->foreignId('primary_site_id')
+                ->nullable()
+                ->constrained('sites', 'id')
+                ->nullOnDelete();
+            $table->boolean('is_active')->default(0)->index();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
+            $table->softDeletes();
+
+            // Composite indexes for common query patterns
+            $table->index(['primary_site_id', 'is_active']);
+            $table->index(['email', 'is_active']);
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
