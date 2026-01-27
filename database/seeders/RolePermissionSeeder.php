@@ -21,9 +21,10 @@ class RolePermissionSeeder extends Seeder
 
         // Create all permissions
         foreach ($this->definePermissions() as $permission) {
-            Permission::firstOrCreate(
-                ['name' => $permission, 'guard_name' => 'web']
-            );
+            Permission::firstOrCreate([
+                'name' => $permission,
+                'guard_name' => 'web',
+            ]);
         }
 
         // Create roles and assign permissions
@@ -495,7 +496,9 @@ class RolePermissionSeeder extends Seeder
         $defaultSite = Site::first();
 
         if (!$defaultSite) {
-            $this->command->warn('No sites found. Please run SiteSeeder first.');
+            $this->command->warn(
+                'No sites found. Please run SiteSeeder first.',
+            );
             return;
         }
 
@@ -539,8 +542,9 @@ class RolePermissionSeeder extends Seeder
                     'name' => $userData['name'],
                     'password' => bcrypt('password'),
                     'email_verified_at' => now(),
+                    'is_active' => true,
                     'primary_site_id' => $defaultSite->id,
-                ]
+                ],
             );
 
             // Assign role
@@ -551,7 +555,9 @@ class RolePermissionSeeder extends Seeder
                 $defaultSite->id => ['granted_at' => now()],
             ]);
 
-            $this->command->info("Created test user: {$userData['email']} (password: password)");
+            $this->command->info(
+                "Created test user: {$userData['email']} (password: password)",
+            );
         }
     }
 }
