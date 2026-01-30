@@ -40,8 +40,10 @@ return new class extends Migration
             $table->index(['client_id', 'status']);
         });
 
-        // Check constraint
-        DB::statement('ALTER TABLE revenue_testing_services ADD CONSTRAINT check_testing_contract_positive CHECK (contract_value > 0)');
+        // Check constraint (only for databases that support ALTER TABLE CHECK)
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE revenue_testing_services ADD CONSTRAINT check_testing_contract_positive CHECK (contract_value > 0)');
+        }
     }
 
     /**
@@ -49,7 +51,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement('ALTER TABLE revenue_testing_services DROP CONSTRAINT IF EXISTS check_testing_contract_positive');
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE revenue_testing_services DROP CONSTRAINT IF EXISTS check_testing_contract_positive');
+        }
         Schema::dropIfExists('revenue_testing_services');
     }
 };

@@ -5,20 +5,18 @@ import { Head } from '@inertiajs/react';
 export default function MySubsidi() {
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: 'My Subsidi',
+            title: 'My Benefit',
             href: '#',
         },
     ];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="My Subsidi" />
+            <Head title="My Benefit" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="flex flex-col items-center justify-center rounded-xl border border-sidebar-border/70 p-12 dark:border-sidebar-border">
-                    <h1 className="text-3xl font-bold">My Subsidi</h1>
-                    <p className="mt-4 text-muted-foreground">
-                        Coming soon...
-                    </p>
+                    <h1 className="text-3xl font-bold">My Benefit</h1>
+                    <p className="mt-4 text-muted-foreground">Coming soon...</p>
                 </div>
             </div>
         </AppLayout>

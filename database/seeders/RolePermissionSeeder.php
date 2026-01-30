@@ -52,7 +52,7 @@ class RolePermissionSeeder extends Seeder
             'dashboard.view.site',
             'dashboard.view.all',
 
-            // Programs (16 permissions)
+            // Programs (18 permissions)
             'programs.view.own',
             'programs.view.assigned',
             'programs.view.site',
@@ -64,13 +64,15 @@ class RolePermissionSeeder extends Seeder
             'programs.update.all',
             'programs.delete.assigned',
             'programs.delete.all',
+            'programs.submit-for-approval.assigned',
+            'programs.submit-for-approval.all',
             'programs.approve.all',
             'programs.reject.all',
             'programs.complete.all',
             'programs.archive.view',
             'programs.archive.manage',
 
-            // Payment Requests (14 permissions)
+            // Payment Requests (17 permissions)
             'payment-requests.view.own',
             'payment-requests.view.assigned',
             'payment-requests.view.site',
@@ -83,10 +85,13 @@ class RolePermissionSeeder extends Seeder
             'payment-requests.update.all',
             'payment-requests.delete.own',
             'payment-requests.delete.assigned',
+            'payment-requests.delete.all',
             'payment-requests.approve.all',
+            'payment-requests.reject.all',
+            'payment-requests.cancel.all',
             'payment-requests.process',
 
-            // Settlements (12 permissions)
+            // Settlements (16 permissions)
             'settlements.view.own',
             'settlements.view.assigned',
             'settlements.view.site',
@@ -97,10 +102,15 @@ class RolePermissionSeeder extends Seeder
             'settlements.update.own',
             'settlements.update.assigned',
             'settlements.delete.own',
+            'settlements.delete.assigned',
+            'settlements.delete.all',
             'settlements.review.site',
+            'settlements.review.all',
+            'settlements.request-revision',
             'settlements.approve.all',
+            'settlements.reject.all',
 
-            // Activities (8 permissions)
+            // Activities (10 permissions)
             'activities.view.own',
             'activities.view.assigned',
             'activities.view.site',
@@ -109,6 +119,8 @@ class RolePermissionSeeder extends Seeder
             'activities.create.all',
             'activities.update.assigned',
             'activities.update.all',
+            'activities.delete.assigned',
+            'activities.delete.all',
 
             // Users & Access Management (9 permissions)
             'users.view.site',
@@ -158,10 +170,173 @@ class RolePermissionSeeder extends Seeder
             'profile.change-password.own',
             'profile.view-activity',
 
-            // Reports (placeholder for future - 3 permissions)
-            'reports.financial.view',
-            'reports.operational.view',
-            'reports.export',
+            // Financial Reports (22 permissions - assigned + all variants)
+            'reports.program-pl.view.assigned',
+            'reports.program-pl.view.all',
+            'reports.budget-vs-actual.view.assigned',
+            'reports.budget-vs-actual.view.all',
+            'reports.budget-utilization.view.assigned',
+            'reports.budget-utilization.view.all',
+            'reports.variance-analysis.view.assigned',
+            'reports.variance-analysis.view.all',
+            'reports.revenue-harvest.view.assigned',
+            'reports.revenue-harvest.view.all',
+            'reports.revenue-testing.view.assigned',
+            'reports.revenue-testing.view.all',
+            'reports.expense-by-coa.view.assigned',
+            'reports.expense-by-coa.view.all',
+            'reports.expense-by-program.view.assigned',
+            'reports.expense-by-program.view.all',
+            'reports.expense-by-activity.view.assigned',
+            'reports.expense-by-activity.view.all',
+            'reports.site-performance.view.all',
+            'reports.consolidated-financial.view.all',
+
+            // Operational Reports (12 permissions)
+            'reports.payment-request-register.view.own',
+            'reports.payment-request-register.view.assigned',
+            'reports.payment-request-register.view.site',
+            'reports.payment-request-register.view.all',
+            'reports.settlement-status.view.own',
+            'reports.settlement-status.view.assigned',
+            'reports.settlement-status.view.site',
+            'reports.settlement-status.view.all',
+            'reports.settlement-compliance.view.site',
+            'reports.settlement-compliance.view.all',
+            'reports.approval-cycle-time.view.all',
+            'reports.transaction-volume.view.all',
+            'reports.user-activity.view.all',
+
+            // Compliance & Audit Reports (5 permissions)
+            'reports.audit-trail.view.all',
+            'reports.digital-signature-log.view.all',
+            'reports.admin-activity-log.view.all',
+            'reports.critical-actions.view.all',
+            'reports.data-change-history.view.all',
+
+            // Export Capabilities (7 permissions)
+            'reports.export.excel.assigned',
+            'reports.export.excel.all',
+            'reports.export.pdf.assigned',
+            'reports.export.pdf.all',
+            'reports.export.csv.assigned',
+            'reports.export.csv.all',
+            'reports.schedule-delivery.manage',
+
+            // Subsidi (15 permissions)
+            'subsidi.view-eligibility.own',
+            'subsidi.view-types.all',
+            'subsidi.claim.create.own',
+            'subsidi.claim.update.own',
+            'subsidi.claim.delete.own',
+            'subsidi.view-claims.own',
+            'subsidi.view-claims.all',
+            'subsidi.approve',
+            'subsidi.reject',
+            'subsidi.process-payment',
+            'subsidi.types.create',
+            'subsidi.types.update',
+            'subsidi.types.deactivate',
+            'subsidi.manage-eligibility',
+            'subsidi.export',
+
+            // Data Management (6 permissions)
+            'data.trigger-backup',
+            'data.view-backup-history',
+            'data.restore-backup',
+            'data.run-year-end',
+            'data.bulk-archive-programs',
+            'data.export-tools',
+
+            // System Settings (9 permissions - Manager/AVP only)
+            'settings.view.all',
+            'settings.update.budget-ceiling',
+            'settings.update.batch-times',
+            'settings.update.settlement-deadline',
+            'settings.update.fiscal-year',
+            'settings.configure.email',
+            'settings.configure.notifications',
+            'settings.configure.workflows',
+            'settings.configure.approval-hierarchies',
+
+            // Audit & Monitoring (6 permissions)
+            'audit.view-logs.all',
+            'audit.view-admin-activity.all',
+            'audit.view-user-access-logs.all',
+            'audit.view-critical-alerts.all',
+            'audit.view-system-health.all',
+            'audit.export.all',
+
+            // Emergency Operations (8 permissions - Manager/AVP only)
+            'emergency.unlock-budget',
+            'emergency.delete-transaction',
+            'emergency.bypass-approval',
+            'emergency.modify-locked-data',
+            'emergency.manual-journal-entry',
+            'emergency.force-archive',
+            'emergency.reset-any-password',
+            'emergency.override-settlement',
+
+            // Revenue - Testing Services (20 permissions)
+            'testing-services.view.assigned',
+            'testing-services.view.site',
+            'testing-services.view.all',
+            'testing-services.create.assigned',
+            'testing-services.create.all',
+            'testing-services.update.draft.assigned',
+            'testing-services.update.draft.all',
+            'testing-services.delete.draft.assigned',
+            'testing-services.delete.draft.all',
+            'testing-services.submit.assigned',
+            'testing-services.approve',
+            'testing-services.reject',
+            'testing-services.update-payment-status.assigned',
+            'testing-services.update-payment-status.all',
+            'testing-services.upload-contract.assigned',
+            'testing-services.upload-contract.all',
+            'testing-services.view-by-client.assigned',
+            'testing-services.view-by-client.all',
+            'testing-services.export.assigned',
+            'testing-services.export.all',
+
+            // Revenue - Harvest (22 permissions)
+            'harvest.view.assigned',
+            'harvest.view.site',
+            'harvest.view.all',
+            'harvest.create.assigned',
+            'harvest.create.all',
+            'harvest.update.own',
+            'harvest.update.assigned',
+            'harvest.update.all',
+            'harvest.update.after-48hrs',
+            'harvest.delete.draft.own',
+            'harvest.delete.draft.assigned',
+            'harvest.delete.draft.all',
+            'harvest.review.all',
+            'harvest.request-correction',
+            'harvest.view-by-program.assigned',
+            'harvest.view-by-program.all',
+            'harvest.view-by-buyer.assigned',
+            'harvest.view-by-buyer.all',
+            'harvest.view-cycle-report.assigned',
+            'harvest.view-cycle-report.all',
+            'harvest.export.assigned',
+            'harvest.export.all',
+
+            // Buyers & Clients (13 permissions)
+            'buyers.view.all',
+            'buyers.create',
+            'buyers.update',
+            'buyers.deactivate',
+            'buyers.view-transaction-history.assigned',
+            'buyers.view-transaction-history.all',
+            'clients.view.all',
+            'clients.create',
+            'clients.update',
+            'clients.deactivate',
+            'clients.view-transaction-history.assigned',
+            'clients.view-transaction-history.all',
+            'buyers-clients.export',
         ];
     }
 
@@ -204,8 +379,41 @@ class RolePermissionSeeder extends Seeder
                 'notifications.view.own',
                 'notifications.manage.own',
 
-                // Reports (limited)
-                'reports.export',
+                // Reports (assigned scope)
+                'reports.program-pl.view.assigned',
+                'reports.budget-vs-actual.view.assigned',
+                'reports.budget-utilization.view.assigned',
+                'reports.revenue-harvest.view.assigned',
+                'reports.expense-by-coa.view.assigned',
+                'reports.expense-by-program.view.assigned',
+                'reports.expense-by-activity.view.assigned',
+                'reports.payment-request-register.view.own',
+                'reports.settlement-status.view.own',
+                'reports.export.excel.assigned',
+                'reports.export.pdf.assigned',
+                'reports.export.csv.assigned',
+
+                // Subsidi
+                'subsidi.view-eligibility.own',
+                'subsidi.view-types.all',
+                'subsidi.claim.create.own',
+                'subsidi.claim.update.own',
+                'subsidi.claim.delete.own',
+                'subsidi.view-claims.own',
+
+                // Revenue - Harvest (assigned scope)
+                'harvest.view.assigned',
+                'harvest.create.assigned',
+                'harvest.update.own',
+                'harvest.delete.draft.own',
+                'harvest.view-by-program.assigned',
+                'harvest.view-cycle-report.assigned',
+                'harvest.export.assigned',
+
+                // Buyers & Clients (limited)
+                'buyers.view.all',
+                'buyers.create',
+                'buyers.view-transaction-history.assigned',
             ],
 
             'Research Associate' => [
@@ -216,6 +424,7 @@ class RolePermissionSeeder extends Seeder
                 'programs.view.assigned',
                 'programs.create.site',
                 'programs.update.assigned',
+                'programs.submit-for-approval.assigned',
 
                 // Payment Requests
                 'payment-requests.view.assigned',
@@ -249,9 +458,61 @@ class RolePermissionSeeder extends Seeder
                 // COA (view only)
                 'coa.view.site',
 
-                // Reports
-                'reports.financial.view',
-                'reports.export',
+                // Reports (assigned scope + more operational)
+                'reports.program-pl.view.assigned',
+                'reports.budget-vs-actual.view.assigned',
+                'reports.budget-utilization.view.assigned',
+                'reports.variance-analysis.view.assigned',
+                'reports.revenue-harvest.view.assigned',
+                'reports.revenue-testing.view.assigned',
+                'reports.expense-by-coa.view.assigned',
+                'reports.expense-by-program.view.assigned',
+                'reports.expense-by-activity.view.assigned',
+                'reports.payment-request-register.view.assigned',
+                'reports.settlement-status.view.assigned',
+                'reports.export.excel.assigned',
+                'reports.export.pdf.assigned',
+                'reports.export.csv.assigned',
+
+                // Subsidi
+                'subsidi.view-eligibility.own',
+                'subsidi.view-types.all',
+                'subsidi.claim.create.own',
+                'subsidi.claim.update.own',
+                'subsidi.claim.delete.own',
+                'subsidi.view-claims.own',
+
+                // Revenue - Harvest
+                'harvest.view.assigned',
+                'harvest.create.assigned',
+                'harvest.update.assigned',
+                'harvest.delete.draft.assigned',
+                'harvest.view-by-program.assigned',
+                'harvest.view-by-buyer.assigned',
+                'harvest.view-cycle-report.assigned',
+                'harvest.export.assigned',
+
+                // Revenue - Testing Services
+                'testing-services.view.assigned',
+                'testing-services.create.assigned',
+                'testing-services.update.draft.assigned',
+                'testing-services.delete.draft.assigned',
+                'testing-services.submit.assigned',
+                'testing-services.update-payment-status.assigned',
+                'testing-services.upload-contract.assigned',
+                'testing-services.view-by-client.assigned',
+                'testing-services.export.assigned',
+
+                // Buyers & Clients
+                'buyers.view.all',
+                'buyers.create',
+                'buyers.update',
+                'buyers.view-transaction-history.assigned',
+                'clients.view.all',
+                'clients.create',
+                'clients.update',
+                'clients.view-transaction-history.assigned',
+                'buyers-clients.export',
             ],
 
             'Manager' => [
@@ -263,6 +524,7 @@ class RolePermissionSeeder extends Seeder
                 'programs.create.all',
                 'programs.update.all',
                 'programs.delete.all',
+                'programs.submit-for-approval.all',
                 'programs.approve.all',
                 'programs.reject.all',
                 'programs.complete.all',
@@ -273,17 +535,24 @@ class RolePermissionSeeder extends Seeder
                 'payment-requests.view.all',
                 'payment-requests.create.all',
                 'payment-requests.update.all',
+                'payment-requests.delete.all',
                 'payment-requests.approve.all',
+                'payment-requests.reject.all',
+                'payment-requests.cancel.all',
 
-                // Settlements
+                // Settlements (full access)
                 'settlements.view.all',
                 'settlements.submit.all',
+                'settlements.delete.all',
+                'settlements.review.all',
                 'settlements.approve.all',
+                'settlements.reject.all',
 
                 // Activities (full access)
                 'activities.view.all',
                 'activities.create.all',
                 'activities.update.all',
+                'activities.delete.all',
 
                 // Users (full management)
                 'users.view.all',
@@ -329,10 +598,124 @@ class RolePermissionSeeder extends Seeder
                 'profile.change-password.own',
                 'profile.view-activity',
 
-                // Reports (full access)
-                'reports.financial.view',
-                'reports.operational.view',
-                'reports.export',
+                // Reports (full access - all scopes)
+                'reports.program-pl.view.all',
+                'reports.budget-vs-actual.view.all',
+                'reports.budget-utilization.view.all',
+                'reports.variance-analysis.view.all',
+                'reports.revenue-harvest.view.all',
+                'reports.revenue-testing.view.all',
+                'reports.expense-by-coa.view.all',
+                'reports.expense-by-program.view.all',
+                'reports.expense-by-activity.view.all',
+                'reports.site-performance.view.all',
+                'reports.consolidated-financial.view.all',
+                'reports.payment-request-register.view.all',
+                'reports.settlement-status.view.all',
+                'reports.settlement-compliance.view.all',
+                'reports.approval-cycle-time.view.all',
+                'reports.transaction-volume.view.all',
+                'reports.user-activity.view.all',
+                'reports.audit-trail.view.all',
+                'reports.digital-signature-log.view.all',
+                'reports.admin-activity-log.view.all',
+                'reports.critical-actions.view.all',
+                'reports.data-change-history.view.all',
+                'reports.export.excel.all',
+                'reports.export.pdf.all',
+                'reports.export.csv.all',
+                'reports.schedule-delivery.manage',
+
+                // Subsidi (full management)
+                'subsidi.view-eligibility.own',
+                'subsidi.view-types.all',
+                'subsidi.claim.create.own',
+                'subsidi.claim.update.own',
+                'subsidi.claim.delete.own',
+                'subsidi.view-claims.own',
+                'subsidi.view-claims.all',
+                'subsidi.approve',
+                'subsidi.reject',
+                'subsidi.types.create',
+                'subsidi.types.update',
+                'subsidi.types.deactivate',
+                'subsidi.manage-eligibility',
+                'subsidi.export',
+
+                // Revenue - Harvest (full management)
+                'harvest.view.all',
+                'harvest.create.all',
+                'harvest.update.all',
+                'harvest.delete.draft.all',
+                'harvest.review.all',
+                'harvest.request-correction',
+                'harvest.view-by-program.all',
+                'harvest.view-by-buyer.all',
+                'harvest.view-cycle-report.all',
+                'harvest.export.all',
+
+                // Revenue - Testing Services (full management)
+                'testing-services.view.all',
+                'testing-services.create.all',
+                'testing-services.update.draft.all',
+                'testing-services.delete.draft.all',
+                'testing-services.submit.assigned',
+                'testing-services.approve',
+                'testing-services.reject',
+                'testing-services.update-payment-status.all',
+                'testing-services.upload-contract.all',
+                'testing-services.view-by-client.all',
+                'testing-services.export.all',
+
+                // Buyers & Clients (full management)
+                'buyers.view.all',
+                'buyers.create',
+                'buyers.update',
+                'buyers.deactivate',
+                'buyers.view-transaction-history.all',
+                'clients.view.all',
+                'clients.create',
+                'clients.update',
+                'clients.deactivate',
+                'clients.view-transaction-history.all',
+                'buyers-clients.export',
+
+                // Emergency Operations (override permissions)
+                'emergency.unlock-budget',
+                'emergency.delete-transaction',
+                'emergency.bypass-approval',
+                'emergency.modify-locked-data',
+                'emergency.manual-journal-entry',
+                'emergency.force-archive',
+                'emergency.reset-any-password',
+                'emergency.override-settlement',
+
+                // Audit & Monitoring (full access)
+                'audit.view-logs.all',
+                'audit.view-admin-activity.all',
+                'audit.view-user-access-logs.all',
+                'audit.view-critical-alerts.all',
+                'audit.view-system-health.all',
+                'audit.export.all',
+
+                // System Settings (full configuration)
+                'settings.view.all',
+                'settings.update.budget-ceiling',
+                'settings.update.batch-times',
+                'settings.update.settlement-deadline',
+                'settings.update.fiscal-year',
+                'settings.configure.email',
+                'settings.configure.notifications',
+                'settings.configure.workflows',
+                'settings.configure.approval-hierarchies',
+
+                // Data Management (full access)
+                'data.trigger-backup',
+                'data.view-backup-history',
+                'data.restore-backup',
+                'data.run-year-end',
+                'data.bulk-archive-programs',
+                'data.export-tools',
             ],
 
             'AVP' => [
@@ -345,6 +728,7 @@ class RolePermissionSeeder extends Seeder
                 'programs.create.all',
                 'programs.update.all',
                 'programs.delete.all',
+                'programs.submit-for-approval.all',
                 'programs.approve.all',
                 'programs.reject.all',
                 'programs.complete.all',
@@ -355,17 +739,24 @@ class RolePermissionSeeder extends Seeder
                 'payment-requests.view.all',
                 'payment-requests.create.all',
                 'payment-requests.update.all',
+                'payment-requests.delete.all',
                 'payment-requests.approve.all',
+                'payment-requests.reject.all',
+                'payment-requests.cancel.all',
 
                 // Settlements (full access)
                 'settlements.view.all',
                 'settlements.submit.all',
+                'settlements.delete.all',
+                'settlements.review.all',
                 'settlements.approve.all',
+                'settlements.reject.all',
 
                 // Activities (full access)
                 'activities.view.all',
                 'activities.create.all',
                 'activities.update.all',
+                'activities.delete.all',
 
                 // Users (full management)
                 'users.view.all',
@@ -411,10 +802,124 @@ class RolePermissionSeeder extends Seeder
                 'profile.change-password.own',
                 'profile.view-activity',
 
-                // Reports (full access)
-                'reports.financial.view',
-                'reports.operational.view',
-                'reports.export',
+                // Reports (full access - all scopes)
+                'reports.program-pl.view.all',
+                'reports.budget-vs-actual.view.all',
+                'reports.budget-utilization.view.all',
+                'reports.variance-analysis.view.all',
+                'reports.revenue-harvest.view.all',
+                'reports.revenue-testing.view.all',
+                'reports.expense-by-coa.view.all',
+                'reports.expense-by-program.view.all',
+                'reports.expense-by-activity.view.all',
+                'reports.site-performance.view.all',
+                'reports.consolidated-financial.view.all',
+                'reports.payment-request-register.view.all',
+                'reports.settlement-status.view.all',
+                'reports.settlement-compliance.view.all',
+                'reports.approval-cycle-time.view.all',
+                'reports.transaction-volume.view.all',
+                'reports.user-activity.view.all',
+                'reports.audit-trail.view.all',
+                'reports.digital-signature-log.view.all',
+                'reports.admin-activity-log.view.all',
+                'reports.critical-actions.view.all',
+                'reports.data-change-history.view.all',
+                'reports.export.excel.all',
+                'reports.export.pdf.all',
+                'reports.export.csv.all',
+                'reports.schedule-delivery.manage',
+
+                // Subsidi (full management)
+                'subsidi.view-eligibility.own',
+                'subsidi.view-types.all',
+                'subsidi.claim.create.own',
+                'subsidi.claim.update.own',
+                'subsidi.claim.delete.own',
+                'subsidi.view-claims.own',
+                'subsidi.view-claims.all',
+                'subsidi.approve',
+                'subsidi.reject',
+                'subsidi.types.create',
+                'subsidi.types.update',
+                'subsidi.types.deactivate',
+                'subsidi.manage-eligibility',
+                'subsidi.export',
+
+                // Revenue - Harvest (full management)
+                'harvest.view.all',
+                'harvest.create.all',
+                'harvest.update.all',
+                'harvest.delete.draft.all',
+                'harvest.review.all',
+                'harvest.request-correction',
+                'harvest.view-by-program.all',
+                'harvest.view-by-buyer.all',
+                'harvest.view-cycle-report.all',
+                'harvest.export.all',
+
+                // Revenue - Testing Services (full management)
+                'testing-services.view.all',
+                'testing-services.create.all',
+                'testing-services.update.draft.all',
+                'testing-services.delete.draft.all',
+                'testing-services.submit.assigned',
+                'testing-services.approve',
+                'testing-services.reject',
+                'testing-services.update-payment-status.all',
+                'testing-services.upload-contract.all',
+                'testing-services.view-by-client.all',
+                'testing-services.export.all',
+
+                // Buyers & Clients (full management)
+                'buyers.view.all',
+                'buyers.create',
+                'buyers.update',
+                'buyers.deactivate',
+                'buyers.view-transaction-history.all',
+                'clients.view.all',
+                'clients.create',
+                'clients.update',
+                'clients.deactivate',
+                'clients.view-transaction-history.all',
+                'buyers-clients.export',
+
+                // Emergency Operations (override permissions)
+                'emergency.unlock-budget',
+                'emergency.delete-transaction',
+                'emergency.bypass-approval',
+                'emergency.modify-locked-data',
+                'emergency.manual-journal-entry',
+                'emergency.force-archive',
+                'emergency.reset-any-password',
+                'emergency.override-settlement',
+
+                // Audit & Monitoring (full access)
+                'audit.view-logs.all',
+                'audit.view-admin-activity.all',
+                'audit.view-user-access-logs.all',
+                'audit.view-critical-alerts.all',
+                'audit.view-system-health.all',
+                'audit.export.all',
+
+                // System Settings (full configuration)
+                'settings.view.all',
+                'settings.update.budget-ceiling',
+                'settings.update.batch-times',
+                'settings.update.settlement-deadline',
+                'settings.update.fiscal-year',
+                'settings.configure.email',
+                'settings.configure.notifications',
+                'settings.configure.workflows',
+                'settings.configure.approval-hierarchies',
+
+                // Data Management (full access)
+                'data.trigger-backup',
+                'data.view-backup-history',
+                'data.restore-backup',
+                'data.run-year-end',
+                'data.bulk-archive-programs',
+                'data.export-tools',
             ],
 
             'Finance Operation' => [
@@ -427,8 +932,10 @@ class RolePermissionSeeder extends Seeder
 
                 // Settlements (review and approve)
                 'settlements.view.all',
-                'settlements.review.site',
+                'settlements.review.all',
+                'settlements.request-revision',
                 'settlements.approve.all',
+                'settlements.reject.all',
 
                 // COA (full management)
                 'coa.view.all',
@@ -452,10 +959,75 @@ class RolePermissionSeeder extends Seeder
                 'notifications.view.own',
                 'notifications.manage.own',
 
-                // Reports (financial reports)
-                'reports.financial.view',
-                'reports.operational.view',
-                'reports.export',
+                // Reports (financial + operational focus)
+                'reports.program-pl.view.all',
+                'reports.budget-vs-actual.view.all',
+                'reports.budget-utilization.view.all',
+                'reports.variance-analysis.view.all',
+                'reports.revenue-harvest.view.all',
+                'reports.revenue-testing.view.all',
+                'reports.expense-by-coa.view.all',
+                'reports.expense-by-program.view.all',
+                'reports.expense-by-activity.view.all',
+                'reports.site-performance.view.all',
+                'reports.consolidated-financial.view.all',
+                'reports.payment-request-register.view.all',
+                'reports.settlement-status.view.all',
+                'reports.settlement-compliance.view.all',
+                'reports.approval-cycle-time.view.all',
+                'reports.transaction-volume.view.all',
+                'reports.audit-trail.view.all',
+                'reports.digital-signature-log.view.all',
+                'reports.data-change-history.view.all',
+                'reports.export.excel.all',
+                'reports.export.pdf.all',
+                'reports.export.csv.all',
+                'reports.schedule-delivery.manage',
+
+                // Subsidi (basic + process payment)
+                'subsidi.view-eligibility.own',
+                'subsidi.view-types.all',
+                'subsidi.claim.create.own',
+                'subsidi.claim.update.own',
+                'subsidi.claim.delete.own',
+                'subsidi.view-claims.own',
+                'subsidi.process-payment',
+
+                // Revenue - Harvest (review + special permissions)
+                'harvest.view.all',
+                'harvest.update.after-48hrs',
+                'harvest.review.all',
+                'harvest.request-correction',
+                'harvest.view-by-program.all',
+                'harvest.view-by-buyer.all',
+                'harvest.view-cycle-report.all',
+                'harvest.export.all',
+
+                // Revenue - Testing Services (view + payment status)
+                'testing-services.view.all',
+                'testing-services.update-payment-status.all',
+                'testing-services.view-by-client.all',
+                'testing-services.export.all',
+
+                // Buyers & Clients (full management)
+                'buyers.view.all',
+                'buyers.create',
+                'buyers.update',
+                'buyers.deactivate',
+                'buyers.view-transaction-history.all',
+                'clients.view.all',
+                'clients.create',
+                'clients.update',
+                'clients.deactivate',
+                'clients.view-transaction-history.all',
+                'buyers-clients.export',
+
+                // Audit & Monitoring (limited - no admin/user logs)
+                'audit.view-logs.all',
+                'audit.export.all',
+
+                // Data Management (export only)
+                'data.export-tools',
             ],
 
             'Farm Admin' => [
@@ -468,6 +1040,7 @@ class RolePermissionSeeder extends Seeder
                 // Settlements (preliminary review)
                 'settlements.view.site',
                 'settlements.review.site',
+                'settlements.request-revision',
 
                 // Programs (view only)
                 'programs.view.site',
@@ -481,8 +1054,28 @@ class RolePermissionSeeder extends Seeder
                 'notifications.view.own',
                 'notifications.manage.own',
 
-                // Reports (operational)
-                'reports.operational.view',
+                // Reports (operational - site scope)
+                'reports.payment-request-register.view.site',
+                'reports.settlement-status.view.site',
+                'reports.settlement-compliance.view.site',
+
+                // Subsidi (basic own)
+                'subsidi.view-eligibility.own',
+                'subsidi.view-types.all',
+                'subsidi.claim.create.own',
+                'subsidi.claim.update.own',
+                'subsidi.claim.delete.own',
+                'subsidi.view-claims.own',
+
+                // Revenue - Harvest (site scope view)
+                'harvest.view.site',
+
+                // Revenue - Testing Services (site scope view)
+                'testing-services.view.site',
+
+                // Buyers & Clients (view only)
+                'buyers.view.all',
+                'clients.view.all',
             ],
         ];
     }
@@ -495,10 +1088,11 @@ class RolePermissionSeeder extends Seeder
         // Get first site for default assignment
         $defaultSite = Site::first();
 
-        if (!$defaultSite) {
+        if (! $defaultSite) {
             $this->command->warn(
                 'No sites found. Please run SiteSeeder first.',
             );
+
             return;
         }
 

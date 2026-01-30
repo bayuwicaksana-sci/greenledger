@@ -9,7 +9,7 @@ import {
 import { mapNavigationIcons } from '@/lib/navigation-icons';
 import { SharedData } from '@/types';
 import { usePage } from '@inertiajs/react';
-import { TeamSwitcher } from './team-switcher';
+import { SiteSwitcher } from './site-switcher';
 
 export function AppSidebar() {
     const { navigation, site_code } = usePage<SharedData>().props;
@@ -18,7 +18,7 @@ export function AppSidebar() {
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
-                <TeamSwitcher />
+                <SiteSwitcher />
                 {/* <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>

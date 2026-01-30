@@ -19,7 +19,7 @@ import { SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { useMemo } from 'react';
 
-export function TeamSwitcher() {
+export function SiteSwitcher() {
     const { sites: teams, site_code } = usePage<SharedData>().props;
     const { isMobile } = useSidebar();
 

@@ -33,9 +33,11 @@ return new class extends Migration
             $table->index(['program_id', 'sort_order']);
         });
 
-        // Check constraints
-        DB::statement('ALTER TABLE activities ADD CONSTRAINT check_activities_budget_non_negative CHECK (budget_allocation >= 0)');
-        DB::statement('ALTER TABLE activities ADD CONSTRAINT check_activities_dates CHECK (actual_end_date IS NULL OR actual_end_date >= actual_start_date)');
+        // Check constraints (only for databases that support ALTER TABLE CHECK)
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE activities ADD CONSTRAINT check_activities_budget_non_negative CHECK (budget_allocation >= 0)');
+            DB::statement('ALTER TABLE activities ADD CONSTRAINT check_activities_dates CHECK (actual_end_date IS NULL OR actual_end_date >= actual_start_date)');
+        }
     }
 
     /**
@@ -43,8 +45,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement('ALTER TABLE activities DROP CONSTRAINT IF EXISTS check_activities_budget_non_negative');
-        DB::statement('ALTER TABLE activities DROP CONSTRAINT IF EXISTS check_activities_dates');
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE activities DROP CONSTRAINT IF EXISTS check_activities_budget_non_negative');
+            DB::statement('ALTER TABLE activities DROP CONSTRAINT IF EXISTS check_activities_dates');
+        }
         Schema::dropIfExists('activities');
     }
 };

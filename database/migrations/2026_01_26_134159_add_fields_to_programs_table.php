@@ -62,9 +62,12 @@ return new class extends Migration
             $table->softDeletes()->after('updated_at');
         });
 
-        // Check constraints
-        DB::statement('ALTER TABLE programs ADD CONSTRAINT check_programs_budget_positive CHECK (total_budget > 0)');
-        DB::statement('ALTER TABLE programs ADD CONSTRAINT check_programs_dates CHECK (actual_end_date IS NULL OR actual_end_date >= actual_start_date)');
+        // Check constraints (only for databases that support ALTER TABLE CHECK)
+        // SQLite doesn't support adding CHECK constraints via ALTER TABLE
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE programs ADD CONSTRAINT check_programs_budget_positive CHECK (total_budget > 0)');
+            DB::statement('ALTER TABLE programs ADD CONSTRAINT check_programs_dates CHECK (actual_end_date IS NULL OR actual_end_date >= actual_start_date)');
+        }
     }
 
     /**
@@ -72,10 +75,13 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('programs', function (Blueprint $table) {
-            // Drop check constraints first
+        // Drop check constraints first (only for non-SQLite databases)
+        if (DB::getDriverName() !== 'sqlite') {
             DB::statement('ALTER TABLE programs DROP CONSTRAINT IF EXISTS check_programs_budget_positive');
             DB::statement('ALTER TABLE programs DROP CONSTRAINT IF EXISTS check_programs_dates');
+        }
+
+        Schema::table('programs', function (Blueprint $table) {
 
             // Drop indexes
             $table->dropIndex(['site_id', 'fiscal_year', 'status']);

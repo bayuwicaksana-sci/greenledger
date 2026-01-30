@@ -33,9 +33,11 @@ return new class extends Migration
             $table->index(['status', 'submitted_at']);
         });
 
-        // Check constraints
-        DB::statement('ALTER TABLE settlements ADD CONSTRAINT check_settlement_actual_non_negative CHECK (actual_amount >= 0)');
-        DB::statement('ALTER TABLE settlements ADD CONSTRAINT check_settlement_surplus_non_negative CHECK (surplus_amount >= 0)');
+        // Check constraints (only for databases that support ALTER TABLE CHECK)
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE settlements ADD CONSTRAINT check_settlement_actual_non_negative CHECK (actual_amount >= 0)');
+            DB::statement('ALTER TABLE settlements ADD CONSTRAINT check_settlement_surplus_non_negative CHECK (surplus_amount >= 0)');
+        }
     }
 
     /**
@@ -43,8 +45,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement('ALTER TABLE settlements DROP CONSTRAINT IF EXISTS check_settlement_actual_non_negative');
-        DB::statement('ALTER TABLE settlements DROP CONSTRAINT IF EXISTS check_settlement_surplus_non_negative');
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE settlements DROP CONSTRAINT IF EXISTS check_settlement_actual_non_negative');
+            DB::statement('ALTER TABLE settlements DROP CONSTRAINT IF EXISTS check_settlement_surplus_non_negative');
+        }
         Schema::dropIfExists('settlements');
     }
 };

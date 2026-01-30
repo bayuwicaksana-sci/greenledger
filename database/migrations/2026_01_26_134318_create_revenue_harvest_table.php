@@ -45,9 +45,11 @@ return new class extends Migration
             $table->unique(['site_id', 'harvest_number']);
         });
 
-        // Check constraints
-        DB::statement('ALTER TABLE revenue_harvest ADD CONSTRAINT check_harvest_quantity_positive CHECK (quantity_kg > 0)');
-        DB::statement('ALTER TABLE revenue_harvest ADD CONSTRAINT check_harvest_price_positive CHECK (price_per_kg > 0)');
+        // Check constraints (only for databases that support ALTER TABLE CHECK)
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE revenue_harvest ADD CONSTRAINT check_harvest_quantity_positive CHECK (quantity_kg > 0)');
+            DB::statement('ALTER TABLE revenue_harvest ADD CONSTRAINT check_harvest_price_positive CHECK (price_per_kg > 0)');
+        }
     }
 
     /**
@@ -55,8 +57,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement('ALTER TABLE revenue_harvest DROP CONSTRAINT IF EXISTS check_harvest_quantity_positive');
-        DB::statement('ALTER TABLE revenue_harvest DROP CONSTRAINT IF EXISTS check_harvest_price_positive');
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE revenue_harvest DROP CONSTRAINT IF EXISTS check_harvest_quantity_positive');
+            DB::statement('ALTER TABLE revenue_harvest DROP CONSTRAINT IF EXISTS check_harvest_price_positive');
+        }
         Schema::dropIfExists('revenue_harvest');
     }
 };

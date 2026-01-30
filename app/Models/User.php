@@ -17,12 +17,12 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory,
+    use HasChildren,
+        HasFactory,
+        HasRoles,
         Notifiable,
-        TwoFactorAuthenticatable,
-        HasChildren,
         SoftDeletes,
-        HasRoles;
+        TwoFactorAuthenticatable;
 
     /**
      * The attributes that are mass assignable.
@@ -87,7 +87,8 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function sites(): BelongsToMany
     {
-        return $this->belongsToMany(Site::class, 'site_user')
+        return $this->belongsToMany(Site::class)
+            ->using(SiteUser::class)
             ->withPivot('granted_at', 'granted_by')
             ->withTimestamps();
     }

@@ -15,5 +15,6 @@ test('new users can register', function () {
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('dashboard', absolute: false));
+    $user = auth()->user();
+    $response->assertRedirect(route('dashboard', ['site' => $user->primarySite->site_code], absolute: false));
 });

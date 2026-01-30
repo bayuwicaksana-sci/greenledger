@@ -2,9 +2,18 @@
 
 namespace App\Providers;
 
+use App\Listeners\LogUserActivity;
+use App\Models\User;
+use App\Policies\UserPolicy;
 use Carbon\CarbonImmutable;
+use Illuminate\Auth\Events\Failed;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Logout;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -24,6 +33,18 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+
+        Gate::policy(User::class, UserPolicy::class);
+
+        $this->registerEventListeners();
+    }
+
+    protected function registerEventListeners(): void
+    {
+        Event::listen(Login::class, LogUserActivity::class);
+        Event::listen(Logout::class, LogUserActivity::class);
+        Event::listen(Failed::class, LogUserActivity::class);
+        Event::listen(PasswordReset::class, LogUserActivity::class);
     }
 
     protected function configureDefaults(): void

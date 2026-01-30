@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Controllers\AcceptInvitationController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UserAccessLogController;
+use App\Http\Controllers\UserController;
 use App\Http\Middleware\EnsureSiteIsValid;
 use App\Models\Site;
 use Illuminate\Support\Facades\Route;
@@ -12,15 +16,150 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
+// Public invitation acceptance routes
+Route::get('invitation/{token}', [
+    AcceptInvitationController::class,
+    'show',
+])->name('invitation.show');
+Route::post('invitation/{token}', [
+    AcceptInvitationController::class,
+    'accept',
+])->name('invitation.accept');
+
 Route::middleware(['auth', 'verified'])->group(function () {
+    // Site API (JSON endpoints)
+    Route::middleware('permission:users.view.site|users.view.all')
+        ->get('api/sites', [\App\Http\Controllers\SiteController::class, 'index']);
+
+    // Role Management API (JSON endpoints)
+    Route::middleware('permission:users.assign-roles')
+        ->prefix('api')
+        ->group(function () {
+            // Get all permissions
+            Route::get('permissions', [
+                \App\Http\Controllers\RoleController::class,
+                'allPermissions',
+            ]);
+
+            // Role endpoints
+            Route::prefix('roles')->group(function () {
+                Route::get('/', [
+                    \App\Http\Controllers\RoleController::class,
+                    'index',
+                ]);
+                Route::post('/', [
+                    \App\Http\Controllers\RoleController::class,
+                    'store',
+                ]);
+                Route::get('{role}', [
+                    \App\Http\Controllers\RoleController::class,
+                    'show',
+                ]);
+                Route::put('{role}', [
+                    \App\Http\Controllers\RoleController::class,
+                    'update',
+                ]);
+                Route::delete('{role}', [
+                    \App\Http\Controllers\RoleController::class,
+                    'destroy',
+                ]);
+                Route::put('{role}/permissions', [
+                    \App\Http\Controllers\RoleController::class,
+                    'syncPermissions',
+                ]);
+            });
+        });
+
+    // User Management API (JSON endpoints)
+    Route::middleware('permission:users.view.site|users.view.all')
+        ->prefix('api/users')
+        ->group(function () {
+            Route::get('/', [UserController::class, 'index']);
+            Route::get('{user}', [UserController::class, 'show']);
+
+            // Invitations
+            Route::middleware('permission:users.create')->group(function () {
+                Route::post('invite', [UserController::class, 'invite']);
+                Route::post('bulk-invite', [
+                    UserController::class,
+                    'bulkInvite',
+                ]);
+                Route::get('`invitations`', [
+                    UserController::class,
+                    'invitations',
+                ]);
+                Route::post('invitations/{invitation}/resend', [
+                    UserController::class,
+                    'resendInvitation',
+                ]);
+                Route::delete('invitations/{invitation}', [
+                    UserController::class,
+                    'cancelInvitation',
+                ]);
+            });
+
+            // User updates
+            Route::middleware('permission:users.update')->group(function () {
+                Route::put('{user}', [UserController::class, 'update']);
+                Route::post('{user}/toggle-status', [
+                    UserController::class,
+                    'toggleStatus',
+                ]);
+            });
+
+            // Bulk operations
+            Route::middleware('permission:users.deactivate')->group(
+                function () {
+                    Route::post('bulk-toggle-status', [
+                        UserController::class,
+                        'bulkToggleStatus',
+                    ]);
+                },
+            );
+
+            Route::middleware('permission:users.assign-roles')->group(
+                function () {
+                    Route::put('{user}/roles', [
+                        UserController::class,
+                        'assignRoles',
+                    ]);
+                    Route::post('bulk-assign-roles', [
+                        UserController::class,
+                        'bulkAssignRoles',
+                    ]);
+                },
+            );
+
+            Route::middleware('permission:users.assign-sites')->group(
+                function () {
+                    Route::put('{user}/sites', [
+                        UserController::class,
+                        'assignSites',
+                    ]);
+                },
+            );
+
+            Route::middleware('permission:users.reset-password')->group(
+                function () {
+                    Route::post('{user}/reset-password', [
+                        UserController::class,
+                        'resetPassword',
+                    ]);
+                },
+            );
+        });
+
+    // Access Logs
+    Route::middleware('permission:users.view-logs')->get(
+        'api/users/access-logs',
+        [UserAccessLogController::class, 'index'],
+    );
+
     Route::prefix('/site/{site:site_code}')
         ->middleware(EnsureSiteIsValid::class)
         ->group(function () {
             // Dashboard
-            Route::get('dashboard', function (Site $site) {
-                Inertia::share('site_code', $site->site_code);
-                return Inertia::render('dashboard');
-            })
+            Route::get('dashboard', [DashboardController::class, 'index'])
                 ->name('dashboard')
                 ->middleware(
                     'permission:dashboard.view.own|dashboard.view.assigned|dashboard.view.site|dashboard.view.all',
@@ -32,6 +171,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->group(function () {
                     Route::get('my', function (Site $site) {
                         Inertia::share('site_code', $site->site_code);
+
                         return Inertia::render('programs/my');
                     })
                         ->name('my')
@@ -41,6 +181,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                     Route::get('/', function (Site $site) {
                         Inertia::share('site_code', $site->site_code);
+
                         return Inertia::render('programs/index');
                     })
                         ->name('index')
@@ -50,6 +191,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                     Route::get('create', function (Site $site) {
                         Inertia::share('site_code', $site->site_code);
+
                         return Inertia::render('programs/create');
                     })
                         ->name('create')
@@ -59,6 +201,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                     Route::get('archived', function (Site $site) {
                         Inertia::share('site_code', $site->site_code);
+
                         return Inertia::render('programs/archived');
                     })
                         ->name('archived')
@@ -71,6 +214,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->group(function () {
                     Route::get('/', function (Site $site) {
                         Inertia::share('site_code', $site->site_code);
+
                         return Inertia::render('payment-requests/index');
                     })
                         ->name('index')
@@ -80,6 +224,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                     Route::get('my', function (Site $site) {
                         Inertia::share('site_code', $site->site_code);
+
                         return Inertia::render('payment-requests/my');
                     })
                         ->name('my')
@@ -87,6 +232,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                     Route::get('create', function (Site $site) {
                         Inertia::share('site_code', $site->site_code);
+
                         return Inertia::render('payment-requests/create');
                     })
                         ->name('create')
@@ -96,6 +242,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                     Route::get('approvals', function (Site $site) {
                         Inertia::share('site_code', $site->site_code);
+
                         return Inertia::render('payment-requests/approvals');
                     })
                         ->name('approvals')
@@ -103,6 +250,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                     Route::get('queue', function (Site $site) {
                         Inertia::share('site_code', $site->site_code);
+
                         return Inertia::render('payment-requests/queue');
                     })
                         ->name('queue')
@@ -112,6 +260,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // Settlements
             Route::get('settlements', function (Site $site) {
                 Inertia::share('site_code', $site->site_code);
+
                 return Inertia::render('settlements/index');
             })
                 ->name('settlements.index')
@@ -125,6 +274,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->group(function () {
                     Route::get('/', function (Site $site) {
                         Inertia::share('site_code', $site->site_code);
+
                         return Inertia::render('activities/index');
                     })
                         ->name('index')
@@ -134,6 +284,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                     Route::get('tracking', function (Site $site) {
                         Inertia::share('site_code', $site->site_code);
+
                         return Inertia::render('activities/tracking');
                     })
                         ->name('tracking')
@@ -152,6 +303,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                         ->group(function () {
                             Route::get('create', function (Site $site) {
                                 Inertia::share('site_code', $site->site_code);
+
                                 return Inertia::render(
                                     'revenue/harvest/create',
                                 );
@@ -163,6 +315,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                             Route::get('/', function (Site $site) {
                                 Inertia::share('site_code', $site->site_code);
+
                                 return Inertia::render('revenue/harvest/index');
                             })
                                 ->name('index')
@@ -177,6 +330,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                         ->group(function () {
                             Route::get('create', function (Site $site) {
                                 Inertia::share('site_code', $site->site_code);
+
                                 return Inertia::render(
                                     'revenue/testing/create',
                                 );
@@ -188,6 +342,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                             Route::get('/', function (Site $site) {
                                 Inertia::share('site_code', $site->site_code);
+
                                 return Inertia::render('revenue/testing/index');
                             })
                                 ->name('index')
@@ -203,6 +358,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->group(function () {
                     Route::get('my', function (Site $site) {
                         Inertia::share('site_code', $site->site_code);
+
                         return Inertia::render('subsidi/my');
                     })
                         ->name('my')
@@ -210,6 +366,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                     Route::get('claim', function (Site $site) {
                         Inertia::share('site_code', $site->site_code);
+
                         return Inertia::render('subsidi/claim');
                     })
                         ->name('claim')
@@ -217,6 +374,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                     Route::get('history', function (Site $site) {
                         Inertia::share('site_code', $site->site_code);
+
                         return Inertia::render('subsidi/history');
                     })
                         ->name('history')
@@ -224,6 +382,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                     Route::get('admin', function (Site $site) {
                         Inertia::share('site_code', $site->site_code);
+
                         return Inertia::render('subsidi/admin');
                     })
                         ->name('admin')
@@ -236,6 +395,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->group(function () {
                     Route::get('program-pnl', function (Site $site) {
                         Inertia::share('site_code', $site->site_code);
+
                         return Inertia::render('reports/program-pnl');
                     })
                         ->name('program-pnl')
@@ -243,6 +403,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                     Route::get('budget', function (Site $site) {
                         Inertia::share('site_code', $site->site_code);
+
                         return Inertia::render('reports/budget');
                     })
                         ->name('budget')
@@ -250,6 +411,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                     Route::get('revenue', function (Site $site) {
                         Inertia::share('site_code', $site->site_code);
+
                         return Inertia::render('reports/revenue');
                     })
                         ->name('revenue')
@@ -257,6 +419,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                     Route::get('expense', function (Site $site) {
                         Inertia::share('site_code', $site->site_code);
+
                         return Inertia::render('reports/expense');
                     })
                         ->name('expense')
@@ -264,6 +427,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                     Route::get('transactions', function (Site $site) {
                         Inertia::share('site_code', $site->site_code);
+
                         return Inertia::render('reports/transactions');
                     })
                         ->name('transactions')
@@ -276,6 +440,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->group(function () {
                     Route::get('coa', function (Site $site) {
                         Inertia::share('site_code', $site->site_code);
+
                         return Inertia::render('config/coa');
                     })
                         ->name('coa')
@@ -283,6 +448,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                     Route::get('sites', function (Site $site) {
                         Inertia::share('site_code', $site->site_code);
+
                         return Inertia::render('config/sites');
                     })
                         ->name('sites')
@@ -290,6 +456,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                     Route::get('buyers-clients', function (Site $site) {
                         Inertia::share('site_code', $site->site_code);
+
                         return Inertia::render('config/buyers-clients');
                     })
                         ->name('buyers-clients')
@@ -297,6 +464,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                     Route::get('settings', function (Site $site) {
                         Inertia::share('site_code', $site->site_code);
+
                         return Inertia::render('config/settings');
                     })
                         ->name('settings')
@@ -309,6 +477,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->group(function () {
                     Route::get('users', function (Site $site) {
                         Inertia::share('site_code', $site->site_code);
+
                         return Inertia::render('admin/users');
                     })
                         ->name('users')
@@ -318,6 +487,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                     Route::get('roles', function (Site $site) {
                         Inertia::share('site_code', $site->site_code);
+
                         return Inertia::render('admin/roles');
                     })
                         ->name('roles')
@@ -325,6 +495,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                     Route::get('logs', function (Site $site) {
                         Inertia::share('site_code', $site->site_code);
+
                         return Inertia::render('admin/logs');
                     })
                         ->name('logs')
@@ -332,6 +503,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
                     Route::get('health', function (Site $site) {
                         Inertia::share('site_code', $site->site_code);
+
                         return Inertia::render('admin/health');
                     })
                         ->name('health')
@@ -341,6 +513,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // Notifications
             Route::get('notifications', function (Site $site) {
                 Inertia::share('site_code', $site->site_code);
+
                 return Inertia::render('notifications/index');
             })
                 ->name('notifications.index')
@@ -348,4 +521,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
 });
 
-require __DIR__ . '/settings.php';
+require __DIR__.'/settings.php';

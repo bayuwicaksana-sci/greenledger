@@ -43,8 +43,10 @@ return new class extends Migration
             $table->index(['status', 'settlement_deadline']);
         });
 
-        // Check constraint
-        DB::statement('ALTER TABLE payment_requests ADD CONSTRAINT check_payment_requests_amount_positive CHECK (total_amount > 0)');
+        // Check constraint (only for databases that support ALTER TABLE CHECK)
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE payment_requests ADD CONSTRAINT check_payment_requests_amount_positive CHECK (total_amount > 0)');
+        }
     }
 
     /**
@@ -52,7 +54,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement('ALTER TABLE payment_requests DROP CONSTRAINT IF EXISTS check_payment_requests_amount_positive');
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE payment_requests DROP CONSTRAINT IF EXISTS check_payment_requests_amount_positive');
+        }
         Schema::dropIfExists('payment_requests');
     }
 };

@@ -28,9 +28,11 @@ return new class extends Migration
             $table->index(['activity_id', 'program_id']);
         });
 
-        // Check constraints
-        DB::statement('ALTER TABLE payment_request_splits ADD CONSTRAINT check_split_amount_positive CHECK (split_amount > 0)');
-        DB::statement('ALTER TABLE payment_request_splits ADD CONSTRAINT check_split_percentage_range CHECK (split_percentage >= 0 AND split_percentage <= 100)');
+        // Check constraints (only for databases that support ALTER TABLE CHECK)
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE payment_request_splits ADD CONSTRAINT check_split_amount_positive CHECK (split_amount > 0)');
+            DB::statement('ALTER TABLE payment_request_splits ADD CONSTRAINT check_split_percentage_range CHECK (split_percentage >= 0 AND split_percentage <= 100)');
+        }
     }
 
     /**
@@ -38,8 +40,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement('ALTER TABLE payment_request_splits DROP CONSTRAINT IF EXISTS check_split_amount_positive');
-        DB::statement('ALTER TABLE payment_request_splits DROP CONSTRAINT IF EXISTS check_split_percentage_range');
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE payment_request_splits DROP CONSTRAINT IF EXISTS check_split_amount_positive');
+            DB::statement('ALTER TABLE payment_request_splits DROP CONSTRAINT IF EXISTS check_split_percentage_range');
+        }
         Schema::dropIfExists('payment_request_splits');
     }
 };

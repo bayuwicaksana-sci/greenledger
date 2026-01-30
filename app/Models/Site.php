@@ -39,6 +39,7 @@ class Site extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'site_user')
+            ->using(SiteUser::class)
             ->withPivot('granted_at', 'granted_by')
             ->withTimestamps();
     }

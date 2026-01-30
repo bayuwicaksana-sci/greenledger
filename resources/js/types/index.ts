@@ -1,8 +1,11 @@
 export type * from './auth';
 export type * from './navigation';
 export type * from './ui';
+export type * from './permissions';
+export type * from './roles';
 
 import type { Auth } from './auth';
+import type { PermissionTranslations } from './permissions';
 
 export type SharedData = {
     name: string;
@@ -25,5 +28,6 @@ export type SharedData = {
             badgeCount?: number;
         }>;
     }>;
+    permissionTranslations: PermissionTranslations;
     [key: string]: unknown;
 };
