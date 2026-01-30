@@ -1,13 +1,13 @@
-import { useState } from 'react';
 import InputError from '@/components/input-error';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/layouts/auth-layout';
-import { Form, Head, router } from '@inertiajs/react';
-import { Badge } from '@/components/ui/badge';
-import { Mail, Building2, Shield, Check, X } from 'lucide-react';
+import { Head, router } from '@inertiajs/react';
+import { Building2, Check, Mail, Shield, X } from 'lucide-react';
+import { useState } from 'react';
 
 interface InvitationData {
     id: number;
@@ -26,6 +26,8 @@ interface Props {
 }
 
 export default function AcceptInvitation({ invitation, token }: Props) {
+    console.log(invitation);
+    console.log(token);
     const [password, setPassword] = useState('');
     const [passwordConfirmation, setPasswordConfirmation] = useState('');
     const [processing, setProcessing] = useState(false);

@@ -33,10 +33,19 @@ class AcceptInvitationController extends Controller
 
         return Inertia::render('auth/accept-invitation', [
             'invitation' => [
+                'id' => $invitation->id,
                 'email' => $invitation->email,
                 'full_name' => $invitation->full_name,
-                'token' => $invitation->token,
+                'primary_site_name' => $invitation->primarySite->site_name,
+                'additional_sites' => $invitation
+                    ->additionalSites()
+                    ->pluck('site_name')
+                    ->toArray(),
+                'roles' => $invitation->roles()->pluck('name')->toArray(),
+                'invited_by_name' => $invitation->invitedBy->name,
+                'expires_at' => $invitation->expires_at->toDateString(),
             ],
+            'token' => $invitation->token,
         ]);
     }
 
@@ -68,13 +77,15 @@ class AcceptInvitationController extends Controller
 
         // Assign roles
         if ($invitation->role_ids) {
-            $user->syncRoles(Role::whereIn('id', $invitation->role_ids)->pluck('name'));
+            $user->syncRoles(
+                Role::whereIn('id', $invitation->role_ids)->pluck('name'),
+            );
         }
 
         // Assign sites
         $siteIds = array_merge(
             [$invitation->primary_site_id],
-            $invitation->additional_site_ids ?? []
+            $invitation->additional_site_ids ?? [],
         );
 
         $syncData = [];
@@ -100,6 +111,8 @@ class AcceptInvitationController extends Controller
         // Log in the user
         Auth::login($user);
 
-        return redirect()->route('dashboard', ['site' => $user->primarySite->site_code]);
+        return redirect()->route('dashboard', [
+            'site' => $user->primarySite->site_code,
+        ]);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\Permission\Models\Role;
 
 class UserInvitation extends Model
 {
@@ -37,6 +38,16 @@ class UserInvitation extends Model
     public function primarySite(): BelongsTo
     {
         return $this->belongsTo(Site::class, 'primary_site_id');
+    }
+
+    public function additionalSites()
+    {
+        return Site::whereIn('id', $this->additional_site_ids ?? []);
+    }
+
+    public function roles()
+    {
+        return Role::whereIn('id', $this->role_ids ?? []);
     }
 
     public function isExpired(): bool
