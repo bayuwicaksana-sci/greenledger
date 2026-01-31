@@ -1,13 +1,12 @@
+import { Alert } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Alert } from '@/components/ui/alert';
+import { cn } from '@/lib/utils';
+import type { SharedData } from '@/types';
+import type { KpiCardData } from '@/types/dashboard';
+import { router, usePage } from '@inertiajs/react';
 import { MetricValue } from '../atoms/MetricValue';
 import { TrendIndicator } from '../atoms/TrendIndicator';
-import { cn } from '@/lib/utils';
-import type { KpiCardData } from '@/types/dashboard';
-import { router } from '@inertiajs/react';
-import { usePage } from '@inertiajs/react';
-import type { SharedData } from '@/types';
 
 interface KpiCardProps extends KpiCardData {
     format?: 'number' | 'currency' | 'percentage';
@@ -29,15 +28,19 @@ export function KpiCard({
     const handleClick = () => {
         if (onClick && site_code) {
             // Import route dynamically based on onClick string
-            import(`@/routes`).then((routes: any) => {
-                const routeFunc = onClick.split('.').reduce((obj, key) => obj[key], routes);
-                if (typeof routeFunc === 'function') {
-                    router.visit(routeFunc({ site_code }).url);
-                }
-            }).catch(() => {
-                // Fallback if route doesn't exist
-                console.warn(`Route ${onClick} not found`);
-            });
+            import(`@/routes`)
+                .then((routes: any) => {
+                    const routeFunc = onClick
+                        .split('.')
+                        .reduce((obj, key) => obj[key], routes);
+                    if (typeof routeFunc === 'function') {
+                        router.visit(routeFunc({ site_code }).url);
+                    }
+                })
+                .catch(() => {
+                    // Fallback if route doesn't exist
+                    console.warn(`Route ${onClick} not found`);
+                });
         }
     };
 
@@ -62,11 +65,16 @@ export function KpiCard({
         <Card
             className={cn(
                 'h-full transition-all',
-                isClickable &&
-                    'cursor-pointer hover:bg-accent hover:shadow-md',
-                hasAlert && alert === 'error' && 'border-red-500 dark:border-red-400',
-                hasAlert && alert === 'warning' && 'border-yellow-500 dark:border-yellow-400',
-                hasAlert && alert === 'success' && 'border-green-500 dark:border-green-400',
+                isClickable && 'cursor-pointer hover:bg-accent hover:shadow-md',
+                hasAlert &&
+                    alert === 'error' &&
+                    'border-red-500 dark:border-red-400',
+                hasAlert &&
+                    alert === 'warning' &&
+                    'border-yellow-500 dark:border-yellow-400',
+                hasAlert &&
+                    alert === 'success' &&
+                    'border-green-500 dark:border-green-400',
             )}
             onClick={handleClick}
         >
@@ -91,7 +99,7 @@ export function KpiCard({
                     <p className="text-xs text-muted-foreground">{subtitle}</p>
                 )}
                 {hasAlert && alert === 'error' && (
-                    <Alert variant="destructive" className="text-xs py-1 px-2">
+                    <Alert variant="destructive" className="px-2 py-1 text-xs">
                         Attention Required
                     </Alert>
                 )}

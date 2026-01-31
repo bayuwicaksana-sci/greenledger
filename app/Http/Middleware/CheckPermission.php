@@ -15,12 +15,12 @@ class CheckPermission
      */
     public function handle(Request $request, Closure $next, string ...$permissions): Response
     {
-        if (!$request->user()) {
+        if (! $request->user()) {
             return redirect()->route('login');
         }
 
         // User must have ANY of the specified permissions
-        if (!$request->user()->hasAnyPermission($permissions)) {
+        if (! $request->user()->hasAnyPermission($permissions)) {
             abort(403, 'Unauthorized action.');
         }
 

@@ -1,10 +1,9 @@
-import { Widget } from './Widget';
-import { AlertItem } from '../molecules/AlertItem';
-import { Empty } from '@/components/ui/empty';
-import { AlertTriangle, CheckCircle } from 'lucide-react';
-import type { SettlementData } from '@/types/dashboard';
 import { Button } from '@/components/ui/button';
-import { router } from '@inertiajs/react';
+import { Empty } from '@/components/ui/empty';
+import type { SettlementData } from '@/types/dashboard';
+import { AlertTriangle, CheckCircle } from 'lucide-react';
+import { AlertItem } from '../molecules/AlertItem';
+import { Widget } from './Widget';
 
 interface SettlementAlertsWidgetProps {
     settlements: SettlementData[];
@@ -57,11 +56,14 @@ export function SettlementAlertsWidget({
                                       ? 'warning'
                                       : 'info',
                                 title: `${settlement.requestNumber} | ${settlement.purpose}`,
-                                description: `Amount: ${new Intl.NumberFormat('id-ID', {
-                                    style: 'currency',
-                                    currency: 'IDR',
-                                    minimumFractionDigits: 0,
-                                }).format(settlement.requested_amount)}`,
+                                description: `Amount: ${new Intl.NumberFormat(
+                                    'id-ID',
+                                    {
+                                        style: 'currency',
+                                        currency: 'IDR',
+                                        minimumFractionDigits: 0,
+                                    },
+                                ).format(settlement.requested_amount)}`,
                                 deadline: settlement.deadline,
                                 hoursRemaining: settlement.hoursRemaining,
                                 overdue: settlement.overdue,

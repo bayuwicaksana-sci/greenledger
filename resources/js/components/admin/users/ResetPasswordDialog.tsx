@@ -94,7 +94,7 @@ export function ResetPasswordDialog({
                         />
                         <Label
                             htmlFor="must_change"
-                            className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            className="text-sm leading-none font-normal peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                         >
                             Require password change on next login
                         </Label>

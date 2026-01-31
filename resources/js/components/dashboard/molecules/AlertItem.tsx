@@ -1,9 +1,7 @@
-import { AlertCircle, AlertTriangle, CheckCircle, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import type { AlertItemData, AlertAction } from '@/types/dashboard';
-import { formatDistanceToNow } from 'date-fns';
-import { id } from 'date-fns/locale';
+import type { AlertAction, AlertItemData } from '@/types/dashboard';
+import { AlertCircle, AlertTriangle, CheckCircle, Info } from 'lucide-react';
 
 interface AlertItemProps {
     alert: AlertItemData;
@@ -15,7 +13,8 @@ const severityConfig = {
     error: {
         icon: AlertCircle,
         className: 'text-red-600 dark:text-red-400',
-        bgClassName: 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900',
+        bgClassName:
+            'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900',
     },
     warning: {
         icon: AlertTriangle,
@@ -26,7 +25,8 @@ const severityConfig = {
     info: {
         icon: Info,
         className: 'text-blue-600 dark:text-blue-400',
-        bgClassName: 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900',
+        bgClassName:
+            'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900',
     },
     success: {
         icon: CheckCircle,
@@ -48,7 +48,7 @@ export function AlertItem({ alert, actions, className }: AlertItemProps) {
 
         if (alert.overdue) {
             return (
-                <span className="text-red-600 dark:text-red-400 font-medium">
+                <span className="font-medium text-red-600 dark:text-red-400">
                     OVERDUE by {Math.abs(alert.hoursRemaining || 0)} hours
                 </span>
             );
@@ -56,7 +56,7 @@ export function AlertItem({ alert, actions, className }: AlertItemProps) {
 
         if (alert.hoursRemaining && alert.hoursRemaining < 12) {
             return (
-                <span className="text-orange-600 dark:text-orange-400 font-medium">
+                <span className="font-medium text-orange-600 dark:text-orange-400">
                     Due in {alert.hoursRemaining} hours
                 </span>
             );
@@ -64,7 +64,8 @@ export function AlertItem({ alert, actions, className }: AlertItemProps) {
 
         return (
             <span className="text-muted-foreground">
-                Due: {deadline.toLocaleString('id-ID', {
+                Due:{' '}
+                {deadline.toLocaleString('id-ID', {
                     month: 'short',
                     day: 'numeric',
                     hour: '2-digit',
@@ -83,11 +84,18 @@ export function AlertItem({ alert, actions, className }: AlertItemProps) {
             )}
         >
             <div className="flex gap-3">
-                <Icon className={cn('size-5 mt-0.5 flex-shrink-0', config.className)} />
+                <Icon
+                    className={cn(
+                        'mt-0.5 size-5 flex-shrink-0',
+                        config.className,
+                    )}
+                />
                 <div className="flex-1 space-y-2">
                     <div>
-                        <h4 className="font-medium text-foreground">{alert.title}</h4>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <h4 className="font-medium text-foreground">
+                            {alert.title}
+                        </h4>
+                        <p className="mt-1 text-sm text-muted-foreground">
                             {alert.description}
                         </p>
                     </div>

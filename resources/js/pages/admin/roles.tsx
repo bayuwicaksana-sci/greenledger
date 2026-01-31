@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Plus } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 import { RoleDeleteDialog } from '@/components/admin/RoleDeleteDialog';
 import { RoleFormDialog } from '@/components/admin/RoleFormDialog';
@@ -112,8 +112,7 @@ export default function RoleConfiguration() {
             toast({
                 title: 'Error',
                 description:
-                    error.response?.data?.message ||
-                    'Failed to duplicate role',
+                    error.response?.data?.message || 'Failed to duplicate role',
                 variant: 'destructive',
             });
         }

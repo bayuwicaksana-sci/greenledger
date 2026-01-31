@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -73,8 +73,7 @@ export function RoleFormDialog({
                 toast({
                     title: 'Error',
                     description:
-                        error.response?.data?.message ||
-                        'Failed to save role',
+                        error.response?.data?.message || 'Failed to save role',
                     variant: 'destructive',
                 });
             }
@@ -106,7 +105,9 @@ export function RoleFormDialog({
                                 onChange={(e) => setName(e.target.value)}
                                 placeholder="e.g., Project Manager"
                                 disabled={loading}
-                                className={errors.name ? 'border-destructive' : ''}
+                                className={
+                                    errors.name ? 'border-destructive' : ''
+                                }
                             />
                             {errors.name && (
                                 <p className="text-sm text-destructive">
@@ -124,7 +125,10 @@ export function RoleFormDialog({
                         >
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={loading || !name.trim()}>
+                        <Button
+                            type="submit"
+                            disabled={loading || !name.trim()}
+                        >
                             {loading && (
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             )}

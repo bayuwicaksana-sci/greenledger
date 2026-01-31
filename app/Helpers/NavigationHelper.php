@@ -411,6 +411,12 @@ class NavigationHelper
                         'permission' => ['users.assign-roles'],
                     ],
                     [
+                        'title' => 'Approval Workflows',
+                        'route' => 'admin.approval-workflows',
+                        'icon' => 'GitBranch',
+                        'permission' => ['approval-workflows.view.all'],
+                    ],
+                    [
                         'title' => 'Access Logs',
                         'route' => 'admin.logs',
                         'icon' => 'FileText',

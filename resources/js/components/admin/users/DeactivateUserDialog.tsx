@@ -72,17 +72,13 @@ export function DeactivateUserDialog({
                         {isDeactivating ? (
                             <>
                                 Are you sure you want to deactivate{' '}
-                                <strong>
-                                    {user?.full_name || user?.name}
-                                </strong>
+                                <strong>{user?.full_name || user?.name}</strong>
                                 ?
                             </>
                         ) : (
                             <>
                                 Are you sure you want to activate{' '}
-                                <strong>
-                                    {user?.full_name || user?.name}
-                                </strong>
+                                <strong>{user?.full_name || user?.name}</strong>
                                 ?
                             </>
                         )}

@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import type { User, Site } from '@/types/users';
+import type { Site, User } from '@/types/users';
 
 interface EditUserDialogProps {
     open: boolean;
@@ -186,7 +186,9 @@ export function EditUserDialog({
                                 <Input
                                     id="full_name"
                                     value={fullName}
-                                    onChange={(e) => setFullName(e.target.value)}
+                                    onChange={(e) =>
+                                        setFullName(e.target.value)
+                                    }
                                     placeholder="John Doe"
                                     disabled={loading}
                                     className={

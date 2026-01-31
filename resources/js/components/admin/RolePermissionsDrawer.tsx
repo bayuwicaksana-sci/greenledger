@@ -208,11 +208,17 @@ export function RolePermissionsDrawer({
         const allModules = Object.keys(groupedPermissions);
 
         // Separate priority modules from others
-        const priority = allModules.filter(module => priorityModules.includes(module));
-        const others = allModules.filter(module => !priorityModules.includes(module)).sort();
+        const priority = allModules.filter((module) =>
+            priorityModules.includes(module),
+        );
+        const others = allModules
+            .filter((module) => !priorityModules.includes(module))
+            .sort();
 
         // Sort priority modules according to priorityModules order
-        const sortedPriority = priorityModules.filter(module => priority.includes(module));
+        const sortedPriority = priorityModules.filter((module) =>
+            priority.includes(module),
+        );
 
         return [...sortedPriority, ...others];
     }, [groupedPermissions]);
@@ -347,128 +353,119 @@ export function RolePermissionsDrawer({
                         <ScrollArea className="-mx-4 flex-1 px-4 pb-4">
                             <div className="space-y-4">
                                 {sortedModules.map((module) => {
-                                        const permissions =
-                                            groupedPermissions[module] || [];
-                                        const selectedCount =
-                                            permissions.filter((p) =>
-                                                selectedPermissions.has(p.name),
-                                            ).length;
-                                        const isExpanded =
-                                            expandedGroups.has(module);
+                                    const permissions =
+                                        groupedPermissions[module] || [];
+                                    const selectedCount = permissions.filter(
+                                        (p) => selectedPermissions.has(p.name),
+                                    ).length;
+                                    const isExpanded =
+                                        expandedGroups.has(module);
 
-                                        return (
-                                            <ScrollArea
-                                                key={module}
-                                                className="max-h-125 overflow-y-scroll rounded-lg border"
+                                    return (
+                                        <ScrollArea
+                                            key={module}
+                                            className="max-h-125 overflow-y-scroll rounded-lg border"
+                                        >
+                                            <div
+                                                className="sticky top-0 left-0 flex cursor-pointer items-center justify-between bg-muted/50 p-3 hover:bg-muted"
+                                                onClick={() =>
+                                                    toggleGroup(module)
+                                                }
                                             >
+                                                <div className="flex items-center gap-2">
+                                                    {isExpanded ? (
+                                                        <ChevronDown className="h-4 w-4" />
+                                                    ) : (
+                                                        <ChevronRight className="h-4 w-4" />
+                                                    )}
+                                                    <span className="font-semibold">
+                                                        {formatModuleName(
+                                                            module,
+                                                        )}
+                                                    </span>
+                                                    <Badge
+                                                        variant="secondary"
+                                                        className="ml-2"
+                                                    >
+                                                        {selectedCount}/
+                                                        {permissions.length}
+                                                    </Badge>
+                                                </div>
                                                 <div
-                                                    className="sticky top-0 left-0 flex cursor-pointer items-center justify-between bg-muted/50 p-3 hover:bg-muted"
-                                                    onClick={() =>
-                                                        toggleGroup(module)
+                                                    className="flex gap-1"
+                                                    onClick={(e) =>
+                                                        e.stopPropagation()
                                                     }
                                                 >
-                                                    <div className="flex items-center gap-2">
-                                                        {isExpanded ? (
-                                                            <ChevronDown className="h-4 w-4" />
-                                                        ) : (
-                                                            <ChevronRight className="h-4 w-4" />
-                                                        )}
-                                                        <span className="font-semibold">
-                                                            {formatModuleName(module)}
-                                                        </span>
-                                                        <Badge
-                                                            variant="secondary"
-                                                            className="ml-2"
-                                                        >
-                                                            {selectedCount}/
-                                                            {permissions.length}
-                                                        </Badge>
-                                                    </div>
-                                                    <div
-                                                        className="flex gap-1"
-                                                        onClick={(e) =>
-                                                            e.stopPropagation()
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() =>
+                                                            selectAllInGroup(
+                                                                module,
+                                                            )
                                                         }
                                                     >
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() =>
-                                                                selectAllInGroup(
-                                                                    module,
-                                                                )
-                                                            }
-                                                        >
-                                                            Select All
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() =>
-                                                                deselectAllInGroup(
-                                                                    module,
-                                                                )
-                                                            }
-                                                        >
-                                                            Clear
-                                                        </Button>
-                                                    </div>
+                                                        Select All
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() =>
+                                                            deselectAllInGroup(
+                                                                module,
+                                                            )
+                                                        }
+                                                    >
+                                                        Clear
+                                                    </Button>
                                                 </div>
+                                            </div>
 
-                                                {isExpanded && (
-                                                    <div className="divide-y">
-                                                        {permissions.map(
-                                                            (perm) => (
-                                                                <div
-                                                                    key={
+                                            {isExpanded && (
+                                                <div className="divide-y">
+                                                    {permissions.map((perm) => (
+                                                        <div
+                                                            key={perm.name}
+                                                            className="flex items-start gap-3 p-3 hover:bg-muted/50"
+                                                        >
+                                                            <Checkbox
+                                                                id={perm.name}
+                                                                checked={selectedPermissions.has(
+                                                                    perm.name,
+                                                                )}
+                                                                onCheckedChange={() =>
+                                                                    togglePermission(
+                                                                        perm.name,
+                                                                    )
+                                                                }
+                                                                className="mt-1"
+                                                            />
+                                                            <div className="flex-1 space-y-1">
+                                                                <label
+                                                                    htmlFor={
                                                                         perm.name
                                                                     }
-                                                                    className="flex items-start gap-3 p-3 hover:bg-muted/50"
+                                                                    className="cursor-pointer text-sm leading-none font-medium"
                                                                 >
-                                                                    <Checkbox
-                                                                        id={
-                                                                            perm.name
-                                                                        }
-                                                                        checked={selectedPermissions.has(
-                                                                            perm.name,
-                                                                        )}
-                                                                        onCheckedChange={() =>
-                                                                            togglePermission(
-                                                                                perm.name,
-                                                                            )
-                                                                        }
-                                                                        className="mt-1"
-                                                                    />
-                                                                    <div className="flex-1 space-y-1">
-                                                                        <label
-                                                                            htmlFor={
-                                                                                perm.name
-                                                                            }
-                                                                            className="cursor-pointer text-sm leading-none font-medium"
-                                                                        >
-                                                                            {
-                                                                                perm.label
-                                                                            }
-                                                                        </label>
-                                                                        <p className="text-sm text-muted-foreground">
-                                                                            {
-                                                                                perm.description
-                                                                            }
-                                                                        </p>
-                                                                        <code className="text-xs text-muted-foreground">
-                                                                            {
-                                                                                perm.name
-                                                                            }
-                                                                        </code>
-                                                                    </div>
-                                                                </div>
-                                                            ),
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </ScrollArea>
-                                        );
-                                    })}
+                                                                    {perm.label}
+                                                                </label>
+                                                                <p className="text-sm text-muted-foreground">
+                                                                    {
+                                                                        perm.description
+                                                                    }
+                                                                </p>
+                                                                <code className="text-xs text-muted-foreground">
+                                                                    {perm.name}
+                                                                </code>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </ScrollArea>
+                                    );
+                                })}
                             </div>
                         </ScrollArea>
                     )}

@@ -13,6 +13,7 @@ import {
     FileText,
     FlaskConical,
     FolderTree,
+    GitBranch,
     History,
     LayoutGrid,
     MapPin,
@@ -55,6 +56,7 @@ const iconMap: Record<string, any> = {
     Users,
     Wallet,
     Wheat,
+    GitBranch,
 };
 
 /**
@@ -121,6 +123,7 @@ function generateRouteUrl(routeName: string, siteCode: string): string {
         'admin.roles': `${baseUrl}/admin/roles`,
         'admin.logs': `${baseUrl}/admin/logs`,
         'admin.health': `${baseUrl}/admin/health`,
+        'admin.approval-workflows': `${baseUrl}/admin/approval-workflows`,
 
         // Notifications
         'notifications.index': `${baseUrl}/notifications`,

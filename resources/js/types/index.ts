@@ -1,8 +1,9 @@
+export type * from './approval';
 export type * from './auth';
 export type * from './navigation';
-export type * from './ui';
 export type * from './permissions';
 export type * from './roles';
+export type * from './ui';
 
 import type { Auth } from './auth';
 import type { PermissionTranslations } from './permissions';

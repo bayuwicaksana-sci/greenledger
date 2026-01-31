@@ -20,7 +20,7 @@ class EnsureSiteIsValid
 
         $findSite = Site::whereSiteCode($site_code)->first(['id']);
 
-        if (!$findSite) {
+        if (! $findSite) {
             return response('Not Found', 404);
         }
 

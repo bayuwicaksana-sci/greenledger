@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
     flexRender,
     getCoreRowModel,
@@ -12,6 +11,7 @@ import {
     type VisibilityState,
 } from '@tanstack/react-table';
 import { ArrowUpDown, ChevronDown } from 'lucide-react';
+import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,8 +30,8 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { RoleActionsMenu } from './RoleActionsMenu';
 import type { Role } from '@/types';
+import { RoleActionsMenu } from './RoleActionsMenu';
 
 interface RolesTableProps {
     roles: Role[];

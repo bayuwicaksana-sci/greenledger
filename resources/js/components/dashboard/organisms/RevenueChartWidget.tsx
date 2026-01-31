@@ -1,5 +1,3 @@
-import { CartesianGrid, Line, LineChart, XAxis } from 'recharts';
-import { Widget } from './Widget';
 import {
     ChartContainer,
     ChartTooltip,
@@ -8,6 +6,8 @@ import {
 } from '@/components/ui/chart';
 import type { TimeSeriesData } from '@/types/dashboard';
 import { TrendingUp } from 'lucide-react';
+import { CartesianGrid, Line, LineChart, XAxis } from 'recharts';
+import { Widget } from './Widget';
 
 interface RevenueChartWidgetProps {
     data: TimeSeriesData[];
@@ -63,9 +63,7 @@ export function RevenueChartWidget({
                         tickLine={false}
                         axisLine={false}
                         tickMargin={8}
-                        tickFormatter={(value) =>
-                            value.substring(0, 7)
-                        } // Show YYYY-MM
+                        tickFormatter={(value) => value.substring(0, 7)} // Show YYYY-MM
                     />
                     <ChartTooltip
                         cursor={false}

@@ -1,10 +1,10 @@
-import { Widget } from './Widget';
-import { StatusBadge } from '../atoms/StatusBadge';
-import { MetricValue } from '../atoms/MetricValue';
-import { Clock } from 'lucide-react';
 import type { RecentActivityData } from '@/types/dashboard';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
+import { Clock } from 'lucide-react';
+import { MetricValue } from '../atoms/MetricValue';
+import { StatusBadge } from '../atoms/StatusBadge';
+import { Widget } from './Widget';
 
 interface RecentActivityWidgetProps {
     activities: RecentActivityData[];
@@ -28,9 +28,9 @@ export function RecentActivityWidget({
                 {activities.slice(0, 5).map((activity) => (
                     <div
                         key={activity.id}
-                        className="flex gap-4 pb-3 border-b border-border last:border-0 last:pb-0"
+                        className="flex gap-4 border-b border-border pb-3 last:border-0 last:pb-0"
                     >
-                        <div className="flex-shrink-0 text-sm text-muted-foreground min-w-[60px]">
+                        <div className="min-w-[60px] flex-shrink-0 text-sm text-muted-foreground">
                             {format(new Date(activity.date), 'MMM dd', {
                                 locale: id,
                             })}
@@ -54,7 +54,9 @@ export function RecentActivityWidget({
                                     className="text-sm"
                                 />
                                 <StatusBadge
-                                    status={activity.status.replace(' ', '_').toUpperCase()}
+                                    status={activity.status
+                                        .replace(' ', '_')
+                                        .toUpperCase()}
                                 />
                             </div>
                         </div>

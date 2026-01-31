@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button';
 import AuthLayout from '@/layouts/auth-layout';
 import { Head } from '@inertiajs/react';
 import { AlertCircle, Mail } from 'lucide-react';

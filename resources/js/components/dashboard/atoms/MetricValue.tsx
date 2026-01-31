@@ -41,7 +41,7 @@ export function MetricValue({
     return (
         <span
             className={cn(
-                'font-semibold tabular-nums text-foreground',
+                'font-semibold text-foreground tabular-nums',
                 className,
             )}
         >

@@ -28,8 +28,10 @@ Route::post('invitation/{token}', [
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Site API (JSON endpoints)
-    Route::middleware('permission:users.view.site|users.view.all')
-        ->get('api/sites', [\App\Http\Controllers\SiteController::class, 'index']);
+    Route::middleware('permission:users.view.site|users.view.all')->get(
+        'api/sites',
+        [\App\Http\Controllers\SiteController::class, 'index'],
+    );
 
     // Role Management API (JSON endpoints)
     Route::middleware('permission:users.assign-roles')
@@ -154,6 +156,100 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'api/users/access-logs',
         [UserAccessLogController::class, 'index'],
     );
+
+    // Approval System API Routes
+    Route::prefix('api/approvals')->group(function () {
+        // Workflow Management (Admin)
+        Route::middleware('permission:view-approval-workflows')->group(
+            function () {
+                Route::get('workflows', [
+                    \App\Http\Controllers\Api\ApprovalWorkflowController::class,
+                    'index',
+                ]);
+                Route::get('workflows/{approvalWorkflow}', [
+                    \App\Http\Controllers\Api\ApprovalWorkflowController::class,
+                    'show',
+                ]);
+            },
+        );
+
+        Route::middleware('permission:create-approval-workflows')->post(
+            'workflows',
+            [
+                \App\Http\Controllers\Api\ApprovalWorkflowController::class,
+                'store',
+            ],
+        );
+
+        Route::middleware('permission:edit-approval-workflows')->group(
+            function () {
+                Route::put('workflows/{approvalWorkflow}', [
+                    \App\Http\Controllers\Api\ApprovalWorkflowController::class,
+                    'update',
+                ]);
+                Route::post('workflows/{approvalWorkflow}/versions', [
+                    \App\Http\Controllers\Api\ApprovalWorkflowController::class,
+                    'createVersion',
+                ]);
+            },
+        );
+
+        Route::middleware('permission:manage-approval-workflows')->group(
+            function () {
+                Route::post(
+                    'workflows/{approvalWorkflow}/versions/{versionId}/activate',
+                    [
+                        \App\Http\Controllers\Api\ApprovalWorkflowController::class,
+                        'activateVersion',
+                    ],
+                );
+                Route::post('workflows/{approvalWorkflow}/deactivate', [
+                    \App\Http\Controllers\Api\ApprovalWorkflowController::class,
+                    'deactivate',
+                ]);
+            },
+        );
+
+        Route::middleware('permission:delete-approval-workflows')->delete(
+            'workflows/{approvalWorkflow}',
+            [
+                \App\Http\Controllers\Api\ApprovalWorkflowController::class,
+                'destroy',
+            ],
+        );
+
+        // Approval Instances
+        Route::get('instances', [
+            \App\Http\Controllers\Api\ApprovalInstanceController::class,
+            'index',
+        ]);
+        Route::get('instances/pending', [
+            \App\Http\Controllers\Api\ApprovalInstanceController::class,
+            'pendingForUser',
+        ]);
+        Route::get('instances/{approvalInstance}', [
+            \App\Http\Controllers\Api\ApprovalInstanceController::class,
+            'show',
+        ]);
+        Route::post('instances/{approvalInstance}/submit', [
+            \App\Http\Controllers\Api\ApprovalInstanceController::class,
+            'submit',
+        ]);
+        Route::post('instances/{approvalInstance}/cancel', [
+            \App\Http\Controllers\Api\ApprovalInstanceController::class,
+            'cancel',
+        ]);
+
+        // Approval Actions
+        Route::post('instances/{approvalInstance}/actions', [
+            \App\Http\Controllers\Api\ApprovalActionController::class,
+            'process',
+        ]);
+        Route::get('instances/{approvalInstance}/history', [
+            \App\Http\Controllers\Api\ApprovalActionController::class,
+            'history',
+        ]);
+    });
 
     Route::prefix('/site/{site:site_code}')
         ->middleware(EnsureSiteIsValid::class)
@@ -508,6 +604,90 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     })
                         ->name('health')
                         ->middleware('permission:users.view.all');
+
+                    // Approval Workflows
+                    Route::prefix('approval-workflows')
+                        ->name('approval-workflows.')
+                        ->middleware('permission:approval-workflows.view.all')
+                        ->group(function () {
+                            Route::get('/', [
+                                \App\Http\Controllers\ApprovalWorkflowController::class,
+                                'index',
+                            ])->name('index');
+
+                            Route::get('/create', [
+                                \App\Http\Controllers\ApprovalWorkflowController::class,
+                                'create',
+                            ])
+                                ->name('create')
+                                ->middleware(
+                                    'permission:approval-workflows.create',
+                                );
+
+                            Route::post('/', [
+                                \App\Http\Controllers\ApprovalWorkflowController::class,
+                                'store',
+                            ])
+                                ->name('store')
+                                ->middleware(
+                                    'permission:approval-workflows.create',
+                                );
+
+                            Route::get('/{approvalWorkflow}/edit', [
+                                \App\Http\Controllers\ApprovalWorkflowController::class,
+                                'edit',
+                            ])
+                                ->name('edit')
+                                ->middleware(
+                                    'permission:approval-workflows.update',
+                                );
+
+                            Route::put('/{approvalWorkflow}', [
+                                \App\Http\Controllers\ApprovalWorkflowController::class,
+                                'update',
+                            ])
+                                ->name('update')
+                                ->middleware(
+                                    'permission:approval-workflows.update',
+                                );
+
+                            Route::delete('/{approvalWorkflow}', [
+                                \App\Http\Controllers\ApprovalWorkflowController::class,
+                                'destroy',
+                            ])
+                                ->name('destroy')
+                                ->middleware(
+                                    'permission:approval-workflows.delete',
+                                );
+
+                            // Workflow Actions
+                            Route::post('/{approvalWorkflow}/duplicate', [
+                                \App\Http\Controllers\ApprovalWorkflowController::class,
+                                'duplicate',
+                            ])
+                                ->name('duplicate')
+                                ->middleware(
+                                    'permission:approval-workflows.duplicate',
+                                );
+
+                            Route::post('/{approvalWorkflow}/set-active', [
+                                \App\Http\Controllers\ApprovalWorkflowController::class,
+                                'setActive',
+                            ])
+                                ->name('set-active')
+                                ->middleware(
+                                    'permission:approval-workflows.activate',
+                                );
+
+                            Route::post('/{approvalWorkflow}/deactivate', [
+                                \App\Http\Controllers\ApprovalWorkflowController::class,
+                                'deactivate',
+                            ])
+                                ->name('deactivate')
+                                ->middleware(
+                                    'permission:approval-workflows.activate',
+                                );
+                        });
                 });
 
             // Notifications

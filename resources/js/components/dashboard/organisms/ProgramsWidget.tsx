@@ -1,11 +1,11 @@
-import { Widget } from './Widget';
-import { StatusBadge } from '../atoms/StatusBadge';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import type { ProgramData } from '@/types/dashboard';
+import { AlertTriangle, Folder } from 'lucide-react';
 import { MetricValue } from '../atoms/MetricValue';
 import { PercentageBar } from '../atoms/PercentageBar';
-import { Folder, AlertTriangle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import type { ProgramData } from '@/types/dashboard';
-import { cn } from '@/lib/utils';
+import { StatusBadge } from '../atoms/StatusBadge';
+import { Widget } from './Widget';
 
 interface ProgramsWidgetProps {
     programs: ProgramData[];
@@ -41,7 +41,7 @@ export function ProgramsWidget({
                         <div
                             key={program.id}
                             className={cn(
-                                'rounded-lg border p-4 space-y-3 transition-colors',
+                                'space-y-3 rounded-lg border p-4 transition-colors',
                                 'hover:bg-accent',
                                 isHighUtilization &&
                                     'border-yellow-500 dark:border-yellow-400',
@@ -52,7 +52,7 @@ export function ProgramsWidget({
                                     <h4 className="font-semibold">
                                         {program.name}
                                     </h4>
-                                    <div className="flex items-center gap-2 mt-1">
+                                    <div className="mt-1 flex items-center gap-2">
                                         <StatusBadge status={program.status} />
                                         {isHighUtilization && (
                                             <div className="flex items-center gap-1 text-xs text-yellow-600 dark:text-yellow-400">
@@ -117,7 +117,7 @@ export function ProgramsWidget({
                             </div>
 
                             <div>
-                                <div className="flex justify-between text-sm mb-1">
+                                <div className="mb-1 flex justify-between text-sm">
                                     <span className="text-muted-foreground">
                                         Budget Utilization
                                     </span>

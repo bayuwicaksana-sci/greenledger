@@ -1,8 +1,18 @@
-import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
-import { Mail, Trash2, AlertCircle, Clock } from 'lucide-react';
+import { AlertCircle, Clock, Mail, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,16 +25,6 @@ import {
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import type { UserInvitation } from '@/types/users';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 
 interface PendingInvitationsTableProps {
     onSuccess: () => void;
@@ -67,9 +67,7 @@ export function PendingInvitationsTable({
     const handleResend = async (invitation: UserInvitation) => {
         setResendingId(invitation.id);
         try {
-            await axios.post(
-                `/api/users/invitations/${invitation.id}/resend`,
-            );
+            await axios.post(`/api/users/invitations/${invitation.id}/resend`);
             toast({
                 title: 'Success',
                 description: `Invitation resent to ${invitation.email}`,
@@ -193,8 +191,7 @@ export function PendingInvitationsTable({
                                                 variant="outline"
                                                 className="text-xs"
                                             >
-                                                +
-                                                {invitation.roles.length - 2}
+                                                +{invitation.roles.length - 2}
                                             </Badge>
                                         )}
                                     </div>
@@ -215,9 +212,7 @@ export function PendingInvitationsTable({
                                         <div className="flex items-center gap-1 text-sm text-muted-foreground">
                                             <Clock className="h-3 w-3" />
                                             {formatDistanceToNow(
-                                                new Date(
-                                                    invitation.expires_at,
-                                                ),
+                                                new Date(invitation.expires_at),
                                                 { addSuffix: true },
                                             )}
                                         </div>

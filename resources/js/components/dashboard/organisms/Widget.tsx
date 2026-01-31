@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
-import { WidgetHeader } from '../molecules/WidgetHeader';
 import { cn } from '@/lib/utils';
+import { AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+import { WidgetHeader } from '../molecules/WidgetHeader';
 
 interface WidgetProps {
     title: string;
@@ -36,13 +36,7 @@ export function Widget({
     const [expanded, setExpanded] = useState(defaultExpanded);
 
     return (
-        <Card
-            className={cn(
-                'h-fit',
-                fullWidth && 'md:col-span-2',
-                className,
-            )}
-        >
+        <Card className={cn('h-fit', fullWidth && 'md:col-span-2', className)}>
             <CardHeader>
                 <WidgetHeader
                     title={title}

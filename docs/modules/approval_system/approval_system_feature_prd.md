@@ -4,18 +4,6 @@
 
 Universal Approval Workflow System
 
-## Document Status
-
-Draft (Enhanced / Industry-Standard)
-
-## Authors
-
-Product & Engineering
-
-## Last Updated
-
-2026-01-30
-
 ---
 
 ## 1. Overview
@@ -243,11 +231,12 @@ System MUST fail gracefully and log all errors.
 
 ## 10. Dependencies & Libraries
 
-| Package                     | Purpose       |
-| --------------------------- | ------------- |
-| spatie/laravel-model-states | State machine |
-| spatie/laravel-activitylog  | Auditing      |
-| spatie/laravel-permission   | RBAC          |
+| Package                     | Purpose       | Docs References                                                                |
+| --------------------------- | ------------- | ------------------------------------------------------------------------------ |
+| spatie/laravel-model-states | State machine | Use context7 mcp tools with "spatie/laravel-model-states" library              |
+| spatie/laravel-activitylog  | Auditing      | Use context7 mcp tools with "spatie/laravel-activitylog" library               |
+| spatie/laravel-permission   | RBAC          | Use context7 mcp tools with "websites/spatie_be_laravel-permission_v6" library |
+| spatie/eloquent-sortable    | Sorting       | N/A                                                                            |
 
 Additional packages MAY be introduced if:
 

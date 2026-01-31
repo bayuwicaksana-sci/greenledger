@@ -1,13 +1,13 @@
-import { QuickStatsRow } from '../organisms/QuickStatsRow';
-import { SettlementAlertsWidget } from '../organisms/SettlementAlertsWidget';
-import { ProgramsWidget } from '../organisms/ProgramsWidget';
-import { RecentActivityWidget } from '../organisms/RecentActivityWidget';
-import { BudgetChartWidget } from '../organisms/BudgetChartWidget';
-import { Widget } from '../organisms/Widget';
-import { Calendar } from 'lucide-react';
 import type { RoDashboardData } from '@/types/dashboard';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
+import { Calendar } from 'lucide-react';
+import { BudgetChartWidget } from '../organisms/BudgetChartWidget';
+import { ProgramsWidget } from '../organisms/ProgramsWidget';
+import { QuickStatsRow } from '../organisms/QuickStatsRow';
+import { RecentActivityWidget } from '../organisms/RecentActivityWidget';
+import { SettlementAlertsWidget } from '../organisms/SettlementAlertsWidget';
+import { Widget } from '../organisms/Widget';
 
 interface RoDashboardProps {
     data: RoDashboardData;
@@ -22,9 +22,7 @@ export function RoDashboard({ data }: RoDashboardProps) {
             {/* Main Content Grid */}
             <div className="grid gap-6 md:grid-cols-2">
                 {/* Priority 1: Settlement Alerts - Full Width */}
-                <SettlementAlertsWidget
-                    settlements={data.settlementAlerts}
-                />
+                <SettlementAlertsWidget settlements={data.settlementAlerts} />
 
                 {/* Priority 2: My Programs Summary */}
                 <ProgramsWidget programs={data.programs} title="My Programs" />
@@ -45,7 +43,7 @@ export function RoDashboard({ data }: RoDashboardProps) {
                         {data.upcomingHarvests.map((harvest) => (
                             <div
                                 key={harvest.id}
-                                className="flex justify-between items-center p-3 rounded-lg border border-border hover:bg-accent transition-colors"
+                                className="flex items-center justify-between rounded-lg border border-border p-3 transition-colors hover:bg-accent"
                             >
                                 <div>
                                     <div className="font-medium">
@@ -57,13 +55,9 @@ export function RoDashboard({ data }: RoDashboardProps) {
                                     </div>
                                 </div>
                                 <div className="text-sm font-medium text-muted-foreground">
-                                    {format(
-                                        new Date(harvest.date),
-                                        'MMM dd',
-                                        {
-                                            locale: id,
-                                        },
-                                    )}
+                                    {format(new Date(harvest.date), 'MMM dd', {
+                                        locale: id,
+                                    })}
                                 </div>
                             </div>
                         ))}

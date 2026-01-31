@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
     Table,
     TableBody,
@@ -7,8 +6,9 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { ArrowUp, ArrowDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ArrowDown, ArrowUp } from 'lucide-react';
+import { useState } from 'react';
 
 interface Column<T> {
     key: keyof T | string;
@@ -98,7 +98,7 @@ export function DataTable<T extends Record<string, any>>({
                         <TableRow>
                             <TableCell
                                 colSpan={columns.length}
-                                className="text-center text-muted-foreground py-8"
+                                className="py-8 text-center text-muted-foreground"
                             >
                                 No data available
                             </TableCell>

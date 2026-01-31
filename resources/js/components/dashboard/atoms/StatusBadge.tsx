@@ -1,11 +1,11 @@
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type {
-    ProgramStatus,
-    PaymentRequestStatus,
-    SettlementStatus,
     ActivityStatus,
+    PaymentRequestStatus,
+    ProgramStatus,
     RevenueStatus,
+    SettlementStatus,
 } from '@/types/dashboard';
 
 type StatusType =
@@ -23,33 +23,66 @@ interface StatusBadgeProps {
 
 const statusConfig: Record<
     string,
-    { variant: 'default' | 'secondary' | 'destructive' | 'outline'; className?: string }
+    {
+        variant: 'default' | 'secondary' | 'destructive' | 'outline';
+        className?: string;
+    }
 > = {
     // Program statuses
-    ACTIVE: { variant: 'default', className: 'bg-green-500 hover:bg-green-600' },
+    ACTIVE: {
+        variant: 'default',
+        className: 'bg-green-500 hover:bg-green-600',
+    },
     DRAFT: { variant: 'secondary' },
-    COMPLETED: { variant: 'default', className: 'bg-blue-500 hover:bg-blue-600' },
+    COMPLETED: {
+        variant: 'default',
+        className: 'bg-blue-500 hover:bg-blue-600',
+    },
     ARCHIVED: { variant: 'outline' },
 
     // Payment Request statuses
-    SUBMITTED: { variant: 'default', className: 'bg-blue-500 hover:bg-blue-600' },
-    APPROVED: { variant: 'default', className: 'bg-green-500 hover:bg-green-600' },
+    SUBMITTED: {
+        variant: 'default',
+        className: 'bg-blue-500 hover:bg-blue-600',
+    },
+    APPROVED: {
+        variant: 'default',
+        className: 'bg-green-500 hover:bg-green-600',
+    },
     REJECTED: { variant: 'destructive' },
-    PAID: { variant: 'default', className: 'bg-purple-500 hover:bg-purple-600' },
+    PAID: {
+        variant: 'default',
+        className: 'bg-purple-500 hover:bg-purple-600',
+    },
     SETTLED: { variant: 'default', className: 'bg-teal-500 hover:bg-teal-600' },
     CANCELLED: { variant: 'outline' },
 
     // Settlement statuses
-    PENDING: { variant: 'default', className: 'bg-yellow-500 hover:bg-yellow-600' },
-    REVISION_REQUESTED: { variant: 'default', className: 'bg-orange-500 hover:bg-orange-600' },
+    PENDING: {
+        variant: 'default',
+        className: 'bg-yellow-500 hover:bg-yellow-600',
+    },
+    REVISION_REQUESTED: {
+        variant: 'default',
+        className: 'bg-orange-500 hover:bg-orange-600',
+    },
 
     // Activity statuses
     PLANNED: { variant: 'secondary' },
 
     // Revenue statuses
-    POSTED: { variant: 'default', className: 'bg-green-500 hover:bg-green-600' },
-    UNDER_REVIEW: { variant: 'default', className: 'bg-yellow-500 hover:bg-yellow-600' },
-    CORRECTED: { variant: 'default', className: 'bg-blue-500 hover:bg-blue-600' },
+    POSTED: {
+        variant: 'default',
+        className: 'bg-green-500 hover:bg-green-600',
+    },
+    UNDER_REVIEW: {
+        variant: 'default',
+        className: 'bg-yellow-500 hover:bg-yellow-600',
+    },
+    CORRECTED: {
+        variant: 'default',
+        className: 'bg-blue-500 hover:bg-blue-600',
+    },
 };
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {

@@ -164,7 +164,11 @@ export interface RevenueTestingServiceData {
 export interface RecentActivityData {
     id: string | number;
     date: string;
-    type: 'Payment Request' | 'Settlement' | 'Harvest Revenue' | 'Testing Service';
+    type:
+        | 'Payment Request'
+        | 'Settlement'
+        | 'Harvest Revenue'
+        | 'Testing Service';
     reference: string;
     description: string;
     amount: number;

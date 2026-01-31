@@ -1,7 +1,7 @@
-import { CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
+import { CardDescription, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
 
 interface WidgetHeaderProps {
     title: string;
@@ -26,14 +26,11 @@ export function WidgetHeader({
 }: WidgetHeaderProps) {
     return (
         <div
-            className={cn(
-                'flex items-start justify-between gap-2',
-                className,
-            )}
+            className={cn('flex items-start justify-between gap-2', className)}
         >
-            <div className="flex items-start gap-2 flex-1">
+            <div className="flex flex-1 items-start gap-2">
                 {icon && (
-                    <div className="text-muted-foreground mt-0.5">{icon}</div>
+                    <div className="mt-0.5 text-muted-foreground">{icon}</div>
                 )}
                 <div className="flex-1 space-y-1">
                     <CardTitle className="text-base font-semibold">

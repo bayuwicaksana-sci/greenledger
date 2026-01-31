@@ -1,5 +1,3 @@
-import { Bar, BarChart, XAxis, YAxis } from 'recharts';
-import { Widget } from './Widget';
 import {
     ChartContainer,
     ChartTooltip,
@@ -8,6 +6,8 @@ import {
 } from '@/components/ui/chart';
 import type { ChartDataPoint } from '@/types/dashboard';
 import { TrendingDown } from 'lucide-react';
+import { Bar, BarChart, XAxis, YAxis } from 'recharts';
+import { Widget } from './Widget';
 
 interface BudgetChartWidgetProps {
     data: ChartDataPoint[];
@@ -91,8 +91,8 @@ export function BudgetChartWidget({
                         Yellow
                     </span>
                     : 70-90% |{' '}
-                    <span className="text-red-600 dark:text-red-400">Red</span>
-                    : &gt;90%
+                    <span className="text-red-600 dark:text-red-400">Red</span>:
+                    &gt;90%
                 </p>
             </div>
         </Widget>

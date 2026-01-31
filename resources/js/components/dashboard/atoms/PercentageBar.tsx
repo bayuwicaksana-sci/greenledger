@@ -29,7 +29,7 @@ export function PercentageBar({
                 />
             </div>
             {showLabel && (
-                <span className="text-sm font-medium text-muted-foreground tabular-nums min-w-[3ch]">
+                <span className="min-w-[3ch] text-sm font-medium text-muted-foreground tabular-nums">
                     {percentage}%
                 </span>
             )}
