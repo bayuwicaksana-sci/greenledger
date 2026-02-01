@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,10 +12,6 @@ return new class extends Migration
     {
         Schema::create('approval_instances', function (Blueprint $table) {
             $table->id();
-            $table
-                ->foreignId('approval_workflow_version_id')
-                ->constrained('approval_workflow_versions')
-                ->cascadeOnDelete();
             $table->morphs('approvable'); // Polymorphic to the model being approved
             $table->string('status')->default('draft'); // draft, pending_approval, approved, rejected, cancelled
             $table

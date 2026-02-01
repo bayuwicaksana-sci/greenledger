@@ -18,8 +18,9 @@ enum ApprovalStepPurpose: string
     public function description(): string
     {
         return match ($this) {
-            self::Approval => 'Requires approval (can be auto-skipped if requester is approver)',
-            self::Action => 'Always executes regardless of requester',
+            self::Approval
+                => 'Requires approval (can be auto-skipped if requester is approver)',
+            self::Action => 'Requires action (Upload transfer receipt, etc.)',
         };
     }
 

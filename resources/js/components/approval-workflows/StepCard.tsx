@@ -267,11 +267,11 @@ export const StepCardContent = forwardRef<HTMLDivElement, StepCardContentProps>(
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="approval">
-                                        Approval (Can be skipped if
-                                        self-approval)
+                                        Approval (can be auto-skipped if
+                                        requester is approver)
                                     </SelectItem>
                                     <SelectItem value="action">
-                                        Action (Always executes)
+                                        Action (Upload transfer receipt, etc.)
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
