@@ -28,6 +28,9 @@ import {
     index,
     setActive,
 } from '@/actions/App/Http/Controllers/ApprovalWorkflowController';
+import { ConfirmationDialog } from '@/components/approval-workflows/ConfirmationDialog';
+import { DuplicateDialog } from '@/components/approval-workflows/DuplicateDialog';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -73,6 +76,14 @@ export default function ApprovalWorkflowsIndex({
     const [search, setSearch] = useState(filters.search || '');
     const { site_code } = usePage<SharedData>().props;
 
+    // Dialog state
+    const [selectedWorkflow, setSelectedWorkflow] =
+        useState<ApprovalWorkflow | null>(null);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
+    const [activateDialogOpen, setActivateDialogOpen] = useState(false);
+    const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
+
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Administration', href: '#' },
         { title: 'Approval Workflows', href: '#' },
@@ -83,11 +94,16 @@ export default function ApprovalWorkflowsIndex({
     };
 
     const handleDelete = (workflow: ApprovalWorkflow) => {
-        if (confirm(`Are you sure you want to delete "${workflow.name}"?`)) {
+        setSelectedWorkflow(workflow);
+        setDeleteDialogOpen(true);
+    };
+
+    const confirmDelete = () => {
+        if (selectedWorkflow) {
             router.delete(
                 destroy.url({
+                    approvalWorkflow: selectedWorkflow.id,
                     site: site_code!,
-                    approvalWorkflow: workflow.id,
                 }),
                 {
                     preserveScroll: true,
@@ -97,15 +113,16 @@ export default function ApprovalWorkflowsIndex({
     };
 
     const handleDuplicate = (workflow: ApprovalWorkflow) => {
-        const newName = prompt(
-            'Enter a name for the duplicated workflow:',
-            `${workflow.name} (Copy)`,
-        );
-        if (newName) {
+        setSelectedWorkflow(workflow);
+        setDuplicateDialogOpen(true);
+    };
+
+    const confirmDuplicate = (newName: string) => {
+        if (selectedWorkflow) {
             router.post(
                 duplicate.url({
+                    approvalWorkflow: selectedWorkflow.id,
                     site: site_code!,
-                    approvalWorkflow: workflow.id,
                 }),
                 { name: newName },
                 { preserveScroll: true },
@@ -114,15 +131,16 @@ export default function ApprovalWorkflowsIndex({
     };
 
     const handleSetActive = (workflow: ApprovalWorkflow) => {
-        if (
-            confirm(
-                `Set "${workflow.name}" as the active workflow for ${workflow.model_type.split('\\').pop()}?`,
-            )
-        ) {
+        setSelectedWorkflow(workflow);
+        setActivateDialogOpen(true);
+    };
+
+    const confirmSetActive = () => {
+        if (selectedWorkflow) {
             router.post(
                 setActive.url({
+                    approvalWorkflow: selectedWorkflow.id,
                     site: site_code!,
-                    approvalWorkflow: workflow.id,
                 }),
                 {},
                 { preserveScroll: true },
@@ -131,11 +149,16 @@ export default function ApprovalWorkflowsIndex({
     };
 
     const handleDeactivate = (workflow: ApprovalWorkflow) => {
-        if (confirm(`Deactivate "${workflow.name}"?`)) {
+        setSelectedWorkflow(workflow);
+        setDeactivateDialogOpen(true);
+    };
+
+    const confirmDeactivate = () => {
+        if (selectedWorkflow) {
             router.post(
                 deactivate.url({
+                    approvalWorkflow: selectedWorkflow.id,
                     site: site_code!,
-                    approvalWorkflow: workflow.id,
                 }),
                 {},
                 { preserveScroll: true },
@@ -219,8 +242,8 @@ export default function ApprovalWorkflowsIndex({
                                     <DropdownMenuItem asChild>
                                         <Link
                                             href={edit.url({
-                                                site: site_code!,
                                                 approvalWorkflow: workflow.id,
+                                                site: site_code!,
                                             })}
                                         >
                                             <Edit className="mr-2 h-4 w-4" />
@@ -384,6 +407,45 @@ export default function ApprovalWorkflowsIndex({
                     </Table>
                 </div>
             </div>
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmationDialog
+                open={deleteDialogOpen}
+                onOpenChange={setDeleteDialogOpen}
+                title="Delete Workflow"
+                description={`Are you sure you want to delete "${selectedWorkflow?.name}"? This action cannot be undone.`}
+                onConfirm={confirmDelete}
+                confirmText="Delete"
+                variant="destructive"
+            />
+
+            {/* Duplicate Dialog */}
+            <DuplicateDialog
+                open={duplicateDialogOpen}
+                onOpenChange={setDuplicateDialogOpen}
+                defaultName={`${selectedWorkflow?.name || ''} (Copy)`}
+                onConfirm={confirmDuplicate}
+            />
+
+            {/* Activate Confirmation Dialog */}
+            <ConfirmationDialog
+                open={activateDialogOpen}
+                onOpenChange={setActivateDialogOpen}
+                title="Set Active Workflow"
+                description={`Set "${selectedWorkflow?.name}" as the active workflow for ${selectedWorkflow?.model_type?.split('\\').pop()}? This will deactivate any other workflow for this model type.`}
+                onConfirm={confirmSetActive}
+                confirmText="Set Active"
+            />
+
+            {/* Deactivate Confirmation Dialog */}
+            <ConfirmationDialog
+                open={deactivateDialogOpen}
+                onOpenChange={setDeactivateDialogOpen}
+                title="Deactivate Workflow"
+                description={`Deactivate "${selectedWorkflow?.name}"? Models of this type will no longer use this workflow.`}
+                onConfirm={confirmDeactivate}
+                confirmText="Deactivate"
+            />
         </AppLayout>
     );
 }

@@ -43,16 +43,18 @@ class ApprovalWorkflowService
                     'description' => $stepData['description'] ?? null,
                     'step_order' => $stepData['step_order'] ?? $index,
                     'step_type' => $stepData['step_type'],
-                    'required_approvals_count' => $stepData['required_approvals_count'] ?? 1,
+                    'required_approvals_count' =>
+                        $stepData['required_approvals_count'] ?? 1,
                     'approver_type' => $stepData['approver_type'],
                     'approver_identifiers' => $stepData['approver_identifiers'],
-                    'conditional_rules' => $stepData['conditional_rules'] ?? null,
+                    'conditional_rules' =>
+                        $stepData['conditional_rules'] ?? null,
                 ]);
             }
 
             activity('approval')
                 ->performedOn($workflow)
-                ->log('Workflow created with '.count($steps).' steps');
+                ->log('Workflow created with ' . count($steps) . ' steps');
 
             // Set as active if requested
             if ($setActive) {
@@ -80,10 +82,12 @@ class ApprovalWorkflowService
                     'description' => $stepData['description'] ?? null,
                     'step_order' => $stepData['step_order'] ?? $index,
                     'step_type' => $stepData['step_type'],
-                    'required_approvals_count' => $stepData['required_approvals_count'] ?? 1,
+                    'required_approvals_count' =>
+                        $stepData['required_approvals_count'] ?? 1,
                     'approver_type' => $stepData['approver_type'],
                     'approver_identifiers' => $stepData['approver_identifiers'],
-                    'conditional_rules' => $stepData['conditional_rules'] ?? null,
+                    'conditional_rules' =>
+                        $stepData['conditional_rules'] ?? null,
                 ]);
             }
 
@@ -111,7 +115,7 @@ class ApprovalWorkflowService
 
             activity('approval')
                 ->performedOn($workflow)
-                ->log('Workflow set as active for '.$workflow->model_type);
+                ->log('Workflow set as active for ' . $workflow->model_type);
 
             return true;
         });
@@ -146,7 +150,7 @@ class ApprovalWorkflowService
 
             // Create new workflow
             $newWorkflow = ApprovalWorkflow::create([
-                'name' => $newName ?? $workflow->name.' (Copy)',
+                'name' => $newName ?? $workflow->name . ' (Copy)',
                 'model_type' => $workflow->model_type,
                 'description' => $workflow->description,
                 'is_active' => false, // Duplicates are never active by default
@@ -160,7 +164,8 @@ class ApprovalWorkflowService
                     'description' => $step->description,
                     'step_order' => $step->step_order,
                     'step_type' => $step->step_type,
-                    'required_approvals_count' => $step->required_approvals_count,
+                    'required_approvals_count' =>
+                        $step->required_approvals_count,
                     'approver_type' => $step->approver_type,
                     'approver_identifiers' => $step->approver_identifiers,
                     'conditional_rules' => $step->conditional_rules,
@@ -169,7 +174,7 @@ class ApprovalWorkflowService
 
             activity('approval')
                 ->performedOn($newWorkflow)
-                ->log('Workflow duplicated from: '.$workflow->name);
+                ->log('Workflow duplicated from: ' . $workflow->name);
 
             return $newWorkflow->fresh('steps');
         });

@@ -64,7 +64,7 @@ PRD - Detail Create Program & Budget
   <tr>
    <td>Research Officer
    </td>
-   <td>[Dropdown-Auto search] List RA
+   <td>[Dropdown-Auto search] List RO
    </td>
    <td>
    </td>
@@ -212,7 +212,7 @@ PRD - Detail Create Program & Budget
    </td>
    <td>Referensi Jurnal (If any)
    </td>
-   <td>[Text Are, bisa list multiple references]
+   <td>[Text Area, bisa list multiple references]
    </td>
    <td>
    </td>
@@ -520,12 +520,279 @@ Pengolahan Lahan, Penanaman, Pengairan, Pengendalian OPT, Pemupukan, Panen, Peng
    <td>
    </td>
   </tr>
+</table>
+
+**Non-Program Only**
+
+<table>
   <tr>
-   <td>
+   <td><strong>Section</strong>
+   </td>
+   <td><strong>Sub 1</strong>
+   </td>
+   <td><strong>Sub 2</strong>
+   </td>
+   <td><strong>Sub 3</strong>
+   </td>
+   <td><strong>Sub 4</strong>
+   </td>
+  </tr>
+  <tr>
+   <td rowspan="12" >Basic Information
+   </td>
+   <td>Non-Program Classification
+   </td>
+   <td>Non-Program Category
+   </td>
+   <td>[Dropdown] Infrastructure & Facilities, Equipment & Machinery, Maintenance & Repairs, Training & Development, Administrative & General Affairs, Transportation & Logistics, External Services (Testing, Consulting, dll), Amenities, Other (Specify: ______)
    </td>
    <td>
    </td>
+  </tr>
+  <tr>
+   <td rowspan="3" >Non-Program Identity
+   </td>
+   <td>Activity Title
+   </td>
+   <td>[Text field, max 350 Char]
+   </td>
    <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Requestor
+   </td>
+   <td>[Dropdown dari daftar Staff]
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Site Location
+   </td>
+   <td>[Checkboxes] Klaten, Magelang, Both Sides, Off-Site /External
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td rowspan="5" >Timeline
+   </td>
+   <td rowspan="4" >Activity Type
+   </td>
+   <td>One-time Activity (Single Event/Purchase)
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td rowspan="3" >Recurring Activity (ongoing/periodic)
+   </td>
+   <td>Start Date
+   </td>
+  </tr>
+  <tr>
+   <td>End Date
+   </td>
+  </tr>
+  <tr>
+   <td>Frequency [Dropdown] Daily/Weekly/Monthly/Quarterly
+   </td>
+  </tr>
+  <tr>
+   <td>Estimated Duration
+   </td>
+   <td>[Number] Days/Weeks/Months
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td rowspan="3" >Program Linkage (Optional)
+   </td>
+   <td rowspan="3" >Is this Non-program linked to any Research Program ?
+   </td>
+   <td>No
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td rowspan="2" >Yes
+   </td>
+   <td>[Dropdown] Select program
+   </td>
+  </tr>
+  <tr>
+   <td>Relationship Type: Direct Support, Shared Resource, Infrastructure
+   </td>
+  </tr>
+  <tr>
+   <td rowspan="7" >Activity Description
+   </td>
+   <td rowspan="3" >Purpose & Justification
+   </td>
+   <td>Purpose
+   </td>
+   <td>[Text-Area]
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Justification
+   </td>
+   <td>[Text-Area]
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Expected Outcome/Deliverable
+   </td>
+   <td>[Text-Area]
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td rowspan="4" >Scope of Work (for infrastructure/service projects)
+   </td>
+   <td>Work Breakdown
+   </td>
+   <td>[Text Area or Bullet List]
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td rowspan="3" >Specification (for equipment/material purchase)
+   </td>
+   <td>Kolom 1: Technical Specs 
+   </td>
+   <td>[Text Area]
+   </td>
+  </tr>
+  <tr>
+   <td>Kolom 2: Quantity
+   </td>
+   <td>[Number] + unit
+   </td>
+  </tr>
+  <tr>
+   <td>Kolom 3: Quality
+   </td>
+   <td>[Text Area]
+   </td>
+  </tr>
+  <tr>
+   <td rowspan="12" >Budget (BoQ)
+   </td>
+   <td rowspan="4" >Budget Category Breakdown
+   </td>
+   <td>Kolom 1: Category
+   </td>
+   <td>[Text]
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Kolom 2: Detail Items
+   </td>
+   <td>[Text]
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Kolom 3: Total
+   </td>
+   <td>[Text]
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Kolom 4 % of Budget
+   </td>
+   <td>[Text]
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td rowspan="8" >Budget Entry
+   </td>
+   <td>Kolom 1: Item Description
+   </td>
+   <td>[Text]
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Kolom 2: Specification
+   </td>
+   <td>[Text]
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Kolom 3: Unit
+   </td>
+   <td>[Text]
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Kolom 4: Qty
+   </td>
+   <td>[Text]
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Kolom 5: Unit Price
+   </td>
+   <td>[Text]
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Kolom 6: Subtotal
+   </td>
+   <td>[Text]
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Kolom 7: Notes
+   </td>
+   <td>[Text]
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Kolom 8: Vendor/Supplier
+   </td>
+   <td>[Text]
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td rowspan="6" >Timeline & Milestone
+   </td>
+   <td rowspan="6" >Project Milestone
+   </td>
+   <td>Kolom 1: Milestone
    </td>
    <td>
    </td>
@@ -533,23 +800,7 @@ Pengolahan Lahan, Penanaman, Pengairan, Pengendalian OPT, Pemupukan, Panen, Peng
    </td>
   </tr>
   <tr>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-  </tr>
-  <tr>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
+   <td>Kolom 2: Description
    </td>
    <td>
    </td>
@@ -557,23 +808,7 @@ Pengolahan Lahan, Penanaman, Pengairan, Pengendalian OPT, Pemupukan, Panen, Peng
    </td>
   </tr>
   <tr>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-  </tr>
-  <tr>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
+   <td>Kolom 3: Target Date
    </td>
    <td>
    </td>
@@ -581,23 +816,7 @@ Pengolahan Lahan, Penanaman, Pengairan, Pengendalian OPT, Pemupukan, Panen, Peng
    </td>
   </tr>
   <tr>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-  </tr>
-  <tr>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
+   <td>Kolom 4: PIC
    </td>
    <td>
    </td>
@@ -605,23 +824,7 @@ Pengolahan Lahan, Penanaman, Pengairan, Pengendalian OPT, Pemupukan, Panen, Peng
    </td>
   </tr>
   <tr>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-  </tr>
-  <tr>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
+   <td>Kolom 5: Status
    </td>
    <td>
    </td>
@@ -629,23 +832,7 @@ Pengolahan Lahan, Penanaman, Pengairan, Pengendalian OPT, Pemupukan, Panen, Peng
    </td>
   </tr>
   <tr>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-  </tr>
-  <tr>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
+   <td>Button [+ Add Milestone]
    </td>
    <td>
    </td>
@@ -653,23 +840,11 @@ Pengolahan Lahan, Penanaman, Pengairan, Pengendalian OPT, Pemupukan, Panen, Peng
    </td>
   </tr>
   <tr>
-   <td>
+   <td rowspan="5" >Risk Assessment (Optional)
    </td>
-   <td>
+   <td rowspan="5" >Potential Risk
    </td>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-  </tr>
-  <tr>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
+   <td>Kolom 1: Risk
    </td>
    <td>
    </td>
@@ -677,23 +852,7 @@ Pengolahan Lahan, Penanaman, Pengairan, Pengendalian OPT, Pemupukan, Panen, Peng
    </td>
   </tr>
   <tr>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-  </tr>
-  <tr>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
+   <td>Kolom 2: Impact
    </td>
    <td>
    </td>
@@ -701,23 +860,7 @@ Pengolahan Lahan, Penanaman, Pengairan, Pengendalian OPT, Pemupukan, Panen, Peng
    </td>
   </tr>
   <tr>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-  </tr>
-  <tr>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
+   <td>Kolom 3: Likelihood
    </td>
    <td>
    </td>
@@ -725,23 +868,7 @@ Pengolahan Lahan, Penanaman, Pengairan, Pengendalian OPT, Pemupukan, Panen, Peng
    </td>
   </tr>
   <tr>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-  </tr>
-  <tr>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
+   <td>Kolom 4: Mitigation Plan
    </td>
    <td>
    </td>
@@ -749,23 +876,7 @@ Pengolahan Lahan, Penanaman, Pengairan, Pengendalian OPT, Pemupukan, Panen, Peng
    </td>
   </tr>
   <tr>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-  </tr>
-  <tr>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
+   <td>Button [+ Add Risk]
    </td>
    <td>
    </td>
@@ -773,25 +884,55 @@ Pengolahan Lahan, Penanaman, Pengairan, Pengendalian OPT, Pemupukan, Panen, Peng
    </td>
   </tr>
   <tr>
-   <td>
+   <td rowspan="6" >Supporting Documents
    </td>
-   <td>
+   <td rowspan="3" >Required Documents
    </td>
-   <td>
+   <td>Quotation
    </td>
-   <td>
+   <td>[Upload or Link]
    </td>
    <td>
    </td>
   </tr>
   <tr>
-   <td>
+   <td>Technical Drawing/Specification
+   </td>
+   <td>[Upload or Link]
    </td>
    <td>
    </td>
-   <td>
+  </tr>
+  <tr>
+   <td>Proposal Document
+   </td>
+   <td>[Upload or Link]
    </td>
    <td>
+   </td>
+  </tr>
+  <tr>
+   <td rowspan="3" >Optional Documents
+   </td>
+   <td>Vendor Comparison Sheet
+   </td>
+   <td>[Upload or Link]
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Reference Photos/Examples
+   </td>
+   <td>[Upload or Link]
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Previous Maintenance Records (if any)
+   </td>
+   <td>[Upload or Link]
    </td>
    <td>
    </td>

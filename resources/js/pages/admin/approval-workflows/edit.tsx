@@ -66,6 +66,8 @@ export default function EditApprovalWorkflow({
                 description: step.description || '',
                 step_order: step.step_order,
                 step_type: step.step_type as 'sequential' | 'parallel',
+                step_purpose:
+                    (step.step_purpose as 'approval' | 'action') || 'approval',
                 approver_type: step.approver_type as
                     | 'user'
                     | 'role'
@@ -118,6 +120,7 @@ export default function EditApprovalWorkflow({
             description: step.description || null,
             step_order: step.step_order,
             step_type: step.step_type,
+            step_purpose: step.step_purpose,
             approver_type: step.approver_type,
             approver_identifiers: step.approver_identifiers,
             required_approvals_count: step.required_approvals_count || null,

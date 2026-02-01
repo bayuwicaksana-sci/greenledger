@@ -21,7 +21,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import type { Permission, Role, User } from '@/types';
 
-import { StepCard, type StepData } from './StepCard';
+import { StepCard, StepCardContent, type StepData } from './StepCard';
 
 interface StepBuilderProps {
     steps: StepData[];
@@ -145,8 +145,8 @@ export function StepBuilder({
 
                 <DragOverlay>
                     {activeId && activeStep ? (
-                        <div className="opacity-50">
-                            <StepCard
+                        <div className="opacity-80">
+                            <StepCardContent
                                 step={activeStep}
                                 index={steps.findIndex(
                                     (s) => s.id === activeId,

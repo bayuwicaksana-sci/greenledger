@@ -76,7 +76,7 @@ class ApprovalWorkflowController extends Controller
     /**
      * Store a newly created workflow.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, Site $site): RedirectResponse
     {
         Gate::authorize('create', ApprovalWorkflow::class);
 
@@ -105,21 +105,27 @@ class ApprovalWorkflowController extends Controller
             setActive: $validated['set_active'] ?? false,
         );
 
-        // Inertia::share('site_code', $site->site_code);
+        Inertia::share('site_code', $site->site_code);
 
         return redirect()
-            ->route('admin.approval-workflows.index')
+            ->route('admin.approval-workflows.index', [
+                'site' => $site->site_code,
+            ])
             ->with('success', 'Approval workflow created successfully.');
     }
 
     /**
      * Show the form for editing the specified workflow.
      */
-    public function edit(ApprovalWorkflow $approvalWorkflow): Response
-    {
+    public function edit(
+        Site $site,
+        ApprovalWorkflow $approvalWorkflow,
+    ): Response {
         Gate::authorize('update', $approvalWorkflow);
 
         $approvalWorkflow->load(['steps']);
+
+        Inertia::share('site_code', $site->site_code);
 
         return Inertia::render('admin/approval-workflows/edit', [
             'workflow' => $approvalWorkflow,
@@ -137,6 +143,7 @@ class ApprovalWorkflowController extends Controller
      */
     public function update(
         Request $request,
+        Site $site,
         ApprovalWorkflow $approvalWorkflow,
     ): RedirectResponse {
         Gate::authorize('update', $approvalWorkflow);
@@ -172,7 +179,9 @@ class ApprovalWorkflowController extends Controller
         }
 
         return redirect()
-            ->route('admin.approval-workflows.index')
+            ->route('admin.approval-workflows.index', [
+                'site' => $site->site_code,
+            ])
             ->with('success', 'Approval workflow updated successfully.');
     }
 
@@ -180,6 +189,7 @@ class ApprovalWorkflowController extends Controller
      * Remove the specified workflow.
      */
     public function destroy(
+        Site $site,
         ApprovalWorkflow $approvalWorkflow,
     ): RedirectResponse {
         Gate::authorize('delete', $approvalWorkflow);
@@ -187,7 +197,9 @@ class ApprovalWorkflowController extends Controller
         $approvalWorkflow->delete();
 
         return redirect()
-            ->route('admin.approval-workflows.index')
+            ->route('admin.approval-workflows.index', [
+                'site' => $site->site_code,
+            ])
             ->with('success', 'Approval workflow deleted successfully.');
     }
 
@@ -196,6 +208,7 @@ class ApprovalWorkflowController extends Controller
      */
     public function duplicate(
         Request $request,
+        Site $site,
         ApprovalWorkflow $approvalWorkflow,
     ): RedirectResponse {
         Gate::authorize('duplicate', $approvalWorkflow);
@@ -210,7 +223,9 @@ class ApprovalWorkflowController extends Controller
         );
 
         return redirect()
-            ->route('admin.approval-workflows.index')
+            ->route('admin.approval-workflows.index', [
+                'site' => $site->site_code,
+            ])
             ->with('success', 'Workflow duplicated successfully.');
     }
 
@@ -218,6 +233,7 @@ class ApprovalWorkflowController extends Controller
      * Set a workflow as the active workflow for its model type.
      */
     public function setActive(
+        Site $site,
         ApprovalWorkflow $approvalWorkflow,
     ): RedirectResponse {
         Gate::authorize('setActive', $approvalWorkflow);
@@ -225,7 +241,9 @@ class ApprovalWorkflowController extends Controller
         $this->workflowService->setActiveWorkflow($approvalWorkflow);
 
         return redirect()
-            ->route('admin.approval-workflows.index')
+            ->route('admin.approval-workflows.index', [
+                'site' => $site->site_code,
+            ])
             ->with('success', 'Workflow activated successfully.');
     }
 
@@ -233,6 +251,7 @@ class ApprovalWorkflowController extends Controller
      * Deactivate the workflow.
      */
     public function deactivate(
+        Site $site,
         ApprovalWorkflow $approvalWorkflow,
     ): RedirectResponse {
         Gate::authorize('activate', $approvalWorkflow);
@@ -240,7 +259,9 @@ class ApprovalWorkflowController extends Controller
         $this->workflowService->deactivateWorkflow($approvalWorkflow);
 
         return redirect()
-            ->route('admin.approval-workflows.index')
+            ->route('admin.approval-workflows.index', [
+                'site' => $site->site_code,
+            ])
             ->with('success', 'Workflow deactivated successfully.');
     }
 
