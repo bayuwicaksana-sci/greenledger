@@ -93,7 +93,7 @@ export function SiteSwitcher() {
                                 <Plus className="size-4" />
                             </div>
                             <div className="font-medium text-muted-foreground">
-                                Add team
+                                Add Research Station
                             </div>
                         </DropdownMenuItem>
                     </DropdownMenuContent>

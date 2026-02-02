@@ -6,6 +6,7 @@ use App\Models\ApprovalWorkflow;
 use App\Models\Site;
 use App\Services\Approval\ApprovalWorkflowService;
 use App\Services\Approval\ModelDiscoveryService;
+use App\Services\Approval\ModelFieldDiscoveryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -19,12 +20,13 @@ class ApprovalWorkflowController extends Controller
     public function __construct(
         protected ApprovalWorkflowService $workflowService,
         protected ModelDiscoveryService $modelDiscoveryService,
+        protected ModelFieldDiscoveryService $fieldDiscoveryService,
     ) {}
 
     /**
      * Display a listing of approval workflows.
      */
-    public function index(Request $request, Site $site): Response
+    public function index(Request $request): Response
     {
         Gate::authorize('viewAny', ApprovalWorkflow::class);
 
@@ -45,8 +47,6 @@ class ApprovalWorkflowController extends Controller
 
         $workflows = $query->latest()->paginate(15)->withQueryString();
 
-        Inertia::share('site_code', $site->site_code);
-
         return Inertia::render('admin/approval-workflows/index', [
             'workflows' => $workflows,
             'filters' => $request->only(['search', 'model_type', 'is_active']),
@@ -57,14 +57,22 @@ class ApprovalWorkflowController extends Controller
     /**
      * Show the form for creating a new workflow.
      */
-    public function create(Site $site): Response
+    public function create(): Response
     {
         Gate::authorize('create', ApprovalWorkflow::class);
 
-        Inertia::share('site_code', $site->site_code);
+        $availableModels = $this->getAvailableModelTypes();
+
+        // Discover fields for all models
+        $modelFieldsMap = [];
+        foreach ($availableModels as $modelClass => $displayName) {
+            $result = $this->fieldDiscoveryService->discoverFields($modelClass);
+            $modelFieldsMap[$modelClass] = $result['fields'];
+        }
 
         return Inertia::render('admin/approval-workflows/create', [
-            'modelTypes' => $this->getAvailableModelTypes(),
+            'modelTypes' => $availableModels,
+            'modelFieldsMap' => $modelFieldsMap,
             'users' => \App\Models\User::select('id', 'name', 'email')->get(),
             'roles' => Role::select('id', 'name')->get(),
             'permissions' => Permission::select('id', 'name')
@@ -76,7 +84,7 @@ class ApprovalWorkflowController extends Controller
     /**
      * Store a newly created workflow.
      */
-    public function store(Request $request, Site $site): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         Gate::authorize('create', ApprovalWorkflow::class);
 
@@ -105,31 +113,28 @@ class ApprovalWorkflowController extends Controller
             setActive: $validated['set_active'] ?? false,
         );
 
-        Inertia::share('site_code', $site->site_code);
-
         return redirect()
-            ->route('admin.approval-workflows.index', [
-                'site' => $site->site_code,
-            ])
+            ->route('admin.approval-workflows.index')
             ->with('success', 'Approval workflow created successfully.');
     }
 
     /**
      * Show the form for editing the specified workflow.
      */
-    public function edit(
-        Site $site,
-        ApprovalWorkflow $approvalWorkflow,
-    ): Response {
+    public function edit(ApprovalWorkflow $approvalWorkflow): Response
+    {
         Gate::authorize('update', $approvalWorkflow);
 
         $approvalWorkflow->load(['steps']);
 
-        Inertia::share('site_code', $site->site_code);
+        // Discover fields for this workflow's model type
+        $result = $this->fieldDiscoveryService->discoverFields($approvalWorkflow->model_type);
+        $modelFields = $result['fields'];
 
         return Inertia::render('admin/approval-workflows/edit', [
             'workflow' => $approvalWorkflow,
             'modelTypes' => $this->getAvailableModelTypes(),
+            'modelFields' => $modelFields,
             'users' => \App\Models\User::select('id', 'name', 'email')->get(),
             'roles' => Role::select('id', 'name')->get(),
             'permissions' => Permission::select('id', 'name')
@@ -143,7 +148,6 @@ class ApprovalWorkflowController extends Controller
      */
     public function update(
         Request $request,
-        Site $site,
         ApprovalWorkflow $approvalWorkflow,
     ): RedirectResponse {
         Gate::authorize('update', $approvalWorkflow);
@@ -179,9 +183,7 @@ class ApprovalWorkflowController extends Controller
         }
 
         return redirect()
-            ->route('admin.approval-workflows.index', [
-                'site' => $site->site_code,
-            ])
+            ->route('admin.approval-workflows.index')
             ->with('success', 'Approval workflow updated successfully.');
     }
 
@@ -189,7 +191,6 @@ class ApprovalWorkflowController extends Controller
      * Remove the specified workflow.
      */
     public function destroy(
-        Site $site,
         ApprovalWorkflow $approvalWorkflow,
     ): RedirectResponse {
         Gate::authorize('delete', $approvalWorkflow);
@@ -197,9 +198,7 @@ class ApprovalWorkflowController extends Controller
         $approvalWorkflow->delete();
 
         return redirect()
-            ->route('admin.approval-workflows.index', [
-                'site' => $site->site_code,
-            ])
+            ->route('admin.approval-workflows.index')
             ->with('success', 'Approval workflow deleted successfully.');
     }
 
@@ -208,7 +207,6 @@ class ApprovalWorkflowController extends Controller
      */
     public function duplicate(
         Request $request,
-        Site $site,
         ApprovalWorkflow $approvalWorkflow,
     ): RedirectResponse {
         Gate::authorize('duplicate', $approvalWorkflow);
@@ -223,9 +221,7 @@ class ApprovalWorkflowController extends Controller
         );
 
         return redirect()
-            ->route('admin.approval-workflows.index', [
-                'site' => $site->site_code,
-            ])
+            ->route('admin.approval-workflows.index')
             ->with('success', 'Workflow duplicated successfully.');
     }
 
@@ -233,7 +229,6 @@ class ApprovalWorkflowController extends Controller
      * Set a workflow as the active workflow for its model type.
      */
     public function setActive(
-        Site $site,
         ApprovalWorkflow $approvalWorkflow,
     ): RedirectResponse {
         Gate::authorize('setActive', $approvalWorkflow);
@@ -241,9 +236,7 @@ class ApprovalWorkflowController extends Controller
         $this->workflowService->setActiveWorkflow($approvalWorkflow);
 
         return redirect()
-            ->route('admin.approval-workflows.index', [
-                'site' => $site->site_code,
-            ])
+            ->route('admin.approval-workflows.index')
             ->with('success', 'Workflow activated successfully.');
     }
 
@@ -251,7 +244,6 @@ class ApprovalWorkflowController extends Controller
      * Deactivate the workflow.
      */
     public function deactivate(
-        Site $site,
         ApprovalWorkflow $approvalWorkflow,
     ): RedirectResponse {
         Gate::authorize('activate', $approvalWorkflow);
@@ -259,9 +251,7 @@ class ApprovalWorkflowController extends Controller
         $this->workflowService->deactivateWorkflow($approvalWorkflow);
 
         return redirect()
-            ->route('admin.approval-workflows.index', [
-                'site' => $site->site_code,
-            ])
+            ->route('admin.approval-workflows.index')
             ->with('success', 'Workflow deactivated successfully.');
     }
 

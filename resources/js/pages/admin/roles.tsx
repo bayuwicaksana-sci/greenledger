@@ -8,7 +8,7 @@ import { RolePermissionsDrawer } from '@/components/admin/RolePermissionsDrawer'
 import { RolesTable } from '@/components/admin/RolesTable';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import AppLayout from '@/layouts/app-layout';
+import MainLayout from '@/layouts/main-layout';
 import type { BreadcrumbItem, Role } from '@/types';
 import { Head } from '@inertiajs/react';
 
@@ -123,7 +123,7 @@ export default function RoleConfiguration() {
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <MainLayout breadcrumbs={breadcrumbs}>
             <Head title="Role Configuration" />
 
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
@@ -186,6 +186,6 @@ export default function RoleConfiguration() {
                     onSuccess={handleSuccess}
                 />
             </div>
-        </AppLayout>
+        </MainLayout>
     );
 }

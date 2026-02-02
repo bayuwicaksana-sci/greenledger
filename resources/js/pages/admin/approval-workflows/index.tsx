@@ -50,7 +50,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import AppLayout from '@/layouts/app-layout';
+import MainLayout from '@/layouts/main-layout';
 import type {
     ApprovalWorkflow,
     BreadcrumbItem,
@@ -85,12 +85,11 @@ export default function ApprovalWorkflowsIndex({
     const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
 
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Administration', href: '#' },
         { title: 'Approval Workflows', href: '#' },
     ];
 
     const handleSearch = () => {
-        router.get(index.url(site_code!), { search }, { preserveState: true });
+        router.get(index(), { search }, { preserveState: true });
     };
 
     const handleDelete = (workflow: ApprovalWorkflow) => {
@@ -103,7 +102,6 @@ export default function ApprovalWorkflowsIndex({
             router.delete(
                 destroy.url({
                     approvalWorkflow: selectedWorkflow.id,
-                    site: site_code!,
                 }),
                 {
                     preserveScroll: true,
@@ -122,7 +120,6 @@ export default function ApprovalWorkflowsIndex({
             router.post(
                 duplicate.url({
                     approvalWorkflow: selectedWorkflow.id,
-                    site: site_code!,
                 }),
                 { name: newName },
                 { preserveScroll: true },
@@ -140,7 +137,6 @@ export default function ApprovalWorkflowsIndex({
             router.post(
                 setActive.url({
                     approvalWorkflow: selectedWorkflow.id,
-                    site: site_code!,
                 }),
                 {},
                 { preserveScroll: true },
@@ -158,7 +154,6 @@ export default function ApprovalWorkflowsIndex({
             router.post(
                 deactivate.url({
                     approvalWorkflow: selectedWorkflow.id,
-                    site: site_code!,
                 }),
                 {},
                 { preserveScroll: true },
@@ -243,7 +238,6 @@ export default function ApprovalWorkflowsIndex({
                                         <Link
                                             href={edit.url({
                                                 approvalWorkflow: workflow.id,
-                                                site: site_code!,
                                             })}
                                         >
                                             <Edit className="mr-2 h-4 w-4" />
@@ -310,7 +304,7 @@ export default function ApprovalWorkflowsIndex({
     });
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <MainLayout breadcrumbs={breadcrumbs}>
             <Head title="Approval Workflows" />
 
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
@@ -324,7 +318,7 @@ export default function ApprovalWorkflowsIndex({
                             Configure approval workflows for different models
                         </p>
                     </div>
-                    <Link href={create.url(site_code!)}>
+                    <Link href={create()}>
                         <Button>
                             <Plus className="mr-2 h-4 w-4" />
                             Create Workflow
@@ -446,6 +440,6 @@ export default function ApprovalWorkflowsIndex({
                 onConfirm={confirmDeactivate}
                 confirmText="Deactivate"
             />
-        </AppLayout>
+        </MainLayout>
     );
 }

@@ -13,7 +13,7 @@ import { UserDetailsDrawer } from '@/components/admin/users/UserDetailsDrawer';
 import { UsersTable } from '@/components/admin/users/UsersTable';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import AppLayout from '@/layouts/app-layout';
+import MainLayout from '@/layouts/main-layout';
 import type { BreadcrumbItem } from '@/types';
 import type { User } from '@/types/users';
 import { Head } from '@inertiajs/react';
@@ -37,10 +37,6 @@ export default function UserManagement() {
     const { toast } = useToast();
 
     const breadcrumbs: BreadcrumbItem[] = [
-        {
-            title: 'Administration',
-            href: '#',
-        },
         {
             title: 'User Management',
             href: '#',
@@ -103,7 +99,7 @@ export default function UserManagement() {
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <MainLayout breadcrumbs={breadcrumbs}>
             <Head title="User Management" />
 
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
@@ -215,6 +211,6 @@ export default function UserManagement() {
                     onSuccess={handleSuccess}
                 />
             </div>
-        </AppLayout>
+        </MainLayout>
     );
 }

@@ -31,7 +31,8 @@ export function useCurrentUrl(): UseCurrentUrlReturn {
         const urlString = toUrl(urlToCheck);
 
         if (!urlString.startsWith('http')) {
-            return urlString === urlToCompare;
+            // return urlString === urlToCompare;
+            return urlToCompare.includes(urlString);
         }
 
         try {

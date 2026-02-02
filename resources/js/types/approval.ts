@@ -11,9 +11,8 @@ export interface ApprovalWorkflow {
     configuration: Record<string, any> | null;
     created_at: string;
     updated_at: string;
-    versions_count?: number;
+    steps_count?: number;
     instances_count?: number;
-    active_version?: ApprovalWorkflowVersion;
     versions?: ApprovalWorkflowVersion[];
 }
 
@@ -107,6 +106,15 @@ export type ApprovalStepStatus =
     | 'skipped';
 
 export type ApprovalActionType = 'approve' | 'reject' | 'request_changes';
+
+// Model Field Discovery Types
+export interface ModelField {
+    value: string;
+    label: string;
+    type: 'string' | 'number' | 'date' | 'boolean';
+    nullable?: boolean;
+    relationship?: boolean;
+}
 
 export interface PaginationMeta {
     current_page: number;

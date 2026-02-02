@@ -20,7 +20,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import AppLayout from '@/layouts/app-layout';
+import MainLayout from '@/layouts/main-layout';
 import type {
     BreadcrumbItem,
     Permission,
@@ -28,9 +28,11 @@ import type {
     SharedData,
     User,
 } from '@/types';
+import type { ModelField } from '@/types/approval';
 
 interface Props {
     modelTypes: Record<string, string>; // class => display name
+    modelFieldsMap: Record<string, ModelField[]>;
     users: User[];
     roles: Role[];
     permissions: Permission[];
@@ -38,6 +40,7 @@ interface Props {
 
 export default function CreateApprovalWorkflow({
     modelTypes,
+    modelFieldsMap,
     users,
     roles,
     permissions,
@@ -55,11 +58,16 @@ export default function CreateApprovalWorkflow({
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Get fields for selected model
+    const selectedModelFields = formData.model_type
+        ? modelFieldsMap[formData.model_type] || []
+        : [];
+
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Administration', href: '#' },
         {
             title: 'Approval Workflows',
-            href: index.url(site_code!),
+            href: index().url,
         },
         { title: 'Create Workflow', href: '#' },
     ];
@@ -115,7 +123,7 @@ export default function CreateApprovalWorkflow({
         }));
 
         router.post(
-            store.url(site_code!),
+            store(),
             {
                 ...formData,
                 steps: stepsData,
@@ -133,7 +141,7 @@ export default function CreateApprovalWorkflow({
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <MainLayout breadcrumbs={breadcrumbs}>
             <Head title="Create Approval Workflow" />
 
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
@@ -287,6 +295,7 @@ export default function CreateApprovalWorkflow({
                             users={users}
                             roles={roles}
                             permissions={permissions}
+                            availableFields={selectedModelFields}
                         />
 
                         {errors.steps && (
@@ -324,6 +333,6 @@ export default function CreateApprovalWorkflow({
                     </div>
                 </form>
             </div>
-        </AppLayout>
+        </MainLayout>
     );
 }

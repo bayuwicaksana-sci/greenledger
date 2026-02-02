@@ -7,9 +7,20 @@ import {
     SidebarHeader,
 } from '@/components/ui/sidebar';
 import { mapNavigationIcons } from '@/lib/navigation-icons';
+import { mainDashboard } from '@/routes';
 import { SharedData } from '@/types';
 import { usePage } from '@inertiajs/react';
+import { ArrowLeftCircle } from 'lucide-react';
+import { NavFooter } from './nav-footer';
 import { SiteSwitcher } from './site-switcher';
+
+const footerNavItems = [
+    {
+        title: 'Back to Main Dashboard',
+        icon: ArrowLeftCircle,
+        href: mainDashboard(),
+    },
+];
 
 export function AppSidebar() {
     const { navigation, site_code } = usePage<SharedData>().props;
@@ -38,7 +49,7 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
-                {/* <NavFooter items={footerNavItems} className="mt-auto" /> */}
+                <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

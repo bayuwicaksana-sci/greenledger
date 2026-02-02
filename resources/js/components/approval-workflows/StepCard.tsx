@@ -27,6 +27,9 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import type { Permission, Role, User as UserType } from '@/types';
+import type { ModelField } from '@/types/approval';
+
+import { RuleBuilder, type ConditionalRules } from './RuleBuilder';
 
 export interface StepData {
     id: string;
@@ -38,7 +41,7 @@ export interface StepData {
     approver_type: 'user' | 'role' | 'permission';
     approver_identifiers: number[];
     required_approvals_count?: number;
-    conditional_rules?: Record<string, unknown>;
+    conditional_rules?: ConditionalRules;
 }
 
 interface StepCardContentProps {
@@ -49,6 +52,7 @@ interface StepCardContentProps {
     permissions: Permission[];
     onUpdate: (id: string, updates: Partial<StepData>) => void;
     onDelete: (id: string) => void;
+    availableFields?: ModelField[];
     // Sortable props (optional - only provided when used in sortable context)
     dragHandleProps?: {
         ref?: React.Ref<HTMLButtonElement>;
@@ -77,6 +81,7 @@ export const StepCardContent = forwardRef<HTMLDivElement, StepCardContentProps>(
             permissions,
             onUpdate,
             onDelete,
+            availableFields,
             dragHandleProps,
             style,
             defaultExpanded = true,
@@ -405,6 +410,17 @@ export const StepCardContent = forwardRef<HTMLDivElement, StepCardContentProps>(
                                 </div>
                             </div>
                         )}
+
+                        {/* Conditional Rules */}
+                        <RuleBuilder
+                            value={step.conditional_rules ?? null}
+                            onChange={(rules) =>
+                                onUpdate(step.id, {
+                                    conditional_rules: rules ?? undefined,
+                                })
+                            }
+                            availableFields={availableFields}
+                        />
                     </CardContent>
                 )}
             </Card>
@@ -420,6 +436,7 @@ interface StepCardProps {
     permissions: Permission[];
     onUpdate: (id: string, updates: Partial<StepData>) => void;
     onDelete: (id: string) => void;
+    availableFields?: ModelField[];
 }
 
 /**
@@ -434,6 +451,7 @@ export function StepCard({
     permissions,
     onUpdate,
     onDelete,
+    availableFields,
 }: StepCardProps) {
     const {
         attributes,
@@ -461,6 +479,7 @@ export function StepCard({
             permissions={permissions}
             onUpdate={onUpdate}
             onDelete={onDelete}
+            availableFields={availableFields}
             style={style}
             dragHandleProps={{
                 ref: setActivatorNodeRef,

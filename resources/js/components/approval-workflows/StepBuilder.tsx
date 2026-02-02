@@ -20,6 +20,7 @@ import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import type { Permission, Role, User } from '@/types';
+import type { ModelField } from '@/types/approval';
 
 import { StepCard, StepCardContent, type StepData } from './StepCard';
 
@@ -29,6 +30,7 @@ interface StepBuilderProps {
     users: User[];
     roles: Role[];
     permissions: Permission[];
+    availableFields?: ModelField[];
 }
 
 export function StepBuilder({
@@ -37,6 +39,7 @@ export function StepBuilder({
     users,
     roles,
     permissions,
+    availableFields,
 }: StepBuilderProps) {
     const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -137,6 +140,7 @@ export function StepBuilder({
                                     permissions={permissions}
                                     onUpdate={handleUpdateStep}
                                     onDelete={handleDeleteStep}
+                                    availableFields={availableFields}
                                 />
                             ))
                         )}
@@ -157,6 +161,7 @@ export function StepBuilder({
                                 onUpdate={() => {}}
                                 onDelete={() => {}}
                                 forceCollapsed={true}
+                                availableFields={availableFields}
                             />
                         </div>
                     ) : null}

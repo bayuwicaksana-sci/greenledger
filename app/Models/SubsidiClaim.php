@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Traits\RequiresApproval;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SubsidiClaim extends Model
 {
-    use HasFactory;
+    use HasFactory, RequiresApproval;
+
+    const APPROVAL_DISPLAY_NAME = 'Subsidy Claim';
 
     // Status constants
     public const STATUS_DRAFT = 'DRAFT';

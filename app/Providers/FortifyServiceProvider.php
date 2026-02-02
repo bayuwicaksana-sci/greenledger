@@ -21,18 +21,18 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->instance(
-            LoginResponse::class,
-            new class implements LoginResponse
-            {
-                public function toResponse($request)
-                {
-                    $primarySite = $request->user()->primarySite->site_code;
+        // $this->app->instance(
+        //     LoginResponse::class,
+        //     new class implements LoginResponse
+        //     {
+        //         public function toResponse($request)
+        //         {
+        //             $primarySite = $request->user()->primarySite->site_code;
 
-                    return to_route('dashboard', ['site' => $primarySite]);
-                }
-            },
-        );
+        //             return to_route('dashboard', ['site' => $primarySite]);
+        //         }
+        //     },
+        // );
     }
 
     /**
@@ -60,7 +60,7 @@ class FortifyServiceProvider extends ServiceProvider
     private function configureViews(): void
     {
         Fortify::loginView(
-            fn (Request $request) => Inertia::render('auth/login', [
+            fn(Request $request) => Inertia::render('auth/login', [
                 'canResetPassword' => Features::enabled(
                     Features::resetPasswords(),
                 ),
@@ -70,32 +70,32 @@ class FortifyServiceProvider extends ServiceProvider
         );
 
         Fortify::resetPasswordView(
-            fn (Request $request) => Inertia::render('auth/reset-password', [
+            fn(Request $request) => Inertia::render('auth/reset-password', [
                 'email' => $request->email,
                 'token' => $request->route('token'),
             ]),
         );
 
         Fortify::requestPasswordResetLinkView(
-            fn (Request $request) => Inertia::render('auth/forgot-password', [
+            fn(Request $request) => Inertia::render('auth/forgot-password', [
                 'status' => $request->session()->get('status'),
             ]),
         );
 
         Fortify::verifyEmailView(
-            fn (Request $request) => Inertia::render('auth/verify-email', [
+            fn(Request $request) => Inertia::render('auth/verify-email', [
                 'status' => $request->session()->get('status'),
             ]),
         );
 
-        Fortify::registerView(fn () => Inertia::render('auth/register'));
+        Fortify::registerView(fn() => Inertia::render('auth/register'));
 
         Fortify::twoFactorChallengeView(
-            fn () => Inertia::render('auth/two-factor-challenge'),
+            fn() => Inertia::render('auth/two-factor-challenge'),
         );
 
         Fortify::confirmPasswordView(
-            fn () => Inertia::render('auth/confirm-password'),
+            fn() => Inertia::render('auth/confirm-password'),
         );
     }
 
@@ -112,8 +112,8 @@ class FortifyServiceProvider extends ServiceProvider
 
         RateLimiter::for('login', function (Request $request) {
             $throttleKey = Str::transliterate(
-                Str::lower($request->input(Fortify::username())).
-                    '|'.
+                Str::lower($request->input(Fortify::username())) .
+                    '|' .
                     $request->ip(),
             );
 

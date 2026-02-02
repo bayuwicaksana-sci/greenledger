@@ -65,7 +65,7 @@ const iconMap: Record<string, any> = {
 function generateRouteUrl(routeName: string, siteCode: string): string {
     // Map route names to actual URLs
     // Since we're using site-prefixed routes, we need to construct the URL
-    const baseUrl = `/site/${siteCode}`;
+    const baseUrl = `/app/site/${siteCode}`;
 
     const routeMap: Record<string, string> = {
         // Dashboard

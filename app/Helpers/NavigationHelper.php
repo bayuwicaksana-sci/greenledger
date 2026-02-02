@@ -16,7 +16,7 @@ class NavigationHelper
     {
         $user = Auth::user();
 
-        if (! $user) {
+        if (!$user) {
             return [];
         }
 
@@ -41,7 +41,7 @@ class NavigationHelper
             }
 
             // Only include group if it has visible items
-            if (! empty($visibleItems)) {
+            if (!empty($visibleItems)) {
                 $filtered[] = [
                     'title' => $group['title'],
                     'items' => $visibleItems,
@@ -80,10 +80,10 @@ class NavigationHelper
             'pending_approvals' => PaymentRequest::query()
                 ->where('status', 'pending')
                 ->when(
-                    ! $user->can('payment-requests.approve.all'),
-                    fn ($q) => $q->whereHas(
+                    !$user->can('payment-requests.approve.all'),
+                    fn($q) => $q->whereHas(
                         'program',
-                        fn ($q2) => $q2->where(
+                        fn($q2) => $q2->where(
                             'site_id',
                             $user->primary_site_id,
                         ),
@@ -95,8 +95,8 @@ class NavigationHelper
                 ->where('status', 'pending')
                 // ->where('deadline', '<', now())
                 ->when(
-                    ! $user->can('settlements.view.all'),
-                    fn ($q) => $q->where('submitted_by', $user->id),
+                    !$user->can('settlements.view.all'),
+                    fn($q) => $q->where('submitted_by', $user->id),
                 )
                 ->count(),
 
@@ -395,41 +395,41 @@ class NavigationHelper
             ],
 
             // Administration
-            [
-                'title' => 'Administration',
-                'items' => [
-                    [
-                        'title' => 'User Management',
-                        'route' => 'admin.users',
-                        'icon' => 'Users',
-                        'permission' => ['users.view.site', 'users.view.all'],
-                    ],
-                    [
-                        'title' => 'Role Configuration',
-                        'route' => 'admin.roles',
-                        'icon' => 'Shield',
-                        'permission' => ['users.assign-roles'],
-                    ],
-                    [
-                        'title' => 'Approval Workflows',
-                        'route' => 'admin.approval-workflows',
-                        'icon' => 'GitBranch',
-                        'permission' => ['approval-workflows.view.all'],
-                    ],
-                    [
-                        'title' => 'Access Logs',
-                        'route' => 'admin.logs',
-                        'icon' => 'FileText',
-                        'permission' => ['users.view-logs'],
-                    ],
-                    [
-                        'title' => 'System Health',
-                        'route' => 'admin.health',
-                        'icon' => 'Activity',
-                        'permission' => ['users.view.all'],
-                    ],
-                ],
-            ],
+            // [
+            //     'title' => 'Administration',
+            //     'items' => [
+            //         [
+            //             'title' => 'User Management',
+            //             'route' => 'admin.users',
+            //             'icon' => 'Users',
+            //             'permission' => ['users.view.site', 'users.view.all'],
+            //         ],
+            //         [
+            //             'title' => 'Role Configuration',
+            //             'route' => 'admin.roles',
+            //             'icon' => 'Shield',
+            //             'permission' => ['users.assign-roles'],
+            //         ],
+            //         [
+            //             'title' => 'Approval Workflows',
+            //             'route' => 'admin.approval-workflows',
+            //             'icon' => 'GitBranch',
+            //             'permission' => ['approval-workflows.view.all'],
+            //         ],
+            //         [
+            //             'title' => 'Access Logs',
+            //             'route' => 'admin.logs',
+            //             'icon' => 'FileText',
+            //             'permission' => ['users.view-logs'],
+            //         ],
+            //         [
+            //             'title' => 'System Health',
+            //             'route' => 'admin.health',
+            //             'icon' => 'Activity',
+            //             'permission' => ['users.view.all'],
+            //         ],
+            //     ],
+            // ],
 
             // Notifications
             [

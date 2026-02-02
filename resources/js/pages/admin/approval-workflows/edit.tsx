@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import AppLayout from '@/layouts/app-layout';
+import MainLayout from '@/layouts/main-layout';
 import type {
     ApprovalWorkflow,
     BreadcrumbItem,
@@ -21,10 +21,12 @@ import type {
     SharedData,
     User,
 } from '@/types';
+import type { ModelField } from '@/types/approval';
 
 interface Props {
     workflow: ApprovalWorkflow;
     modelTypes: Record<string, string>; // class => display name (not used in edit)
+    modelFields: ModelField[];
     users: User[];
     roles: Role[];
     permissions: Permission[];
@@ -33,6 +35,7 @@ interface Props {
 export default function EditApprovalWorkflow({
     workflow,
     modelTypes,
+    modelFields,
     users,
     roles,
     permissions,
@@ -49,10 +52,9 @@ export default function EditApprovalWorkflow({
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Administration', href: '#' },
         {
             title: 'Approval Workflows',
-            href: index.url(site_code!),
+            href: index().url,
         },
         { title: workflow.name, href: '#' },
     ];
@@ -129,7 +131,6 @@ export default function EditApprovalWorkflow({
 
         router.put(
             update.url({
-                site: site_code!,
                 approvalWorkflow: workflow.id,
             }),
             {
@@ -149,7 +150,7 @@ export default function EditApprovalWorkflow({
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <MainLayout breadcrumbs={breadcrumbs}>
             <Head title={`Edit ${workflow.name}`} />
 
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
@@ -251,6 +252,7 @@ export default function EditApprovalWorkflow({
                             users={users}
                             roles={roles}
                             permissions={permissions}
+                            availableFields={modelFields}
                         />
 
                         {errors.steps && (
@@ -288,6 +290,6 @@ export default function EditApprovalWorkflow({
                     </div>
                 </form>
             </div>
-        </AppLayout>
+        </MainLayout>
     );
 }

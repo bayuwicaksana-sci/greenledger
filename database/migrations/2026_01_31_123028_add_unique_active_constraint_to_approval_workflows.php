@@ -12,6 +12,12 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip for SQLite as it doesn't support generated columns with IF()
+        // The unique constraint will be enforced at the application level for SQLite
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         Schema::table('approval_workflows', function (Blueprint $table) {
             // Add a generated column for active model types (MySQL compatible)
             DB::statement(
@@ -28,6 +34,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         Schema::table('approval_workflows', function (Blueprint $table) {
             $table->dropUnique('unique_active_workflow');
             DB::statement(
