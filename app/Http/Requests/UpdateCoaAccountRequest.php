@@ -30,6 +30,7 @@ class UpdateCoaAccountRequest extends FormRequest
             'short_description' => ['nullable', 'string'],
             'is_active' => ['boolean'],
             'parent_account_id' => ['nullable', 'exists:coa_accounts,id'],
+            'initial_budget' => ['nullable', 'numeric', 'min:0'],
         ];
 
         // Lock account_code and account_type if account has transactions

@@ -25,6 +25,7 @@ class CoaAccount extends Model
         'parent_account_id',
         'hierarchy_level',
         'is_active',
+        'initial_budget',
         'first_transaction_at',
         'created_by',
         'updated_by',

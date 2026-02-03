@@ -1,0 +1,241 @@
+import { Button } from '@/components/ui/button';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import config from '@/routes/config';
+import { Site } from '@/types';
+import { Link, router } from '@inertiajs/react';
+import { ChevronDown, ChevronRight, Edit, Trash2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
+
+interface CoaAccount {
+    id: number;
+    site_id: number;
+    account_code: string;
+    account_name: string;
+    account_type: 'REVENUE' | 'EXPENSE';
+    is_active: boolean;
+    parent_account_id: number | null;
+    initial_budget: number;
+    actual_amount: number;
+    site?: Site;
+}
+
+interface CoaTreeViewProps {
+    accounts: CoaAccount[];
+    sites: Site[];
+}
+
+function formatCurrency(value: number): string {
+    if (value === 0) {
+        return '—';
+    }
+    return value.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
+}
+
+function TreeRow({
+    account,
+    childrenMap,
+    expandedIds,
+    onToggle,
+    depth,
+}: {
+    account: CoaAccount;
+    childrenMap: Map<number | null, CoaAccount[]>;
+    expandedIds: Set<number>;
+    onToggle: (id: number) => void;
+    depth: number;
+}) {
+    const children = childrenMap.get(account.id) || [];
+    const hasChildren = children.length > 0;
+    const isExpanded = expandedIds.has(account.id);
+
+    return (
+        <>
+            <TableRow>
+                <TableCell>
+                    <div
+                        className="flex items-center"
+                        style={{ paddingLeft: `${depth * 20}px` }}
+                    >
+                        {hasChildren ? (
+                            <button
+                                type="button"
+                                onClick={() => onToggle(account.id)}
+                                className="mr-1 text-muted-foreground hover:text-foreground"
+                            >
+                                {isExpanded ? (
+                                    <ChevronDown className="h-4 w-4" />
+                                ) : (
+                                    <ChevronRight className="h-4 w-4" />
+                                )}
+                            </button>
+                        ) : (
+                            <span className="mr-1 w-4" />
+                        )}
+                        <span className="font-medium">
+                            {account.account_code}
+                        </span>
+                    </div>
+                </TableCell>
+                <TableCell>{account.account_name}</TableCell>
+                <TableCell>
+                    <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                            account.account_type === 'REVENUE'
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                        }`}
+                    >
+                        {account.account_type}
+                    </span>
+                </TableCell>
+                <TableCell>{account.site?.site_code || '—'}</TableCell>
+                <TableCell>
+                    {account.is_active ? (
+                        <span className="text-green-600">Active</span>
+                    ) : (
+                        <span className="text-gray-500">Inactive</span>
+                    )}
+                </TableCell>
+                <TableCell className="text-right">
+                    {formatCurrency(account.initial_budget)}
+                </TableCell>
+                <TableCell className="text-right">
+                    <span
+                        className={
+                            account.actual_amount === 0
+                                ? ''
+                                : account.account_type === 'EXPENSE'
+                                  ? 'text-red-600'
+                                  : 'text-green-600'
+                        }
+                    >
+                        {formatCurrency(account.actual_amount)}
+                    </span>
+                </TableCell>
+                <TableCell>
+                    <div className="flex justify-end gap-2">
+                        <Link href={config.coa.edit(account.id)}>
+                            <Button variant="ghost" size="icon">
+                                <Edit className="h-4 w-4" />
+                            </Button>
+                        </Link>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                                if (
+                                    confirm(
+                                        'Are you sure you want to delete this account?',
+                                    )
+                                ) {
+                                    router.delete(
+                                        config.coa.destroy(account.id),
+                                    );
+                                }
+                            }}
+                        >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                    </div>
+                </TableCell>
+            </TableRow>
+            {isExpanded &&
+                children.map((child) => (
+                    <TreeRow
+                        key={child.id}
+                        account={child}
+                        childrenMap={childrenMap}
+                        expandedIds={expandedIds}
+                        onToggle={onToggle}
+                        depth={depth + 1}
+                    />
+                ))}
+        </>
+    );
+}
+
+export function CoaTreeView({ accounts }: CoaTreeViewProps) {
+    const childrenMap = useMemo(() => {
+        const map = new Map<number | null, CoaAccount[]>();
+        for (const account of accounts) {
+            const key = account.parent_account_id;
+            const existing = map.get(key) || [];
+            existing.push(account);
+            map.set(key, existing);
+        }
+        return map;
+    }, [accounts]);
+
+    const rootAccounts = useMemo(
+        () => childrenMap.get(null) || [],
+        [childrenMap],
+    );
+
+    const [expandedIds, setExpandedIds] = useState<Set<number>>(() => {
+        return new Set(rootAccounts.map((a) => a.id));
+    });
+
+    const handleToggle = (id: number) => {
+        setExpandedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
+    };
+
+    return (
+        <div className="rounded-md border">
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Code</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Site</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Budget</TableHead>
+                        <TableHead className="text-right">Actual</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {rootAccounts.length > 0 ? (
+                        rootAccounts.map((account) => (
+                            <TreeRow
+                                key={account.id}
+                                account={account}
+                                childrenMap={childrenMap}
+                                expandedIds={expandedIds}
+                                onToggle={handleToggle}
+                                depth={0}
+                            />
+                        ))
+                    ) : (
+                        <TableRow>
+                            <TableCell
+                                colSpan={8}
+                                className="h-24 text-center"
+                            >
+                                No accounts found.
+                            </TableCell>
+                        </TableRow>
+                    )}
+                </TableBody>
+            </Table>
+        </div>
+    );
+}

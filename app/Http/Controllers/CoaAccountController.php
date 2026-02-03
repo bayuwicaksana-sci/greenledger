@@ -17,33 +17,23 @@ class CoaAccountController extends Controller
      */
     public function index(Request $request)
     {
-        $query = CoaAccount::query()->with('site');
-
-        if ($request->has('site_id')) {
-            $query->where('site_id', $request->input('site_id'));
-        }
-
-        // Standard COA sorting: code is usually hierarchical
-        $query->orderBy('account_code', 'asc');
-
-        if ($request->has('search')) {
-            $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('account_code', 'like', "%{$search}%")->orWhere(
-                    'account_name',
-                    'like',
-                    "%{$search}%",
-                );
-            });
-        }
-
-        $accounts = $query->paginate(10)->withQueryString();
-        $sites = \App\Models\Site::all();
+        $accounts = CoaAccount::query()
+            ->with('site')
+            ->select('coa_accounts.*')
+            ->selectRaw('CASE
+                WHEN coa_accounts.account_type = ? THEN
+                    COALESCE((SELECT SUM(split_amount) FROM payment_request_splits WHERE payment_request_splits.coa_account_id = coa_accounts.id), 0)
+                WHEN coa_accounts.account_type = ? THEN
+                    COALESCE((SELECT SUM(total_revenue) FROM revenue_harvest WHERE revenue_harvest.coa_account_id = coa_accounts.id), 0)
+                    + COALESCE((SELECT SUM(contract_value) FROM revenue_testing_services WHERE revenue_testing_services.coa_account_id = coa_accounts.id), 0)
+                ELSE 0
+            END AS actual_amount', ['EXPENSE', 'REVENUE'])
+            ->orderBy('account_code', 'asc')
+            ->get();
 
         return Inertia::render('config/coa/Index', [
             'accounts' => $accounts,
-            'filters' => $request->only(['search', 'site_id']),
-            'sites' => $sites,
+            'sites' => \App\Models\Site::all(),
         ]);
     }
 
@@ -89,7 +79,7 @@ class CoaAccountController extends Controller
         CoaAccount::create($data);
 
         return redirect()
-            ->back()
+            ->route('config.coa.index')
             ->with('success', 'COA Account created successfully.');
     }
 
@@ -218,6 +208,7 @@ class CoaAccountController extends Controller
                 'short_description',
                 'parent_account_id',
                 'is_active',
+                'initial_budget',
                 'first_transaction_at',
             ]),
             'sites' => \App\Models\Site::all(),

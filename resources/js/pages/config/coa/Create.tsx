@@ -64,6 +64,7 @@ interface AccountFormData {
     parent_account_id: string;
     parent_temp_id: string;
     is_active: boolean;
+    initial_budget: string;
 }
 
 // Parse the trailing number from a code like "klaten-expense-003" → 3
@@ -107,6 +108,7 @@ export default function Create({ sites, parents, existingCodes }: CreateProps) {
             parent_account_id: '',
             parent_temp_id: '',
             is_active: true,
+            initial_budget: '0',
         };
     }
 
@@ -185,12 +187,9 @@ export default function Create({ sites, parents, existingCodes }: CreateProps) {
             updated[index] = { ...updated[index], [field]: value };
 
             // Regenerate code based on the new site/type
-            const siteId =
-                field === 'site_id' ? value : updated[index].site_id;
+            const siteId = field === 'site_id' ? value : updated[index].site_id;
             const accountType =
-                field === 'account_type'
-                    ? value
-                    : updated[index].account_type;
+                field === 'account_type' ? value : updated[index].account_type;
 
             if (siteId) {
                 const site = sites.find((s) => s.id.toString() === siteId);
@@ -201,9 +200,7 @@ export default function Create({ sites, parents, existingCodes }: CreateProps) {
                         .filter(
                             (c) =>
                                 c.site_id.toString() === siteId &&
-                                c.account_code
-                                    .toLowerCase()
-                                    .startsWith(prefix),
+                                c.account_code.toLowerCase().startsWith(prefix),
                         )
                         .reduce(
                             (max, c) =>
@@ -218,9 +215,7 @@ export default function Create({ sites, parents, existingCodes }: CreateProps) {
                         if (idx === index) return max;
                         if (
                             acc.site_id === siteId &&
-                            acc.account_code
-                                .toLowerCase()
-                                .startsWith(prefix)
+                            acc.account_code.toLowerCase().startsWith(prefix)
                         ) {
                             return Math.max(
                                 max,
@@ -231,7 +226,8 @@ export default function Create({ sites, parents, existingCodes }: CreateProps) {
                     }, 0);
 
                     const nextNum = Math.max(dbMax, batchMax) + 1;
-                    updated[index].account_code = `${prefix}${nextNum.toString().padStart(3, '0')}`;
+                    updated[index].account_code =
+                        `${prefix}${nextNum.toString().padStart(3, '0')}`;
                 }
             }
 
@@ -306,9 +302,7 @@ export default function Create({ sites, parents, existingCodes }: CreateProps) {
 
         const existingParents = parents
             .filter(
-                (p) =>
-                    !currentSiteId ||
-                    p.site_id.toString() === currentSiteId,
+                (p) => !currentSiteId || p.site_id.toString() === currentSiteId,
             )
             .map((p) => ({
                 id: p.id.toString(),
@@ -325,8 +319,7 @@ export default function Create({ sites, parents, existingCodes }: CreateProps) {
             }))
             .filter(
                 (_, idx) =>
-                    !currentSiteId ||
-                    accounts[idx].site_id === currentSiteId,
+                    !currentSiteId || accounts[idx].site_id === currentSiteId,
             );
 
         return [...existingParents, ...batchParents];
@@ -365,7 +358,9 @@ export default function Create({ sites, parents, existingCodes }: CreateProps) {
                             <CardHeader className="pb-3">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <CardTitle>Accounts to Create</CardTitle>
+                                        <CardTitle>
+                                            Accounts to Create
+                                        </CardTitle>
                                         <CardDescription>
                                             Create multiple accounts in one
                                             submission. Account codes are
@@ -402,7 +397,9 @@ export default function Create({ sites, parents, existingCodes }: CreateProps) {
                                         </TableHeader>
                                         <TableBody>
                                             {accounts.map((account, index) => (
-                                                <TableRow key={account._temp_id}>
+                                                <TableRow
+                                                    key={account._temp_id}
+                                                >
                                                     <TableCell>
                                                         {index + 1}
                                                     </TableCell>
@@ -410,8 +407,12 @@ export default function Create({ sites, parents, existingCodes }: CreateProps) {
                                                     {/* Site */}
                                                     <TableCell>
                                                         <Select
-                                                            value={account.site_id}
-                                                            onValueChange={(val) =>
+                                                            value={
+                                                                account.site_id
+                                                            }
+                                                            onValueChange={(
+                                                                val,
+                                                            ) =>
                                                                 handleSiteOrTypeChange(
                                                                     index,
                                                                     'site_id',
@@ -423,19 +424,31 @@ export default function Create({ sites, parents, existingCodes }: CreateProps) {
                                                                 <SelectValue placeholder="Site" />
                                                             </SelectTrigger>
                                                             <SelectContent>
-                                                                {sites.map((site) => (
-                                                                    <SelectItem
-                                                                        key={site.id}
-                                                                        value={site.id.toString()}
-                                                                    >
-                                                                        {site.site_name}
-                                                                    </SelectItem>
-                                                                ))}
+                                                                {sites.map(
+                                                                    (site) => (
+                                                                        <SelectItem
+                                                                            key={
+                                                                                site.id
+                                                                            }
+                                                                            value={site.id.toString()}
+                                                                        >
+                                                                            {
+                                                                                site.site_name
+                                                                            }
+                                                                        </SelectItem>
+                                                                    ),
+                                                                )}
                                                             </SelectContent>
                                                         </Select>
-                                                        {errors[`accounts.${index}.site_id`] && (
+                                                        {errors[
+                                                            `accounts.${index}.site_id`
+                                                        ] && (
                                                             <p className="text-xs text-destructive">
-                                                                {errors[`accounts.${index}.site_id`]}
+                                                                {
+                                                                    errors[
+                                                                        `accounts.${index}.site_id`
+                                                                    ]
+                                                                }
                                                             </p>
                                                         )}
                                                     </TableCell>
@@ -443,20 +456,29 @@ export default function Create({ sites, parents, existingCodes }: CreateProps) {
                                                     {/* Code — auto-generated, still editable */}
                                                     <TableCell>
                                                         <Input
-                                                            value={account.account_code}
+                                                            value={
+                                                                account.account_code
+                                                            }
                                                             onChange={(e) =>
                                                                 handleUpdateAccount(
                                                                     index,
                                                                     'account_code',
-                                                                    e.target.value,
+                                                                    e.target
+                                                                        .value,
                                                                 )
                                                             }
                                                             placeholder="Auto"
                                                             className="w-36"
                                                         />
-                                                        {errors[`accounts.${index}.account_code`] && (
+                                                        {errors[
+                                                            `accounts.${index}.account_code`
+                                                        ] && (
                                                             <p className="text-xs text-destructive">
-                                                                {errors[`accounts.${index}.account_code`]}
+                                                                {
+                                                                    errors[
+                                                                        `accounts.${index}.account_code`
+                                                                    ]
+                                                                }
                                                             </p>
                                                         )}
                                                     </TableCell>
@@ -464,20 +486,29 @@ export default function Create({ sites, parents, existingCodes }: CreateProps) {
                                                     {/* Name */}
                                                     <TableCell>
                                                         <Input
-                                                            value={account.account_name}
+                                                            value={
+                                                                account.account_name
+                                                            }
                                                             onChange={(e) =>
                                                                 handleUpdateAccount(
                                                                     index,
                                                                     'account_name',
-                                                                    e.target.value,
+                                                                    e.target
+                                                                        .value,
                                                                 )
                                                             }
                                                             placeholder="Name"
                                                             className="w-48"
                                                         />
-                                                        {errors[`accounts.${index}.account_name`] && (
+                                                        {errors[
+                                                            `accounts.${index}.account_name`
+                                                        ] && (
                                                             <p className="text-xs text-destructive">
-                                                                {errors[`accounts.${index}.account_name`]}
+                                                                {
+                                                                    errors[
+                                                                        `accounts.${index}.account_name`
+                                                                    ]
+                                                                }
                                                             </p>
                                                         )}
                                                     </TableCell>
@@ -485,8 +516,12 @@ export default function Create({ sites, parents, existingCodes }: CreateProps) {
                                                     {/* Type */}
                                                     <TableCell>
                                                         <Select
-                                                            value={account.account_type}
-                                                            onValueChange={(val) =>
+                                                            value={
+                                                                account.account_type
+                                                            }
+                                                            onValueChange={(
+                                                                val,
+                                                            ) =>
                                                                 handleSiteOrTypeChange(
                                                                     index,
                                                                     'account_type',
@@ -516,8 +551,13 @@ export default function Create({ sites, parents, existingCodes }: CreateProps) {
                                                                 account.parent_account_id ||
                                                                 'none'
                                                             }
-                                                            onValueChange={(val) =>
-                                                                handleParentChange(index, val)
+                                                            onValueChange={(
+                                                                val,
+                                                            ) =>
+                                                                handleParentChange(
+                                                                    index,
+                                                                    val,
+                                                                )
                                                             }
                                                         >
                                                             <SelectTrigger className="w-52">
@@ -527,14 +567,26 @@ export default function Create({ sites, parents, existingCodes }: CreateProps) {
                                                                 <SelectItem value="none">
                                                                     None
                                                                 </SelectItem>
-                                                                {getAvailableParents(index).map((parent) => (
-                                                                    <SelectItem
-                                                                        key={parent.id}
-                                                                        value={parent.id}
-                                                                    >
-                                                                        {parent.label}
-                                                                    </SelectItem>
-                                                                ))}
+                                                                {getAvailableParents(
+                                                                    index,
+                                                                ).map(
+                                                                    (
+                                                                        parent,
+                                                                    ) => (
+                                                                        <SelectItem
+                                                                            key={
+                                                                                parent.id
+                                                                            }
+                                                                            value={
+                                                                                parent.id
+                                                                            }
+                                                                        >
+                                                                            {
+                                                                                parent.label
+                                                                            }
+                                                                        </SelectItem>
+                                                                    ),
+                                                                )}
                                                             </SelectContent>
                                                         </Select>
                                                     </TableCell>
@@ -542,12 +594,15 @@ export default function Create({ sites, parents, existingCodes }: CreateProps) {
                                                     {/* Description */}
                                                     <TableCell>
                                                         <Input
-                                                            value={account.short_description}
+                                                            value={
+                                                                account.short_description
+                                                            }
                                                             onChange={(e) =>
                                                                 handleUpdateAccount(
                                                                     index,
                                                                     'short_description',
-                                                                    e.target.value,
+                                                                    e.target
+                                                                        .value,
                                                                 )
                                                             }
                                                             placeholder="Description"
@@ -558,12 +613,19 @@ export default function Create({ sites, parents, existingCodes }: CreateProps) {
                                                     {/* Active */}
                                                     <TableCell>
                                                         <Select
-                                                            value={account.is_active ? 'true' : 'false'}
-                                                            onValueChange={(val) =>
+                                                            value={
+                                                                account.is_active
+                                                                    ? 'true'
+                                                                    : 'false'
+                                                            }
+                                                            onValueChange={(
+                                                                val,
+                                                            ) =>
                                                                 handleUpdateAccount(
                                                                     index,
                                                                     'is_active',
-                                                                    val === 'true',
+                                                                    val ===
+                                                                        'true',
                                                                 )
                                                             }
                                                         >
@@ -583,13 +645,16 @@ export default function Create({ sites, parents, existingCodes }: CreateProps) {
 
                                                     {/* Remove */}
                                                     <TableCell>
-                                                        {accounts.length > 1 && (
+                                                        {accounts.length >
+                                                            1 && (
                                                             <Button
                                                                 type="button"
                                                                 variant="ghost"
                                                                 size="sm"
                                                                 onClick={() =>
-                                                                    handleRemoveAccount(index)
+                                                                    handleRemoveAccount(
+                                                                        index,
+                                                                    )
                                                                 }
                                                             >
                                                                 <Trash2 className="h-4 w-4" />
@@ -667,7 +732,10 @@ export default function Create({ sites, parents, existingCodes }: CreateProps) {
                                             </Label>
                                             <Textarea
                                                 id="short_description"
-                                                value={accounts[0].short_description}
+                                                value={
+                                                    accounts[0]
+                                                        .short_description
+                                                }
                                                 onChange={(e) =>
                                                     handleUpdateAccount(
                                                         0,
@@ -683,12 +751,39 @@ export default function Create({ sites, parents, existingCodes }: CreateProps) {
                                                 </p>
                                             )}
                                         </div>
+
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="initial_budget">
+                                                Initial Budget
+                                            </Label>
+                                            <Input
+                                                id="initial_budget"
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                value={
+                                                    accounts[0].initial_budget
+                                                }
+                                                onChange={(e) =>
+                                                    handleUpdateAccount(
+                                                        0,
+                                                        'initial_budget',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                            />
+                                            {errors.initial_budget && (
+                                                <p className="text-sm text-destructive">
+                                                    {errors.initial_budget}
+                                                </p>
+                                            )}
+                                        </div>
                                     </CardContent>
                                 </Card>
                             </div>
 
                             <div className="flex flex-col gap-4">
-                                <Card>
+                                <Card className="h-full">
                                     <CardHeader className="pb-3">
                                         <CardTitle>Classification</CardTitle>
                                         <CardDescription>
@@ -697,11 +792,17 @@ export default function Create({ sites, parents, existingCodes }: CreateProps) {
                                     </CardHeader>
                                     <CardContent className="grid gap-4">
                                         <div className="grid gap-2">
-                                            <Label htmlFor="site_id">Site</Label>
+                                            <Label htmlFor="site_id">
+                                                Site
+                                            </Label>
                                             <Select
                                                 value={accounts[0].site_id}
                                                 onValueChange={(val) =>
-                                                    handleSiteOrTypeChange(0, 'site_id', val)
+                                                    handleSiteOrTypeChange(
+                                                        0,
+                                                        'site_id',
+                                                        val,
+                                                    )
                                                 }
                                             >
                                                 <SelectTrigger id="site_id">
@@ -731,13 +832,17 @@ export default function Create({ sites, parents, existingCodes }: CreateProps) {
                                             </Label>
                                             <Select
                                                 value={
-                                                    accounts[0].parent_account_id || 'none'
+                                                    accounts[0]
+                                                        .parent_account_id ||
+                                                    'none'
                                                 }
                                                 onValueChange={(val) =>
                                                     handleUpdateAccount(
                                                         0,
                                                         'parent_account_id',
-                                                        val === 'none' ? '' : val,
+                                                        val === 'none'
+                                                            ? ''
+                                                            : val,
                                                     )
                                                 }
                                             >
@@ -751,17 +856,24 @@ export default function Create({ sites, parents, existingCodes }: CreateProps) {
                                                     {parents
                                                         .filter(
                                                             (p) =>
-                                                                !accounts[0].site_id ||
+                                                                !accounts[0]
+                                                                    .site_id ||
                                                                 p.site_id.toString() ===
-                                                                    accounts[0].site_id,
+                                                                    accounts[0]
+                                                                        .site_id,
                                                         )
                                                         .map((parent) => (
                                                             <SelectItem
                                                                 key={parent.id}
                                                                 value={parent.id.toString()}
                                                             >
-                                                                {parent.account_code} -{' '}
-                                                                {parent.account_name}
+                                                                {
+                                                                    parent.account_code
+                                                                }{' '}
+                                                                -{' '}
+                                                                {
+                                                                    parent.account_name
+                                                                }
                                                             </SelectItem>
                                                         ))}
                                                 </SelectContent>
@@ -780,7 +892,11 @@ export default function Create({ sites, parents, existingCodes }: CreateProps) {
                                             <Select
                                                 value={accounts[0].account_type}
                                                 onValueChange={(val) =>
-                                                    handleSiteOrTypeChange(0, 'account_type', val)
+                                                    handleSiteOrTypeChange(
+                                                        0,
+                                                        'account_type',
+                                                        val,
+                                                    )
                                                 }
                                             >
                                                 <SelectTrigger id="account_type">

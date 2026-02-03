@@ -28,6 +28,7 @@ class CoaAccountFactory extends Factory
             'hierarchy_level' => 1,
             'short_description' => $this->faker->sentence(),
             'is_active' => true,
+            'initial_budget' => $this->faker->randomFloat(2, 0, 500000),
         ];
     }
 }

@@ -28,7 +28,7 @@ class StoreCoaAccountRequest extends FormRequest
                 'string',
                 'max:255',
                 // Unique per site
-                'unique:coa_accounts,account_code,NULL,id,site_id,' .
+                'unique:coa_accounts,account_code,NULL,id,site_id,'.
                 $this->input('site_id'),
             ],
             'account_name' => ['required', 'string', 'max:255'],
@@ -36,6 +36,7 @@ class StoreCoaAccountRequest extends FormRequest
             'short_description' => ['nullable', 'string'],
             'parent_account_id' => ['nullable', 'exists:coa_accounts,id'],
             'is_active' => ['boolean'],
+            'initial_budget' => ['nullable', 'numeric', 'min:0'],
         ];
     }
 }

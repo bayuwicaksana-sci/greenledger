@@ -40,6 +40,7 @@ interface CoaAccount {
     short_description?: string;
     parent_account_id?: number | null;
     is_active: boolean;
+    initial_budget: number;
     first_transaction_at?: string | null;
 }
 
@@ -73,6 +74,7 @@ export default function Edit({ account, sites, parents }: EditProps) {
             ? account.parent_account_id.toString()
             : '',
         is_active: account.is_active,
+        initial_budget: account.initial_budget.toString(),
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -172,6 +174,30 @@ export default function Edit({ account, sites, parents }: EditProps) {
                                     {errors.short_description && (
                                         <p className="text-sm text-destructive">
                                             {errors.short_description}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <Label htmlFor="initial_budget">
+                                        Initial Budget
+                                    </Label>
+                                    <Input
+                                        id="initial_budget"
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value={data.initial_budget}
+                                        onChange={(e) =>
+                                            setData(
+                                                'initial_budget',
+                                                e.target.value,
+                                            )
+                                        }
+                                    />
+                                    {errors.initial_budget && (
+                                        <p className="text-sm text-destructive">
+                                            {errors.initial_budget}
                                         </p>
                                     )}
                                 </div>

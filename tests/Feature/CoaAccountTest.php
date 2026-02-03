@@ -2,7 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Activity;
 use App\Models\CoaAccount;
+use App\Models\PaymentRequest;
+use App\Models\PaymentRequestSplit;
+use App\Models\Program;
 use App\Models\Site;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -699,5 +703,134 @@ class CoaAccountTest extends TestCase
 
         $response->assertStatus(422);
         $response->assertJsonPath('success', false);
+    }
+
+    // --- Phase 4 Tests ---
+
+    public function test_store_redirects_to_index()
+    {
+        $user = User::factory()->create();
+        $user->givePermissionTo('coa.view.all');
+
+        $site = Site::factory()->create();
+
+        $response = $this->actingAs($user)->post(route('config.coa.store'), [
+            'site_id' => $site->id,
+            'account_code' => 'REDIR-001',
+            'account_name' => 'Redirect Test',
+            'account_type' => 'EXPENSE',
+            'is_active' => true,
+        ]);
+
+        $response->assertRedirect(route('config.coa.index'));
+    }
+
+    public function test_initial_budget_persists_on_store()
+    {
+        $user = User::factory()->create();
+        $user->givePermissionTo('coa.view.all');
+
+        $site = Site::factory()->create();
+
+        $this->actingAs($user)->post(route('config.coa.store'), [
+            'site_id' => $site->id,
+            'account_code' => 'BUD-001',
+            'account_name' => 'Budget Store Test',
+            'account_type' => 'EXPENSE',
+            'is_active' => true,
+            'initial_budget' => 50000,
+        ]);
+
+        $this->assertDatabaseHas('coa_accounts', [
+            'account_code' => 'BUD-001',
+            'initial_budget' => 50000,
+        ]);
+    }
+
+    public function test_initial_budget_persists_on_update()
+    {
+        $user = User::factory()->create();
+        $user->givePermissionTo('coa.view.all');
+
+        $coa = CoaAccount::factory()->create([
+            'initial_budget' => 10000,
+        ]);
+
+        $this->actingAs($user)->put(
+            route('config.coa.update', $coa),
+            [
+                'account_code' => $coa->account_code,
+                'account_name' => $coa->account_name,
+                'account_type' => $coa->account_type,
+                'initial_budget' => 75000,
+            ],
+        );
+
+        $this->assertDatabaseHas('coa_accounts', [
+            'id' => $coa->id,
+            'initial_budget' => 75000,
+        ]);
+    }
+
+    public function test_actual_amount_returned_in_index_for_expense()
+    {
+        $user = User::factory()->create();
+        $user->givePermissionTo('coa.view.all');
+
+        $site = Site::factory()->create();
+
+        $coa = CoaAccount::factory()->create([
+            'site_id' => $site->id,
+            'account_type' => 'EXPENSE',
+        ]);
+
+        $program = Program::create([
+            'site_id' => $site->id,
+            'program_code' => 'PGM-001',
+            'program_name' => 'Test Program',
+            'fiscal_year' => 2026,
+            'status' => 'ACTIVE',
+            'total_budget' => 100000,
+            'start_date' => '2026-01-01',
+            'end_date' => '2026-12-31',
+        ]);
+
+        $activity = Activity::create([
+            'program_id' => $program->id,
+            'activity_name' => 'Test Activity',
+            'budget_allocation' => 100000,
+            'status' => 'ACTIVE',
+        ]);
+
+        $paymentRequest = PaymentRequest::create([
+            'request_number' => 'PR-001',
+            'site_id' => $site->id,
+            'request_date' => '2026-01-15',
+            'total_amount' => 5000,
+            'purpose' => 'Test',
+            'vendor_name' => 'Vendor',
+            'status' => 'PENDING',
+        ]);
+
+        PaymentRequestSplit::create([
+            'payment_request_id' => $paymentRequest->id,
+            'program_id' => $program->id,
+            'activity_id' => $activity->id,
+            'coa_account_id' => $coa->id,
+            'split_amount' => 3500.00,
+            'split_percentage' => 70,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('config.coa.index'))
+            ->assertOk()
+            ->assertInertia(function ($page) use ($coa) {
+                $data = $page->toArray();
+                $accounts = collect($data['props']['accounts']);
+                $found = $accounts->first(fn ($a) => $a['id'] === $coa->id);
+
+                $this->assertNotNull($found, 'COA account not found in index response');
+                $this->assertEquals(3500.00, (float) $found['actual_amount']);
+            });
     }
 }
