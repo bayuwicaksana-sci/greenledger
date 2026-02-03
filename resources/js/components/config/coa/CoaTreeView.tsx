@@ -23,6 +23,7 @@ interface CoaAccount {
     parent_account_id: number | null;
     initial_budget: number;
     actual_amount: number;
+    balance: number;
     site?: Site;
 }
 
@@ -60,7 +61,11 @@ function TreeRow({
 
     return (
         <>
-            <TableRow>
+            <TableRow
+                className={
+                    account.parent_account_id === null ? 'font-bold' : ''
+                }
+            >
                 <TableCell>
                     <div
                         className="flex items-center"
@@ -121,6 +126,9 @@ function TreeRow({
                     >
                         {formatCurrency(account.actual_amount)}
                     </span>
+                </TableCell>
+                <TableCell className="text-right">
+                    {formatCurrency(account.balance)}
                 </TableCell>
                 <TableCell>
                     <div className="flex justify-end gap-2">
@@ -209,6 +217,7 @@ export function CoaTreeView({ accounts }: CoaTreeViewProps) {
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Budget</TableHead>
                         <TableHead className="text-right">Actual</TableHead>
+                        <TableHead className="text-right">Balance</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -226,10 +235,7 @@ export function CoaTreeView({ accounts }: CoaTreeViewProps) {
                         ))
                     ) : (
                         <TableRow>
-                            <TableCell
-                                colSpan={8}
-                                className="h-24 text-center"
-                            >
+                            <TableCell colSpan={9} className="h-24 text-center">
                                 No accounts found.
                             </TableCell>
                         </TableRow>

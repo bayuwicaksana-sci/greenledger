@@ -1,6 +1,6 @@
+import { CoaTreeView } from '@/components/config/coa/CoaTreeView';
 import { ImportDialog } from '@/components/config/coa/ImportDialog';
 import { TemplateDialog } from '@/components/config/coa/TemplateDialog';
-import { CoaTreeView } from '@/components/config/coa/CoaTreeView';
 import PageAction from '@/components/page/page-action';
 import PageHeader from '@/components/page/page-header';
 import PageLayout from '@/components/page/page-layout';
@@ -66,6 +66,7 @@ interface CoaAccount {
     parent_account_id: number | null;
     initial_budget: number;
     actual_amount: number;
+    balance: number;
     site?: Site;
 }
 
@@ -111,9 +112,7 @@ export default function ChartOfAccounts({ accounts, sites = [] }: Props) {
         if (selectedSiteId === 'all') {
             return accounts;
         }
-        return accounts.filter(
-            (a) => a.site_id.toString() === selectedSiteId,
-        );
+        return accounts.filter((a) => a.site_id.toString() === selectedSiteId);
     }, [accounts, selectedSiteId]);
 
     const columns: ColumnDef<CoaAccount>[] = [
@@ -131,7 +130,9 @@ export default function ChartOfAccounts({ accounts, sites = [] }: Props) {
                 </Button>
             ),
             cell: ({ row }) => (
-                <span className="font-medium">{row.getValue('account_code')}</span>
+                <span className="font-medium">
+                    {row.getValue('account_code')}
+                </span>
             ),
         },
         {
@@ -235,6 +236,18 @@ export default function ChartOfAccounts({ accounts, sites = [] }: Props) {
                           : 'text-green-600';
                 return (
                     <span className={`block text-right ${colorClass}`}>
+                        {formatCurrency(amount)}
+                    </span>
+                );
+            },
+        },
+        {
+            accessorKey: 'balance',
+            header: () => <span className="block text-right">Balance</span>,
+            cell: ({ row }) => {
+                const amount = row.getValue<number>('balance');
+                return (
+                    <span className="block text-right">
                         {formatCurrency(amount)}
                     </span>
                 );
@@ -377,9 +390,7 @@ export default function ChartOfAccounts({ accounts, sites = [] }: Props) {
                                             className="capitalize"
                                             checked={column.getIsVisible()}
                                             onCheckedChange={(value) =>
-                                                column.toggleVisibility(
-                                                    !!value,
-                                                )
+                                                column.toggleVisibility(!!value)
                                             }
                                         >
                                             {column.id}
@@ -390,9 +401,7 @@ export default function ChartOfAccounts({ accounts, sites = [] }: Props) {
                         <div className="flex rounded-md border">
                             <Button
                                 variant={
-                                    viewMode === 'table'
-                                        ? 'default'
-                                        : 'ghost'
+                                    viewMode === 'table' ? 'default' : 'ghost'
                                 }
                                 size="sm"
                                 className="rounded-r-none"
@@ -402,9 +411,7 @@ export default function ChartOfAccounts({ accounts, sites = [] }: Props) {
                             </Button>
                             <Button
                                 variant={
-                                    viewMode === 'tree'
-                                        ? 'default'
-                                        : 'ghost'
+                                    viewMode === 'tree' ? 'default' : 'ghost'
                                 }
                                 size="sm"
                                 className="rounded-l-none"
@@ -428,9 +435,7 @@ export default function ChartOfAccounts({ accounts, sites = [] }: Props) {
                                         {table
                                             .getHeaderGroups()
                                             .map((headerGroup) => (
-                                                <TableRow
-                                                    key={headerGroup.id}
-                                                >
+                                                <TableRow key={headerGroup.id}>
                                                     {headerGroup.headers.map(
                                                         (header) => (
                                                             <TableHead
@@ -439,7 +444,8 @@ export default function ChartOfAccounts({ accounts, sites = [] }: Props) {
                                                                 {header.isPlaceholder
                                                                     ? null
                                                                     : flexRender(
-                                                                          header.column
+                                                                          header
+                                                                              .column
                                                                               .columnDef
                                                                               .header,
                                                                           header.getContext(),
@@ -455,7 +461,16 @@ export default function ChartOfAccounts({ accounts, sites = [] }: Props) {
                                             table
                                                 .getRowModel()
                                                 .rows.map((row) => (
-                                                    <TableRow key={row.id}>
+                                                    <TableRow
+                                                        key={row.id}
+                                                        className={
+                                                            row.original
+                                                                .parent_account_id ===
+                                                            null
+                                                                ? 'font-bold'
+                                                                : ''
+                                                        }
+                                                    >
                                                         {row
                                                             .getVisibleCells()
                                                             .map((cell) => (
@@ -465,7 +480,8 @@ export default function ChartOfAccounts({ accounts, sites = [] }: Props) {
                                                                     }
                                                                 >
                                                                     {flexRender(
-                                                                        cell.column
+                                                                        cell
+                                                                            .column
                                                                             .columnDef
                                                                             .cell,
                                                                         cell.getContext(),
@@ -498,16 +514,14 @@ export default function ChartOfAccounts({ accounts, sites = [] }: Props) {
                                         variant="outline"
                                         size="sm"
                                         onClick={() => table.previousPage()}
-                                        disabled={
-                                            !table.getCanPreviousPage()
-                                        }
+                                        disabled={!table.getCanPreviousPage()}
                                     >
                                         Previous
                                     </Button>
                                     <div className="text-sm font-medium">
                                         Page{' '}
-                                        {table.getState().pagination
-                                            .pageIndex + 1}{' '}
+                                        {table.getState().pagination.pageIndex +
+                                            1}{' '}
                                         of {table.getPageCount()}
                                     </div>
                                     <Button

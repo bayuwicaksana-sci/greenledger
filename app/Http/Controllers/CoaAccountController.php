@@ -20,16 +20,20 @@ class CoaAccountController extends Controller
         $accounts = CoaAccount::query()
             ->with('site')
             ->select('coa_accounts.*')
-            ->selectRaw('CASE
+            ->selectRaw(
+                'CASE
                 WHEN coa_accounts.account_type = ? THEN
                     COALESCE((SELECT SUM(split_amount) FROM payment_request_splits WHERE payment_request_splits.coa_account_id = coa_accounts.id), 0)
                 WHEN coa_accounts.account_type = ? THEN
                     COALESCE((SELECT SUM(total_revenue) FROM revenue_harvest WHERE revenue_harvest.coa_account_id = coa_accounts.id), 0)
                     + COALESCE((SELECT SUM(contract_value) FROM revenue_testing_services WHERE revenue_testing_services.coa_account_id = coa_accounts.id), 0)
                 ELSE 0
-            END AS actual_amount', ['EXPENSE', 'REVENUE'])
+            END AS actual_amount',
+                ['EXPENSE', 'REVENUE'],
+            )
             ->orderBy('account_code', 'asc')
-            ->get();
+            ->get()
+            ->append('balance');
 
         return Inertia::render('config/coa/Index', [
             'accounts' => $accounts,
@@ -67,7 +71,7 @@ class CoaAccountController extends Controller
     {
         $data = $request->validated();
 
-        if (! empty($data['parent_account_id'])) {
+        if (!empty($data['parent_account_id'])) {
             $parent = CoaAccount::find($data['parent_account_id']);
             $data['hierarchy_level'] = $parent
                 ? $parent->hierarchy_level + 1
@@ -105,7 +109,7 @@ class CoaAccountController extends Controller
 
                 // Resolve parent_temp_id to actual parent_account_id
                 if (
-                    ! empty($accountData['parent_temp_id']) &&
+                    !empty($accountData['parent_temp_id']) &&
                     isset($tempIdMap[$accountData['parent_temp_id']])
                 ) {
                     $accountData['parent_account_id'] =
@@ -117,7 +121,7 @@ class CoaAccountController extends Controller
                 unset($accountData['_temp_id']);
 
                 // Calculate hierarchy level
-                if (! empty($accountData['parent_account_id'])) {
+                if (!empty($accountData['parent_account_id'])) {
                     $parent = CoaAccount::find(
                         $accountData['parent_account_id'],
                     );
@@ -143,10 +147,7 @@ class CoaAccountController extends Controller
 
             return redirect()
                 ->route('config.coa.index')
-                ->with(
-                    'success',
-                    "{$count} account(s) created successfully.",
-                );
+                ->with('success', "{$count} account(s) created successfully.");
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -155,7 +156,7 @@ class CoaAccountController extends Controller
                 ->withInput()
                 ->with(
                     'error',
-                    'Failed to create accounts: '.$e->getMessage(),
+                    'Failed to create accounts: ' . $e->getMessage(),
                 );
         }
     }
@@ -185,7 +186,7 @@ class CoaAccountController extends Controller
 
         // Add accounts with parent_temp_id
         foreach ($accounts as $account) {
-            if (! empty($account['parent_temp_id'])) {
+            if (!empty($account['parent_temp_id'])) {
                 $sorted[] = $account;
             }
         }
@@ -233,7 +234,7 @@ class CoaAccountController extends Controller
 
         // If parent_account_id is strictly provided (even if null)
         if (array_key_exists('parent_account_id', $data)) {
-            if (! empty($data['parent_account_id'])) {
+            if (!empty($data['parent_account_id'])) {
                 $parent = CoaAccount::find($data['parent_account_id']);
                 $data['hierarchy_level'] = $parent
                     ? $parent->hierarchy_level + 1

@@ -108,9 +108,9 @@ class CoaAccount extends Model
      */
     public function hasTransactions(): bool
     {
-        return $this->paymentSplits()->exists()
-            || $this->revenueHarvests()->exists()
-            || $this->revenueTestingServices()->exists();
+        return $this->paymentSplits()->exists() ||
+            $this->revenueHarvests()->exists() ||
+            $this->revenueTestingServices()->exists();
     }
 
     /**
@@ -118,9 +118,9 @@ class CoaAccount extends Model
      */
     public function getTransactionCount(): int
     {
-        return $this->paymentSplits()->count()
-            + $this->revenueHarvests()->count()
-            + $this->revenueTestingServices()->count();
+        return $this->paymentSplits()->count() +
+            $this->revenueHarvests()->count() +
+            $this->revenueTestingServices()->count();
     }
 
     /**
@@ -129,5 +129,14 @@ class CoaAccount extends Model
     public function isLocked(): bool
     {
         return $this->first_transaction_at !== null;
+    }
+    /**
+     * Get the balance (Actual - Budget).
+     */
+    public function getBalanceAttribute(): float
+    {
+        // actual_amount is not a DB column but selected at runtime in Controller
+        return (float) ($this->actual_amount ?? 0) -
+            (float) $this->initial_budget;
     }
 }
