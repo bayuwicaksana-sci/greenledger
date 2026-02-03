@@ -101,4 +101,32 @@ class CoaAccount extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+
+    /**
+     * Check if the account has any transactions.
+     */
+    public function hasTransactions(): bool
+    {
+        return $this->paymentSplits()->exists()
+            || $this->revenueHarvests()->exists()
+            || $this->revenueTestingServices()->exists();
+    }
+
+    /**
+     * Get the total count of transactions for this account.
+     */
+    public function getTransactionCount(): int
+    {
+        return $this->paymentSplits()->count()
+            + $this->revenueHarvests()->count()
+            + $this->revenueTestingServices()->count();
+    }
+
+    /**
+     * Check if the account code and type are locked (has transactions).
+     */
+    public function isLocked(): bool
+    {
+        return $this->first_transaction_at !== null;
+    }
 }

@@ -1,3 +1,5 @@
+import { ImportDialog } from '@/components/config/coa/ImportDialog';
+import { TemplateDialog } from '@/components/config/coa/TemplateDialog';
 import PageAction from '@/components/page/page-action';
 import PageHeader from '@/components/page/page-header';
 import PageLayout from '@/components/page/page-layout';
@@ -22,11 +24,8 @@ import MainLayout from '@/layouts/main-layout';
 import config from '@/routes/config';
 import { BreadcrumbItem, PaginatedResponse, Site } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import { Edit, Plus, Search, Trash2 } from 'lucide-react';
+import { Edit, Plus, Search, Trash2, Upload, LayoutTemplate } from 'lucide-react';
 import { useEffect, useState } from 'react';
-
-// Declare route globally or locally
-declare var route: any;
 
 interface CoaAccount {
     id: number;
@@ -66,6 +65,12 @@ export default function ChartOfAccounts({
         null,
     );
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
+    const [importDialogOpen, setImportDialogOpen] = useState(false);
+    const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+
+    const handleDialogSuccess = () => {
+        router.reload();
+    };
 
     // Debounce search
     useEffect(() => {
@@ -90,7 +95,7 @@ export default function ChartOfAccounts({
 
     const handleSiteFilter = (siteId: string) => {
         router.get(
-            route('config.coa.index'),
+            config.coa.index.url(),
             { ...filters, site_id: siteId === 'all' ? undefined : siteId },
             { preserveState: true, preserveScroll: true },
         );
@@ -105,6 +110,20 @@ export default function ChartOfAccounts({
                     pageSubtitle="Manage Chart of Accounts"
                 >
                     <PageAction>
+                        <Button
+                            variant="outline"
+                            onClick={() => setTemplateDialogOpen(true)}
+                        >
+                            <LayoutTemplate className="mr-2 h-4 w-4" />
+                            Templates
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => setImportDialogOpen(true)}
+                        >
+                            <Upload className="mr-2 h-4 w-4" />
+                            Import CSV
+                        </Button>
                         <Link href={config.coa.create()}>
                             <Button>
                                 <Plus className="mr-2 h-4 w-4" />
@@ -253,6 +272,19 @@ export default function ChartOfAccounts({
                     </div>
                 </div>
             </PageLayout>
+
+            <ImportDialog
+                open={importDialogOpen}
+                onOpenChange={setImportDialogOpen}
+                onSuccess={handleDialogSuccess}
+            />
+
+            <TemplateDialog
+                open={templateDialogOpen}
+                onOpenChange={setTemplateDialogOpen}
+                onSuccess={handleDialogSuccess}
+                sites={sites}
+            />
         </MainLayout>
     );
 }

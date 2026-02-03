@@ -264,6 +264,42 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::prefix('config')
             ->name('config.')
             ->group(function () {
+                // COA auxiliary routes (must come before resource routes)
+                Route::post(
+                    'coa/bulk',
+                    [\App\Http\Controllers\CoaAccountController::class, 'bulkStore'],
+                )
+                    ->name('coa.bulk-store')
+                    ->middleware('permission:coa.view.all|coa.view.site');
+
+                Route::post(
+                    'coa/import/validate',
+                    [\App\Http\Controllers\CoaAccountImportController::class, 'validate'],
+                )
+                    ->name('coa.import.validate')
+                    ->middleware('permission:coa.view.all|coa.view.site');
+
+                Route::post(
+                    'coa/import',
+                    [\App\Http\Controllers\CoaAccountImportController::class, 'import'],
+                )
+                    ->name('coa.import')
+                    ->middleware('permission:coa.view.all|coa.view.site');
+
+                Route::get(
+                    'coa/templates',
+                    [\App\Http\Controllers\CoaAccountTemplateController::class, 'index'],
+                )
+                    ->name('coa.templates.index')
+                    ->middleware('permission:coa.view.all|coa.view.site');
+
+                Route::post(
+                    'coa/templates/apply',
+                    [\App\Http\Controllers\CoaAccountTemplateController::class, 'apply'],
+                )
+                    ->name('coa.templates.apply')
+                    ->middleware('permission:coa.view.all|coa.view.site');
+
                 Route::resource(
                     'coa',
                     \App\Http\Controllers\CoaAccountController::class,
@@ -743,6 +779,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
                         ])->name('action');
                     });
             });
-        require __DIR__ . '/settings.php';
+        require __DIR__.'/settings.php';
     });
 });

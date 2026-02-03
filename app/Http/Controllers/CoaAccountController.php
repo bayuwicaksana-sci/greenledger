@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\BulkStoreCoaAccountRequest;
 use App\Http\Requests\StoreCoaAccountRequest;
 use App\Http\Requests\UpdateCoaAccountRequest;
 use App\Models\CoaAccount;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class CoaAccountController extends Controller
@@ -56,10 +58,15 @@ class CoaAccountController extends Controller
                 'id',
                 'account_code',
                 'account_name',
+                'site_id',
                 'hierarchy_level',
             )
                 ->where('is_active', true)
                 ->get(),
+            'existingCodes' => CoaAccount::select(
+                'site_id',
+                'account_code',
+            )->get(),
         ]);
     }
 
@@ -70,7 +77,7 @@ class CoaAccountController extends Controller
     {
         $data = $request->validated();
 
-        if (!empty($data['parent_account_id'])) {
+        if (! empty($data['parent_account_id'])) {
             $parent = CoaAccount::find($data['parent_account_id']);
             $data['hierarchy_level'] = $parent
                 ? $parent->hierarchy_level + 1
@@ -87,12 +94,132 @@ class CoaAccountController extends Controller
     }
 
     /**
+     * Store multiple accounts in a single transaction.
+     */
+    public function bulkStore(BulkStoreCoaAccountRequest $request)
+    {
+        $accounts = $request->validated()['accounts'];
+
+        try {
+            DB::beginTransaction();
+
+            // Map to store temp_id -> actual created account ID
+            $tempIdMap = [];
+
+            // Sort accounts so parents are created before children
+            $sortedAccounts = $this->sortAccountsByDependency($accounts);
+
+            foreach ($sortedAccounts as $accountData) {
+                // Store temp_id before removing it
+                $tempId = $accountData['_temp_id'] ?? null;
+
+                // Resolve parent_temp_id to actual parent_account_id
+                if (
+                    ! empty($accountData['parent_temp_id']) &&
+                    isset($tempIdMap[$accountData['parent_temp_id']])
+                ) {
+                    $accountData['parent_account_id'] =
+                        $tempIdMap[$accountData['parent_temp_id']];
+                }
+
+                // Remove temp fields before creating
+                unset($accountData['parent_temp_id']);
+                unset($accountData['_temp_id']);
+
+                // Calculate hierarchy level
+                if (! empty($accountData['parent_account_id'])) {
+                    $parent = CoaAccount::find(
+                        $accountData['parent_account_id'],
+                    );
+                    $accountData['hierarchy_level'] = $parent
+                        ? $parent->hierarchy_level + 1
+                        : 1;
+                } else {
+                    $accountData['hierarchy_level'] = 1;
+                }
+
+                // Create the account
+                $account = CoaAccount::create($accountData);
+
+                // Store mapping if temp_id exists
+                if ($tempId) {
+                    $tempIdMap[$tempId] = $account->id;
+                }
+            }
+
+            DB::commit();
+
+            $count = count($accounts);
+
+            return redirect()
+                ->route('config.coa.index')
+                ->with(
+                    'success',
+                    "{$count} account(s) created successfully.",
+                );
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with(
+                    'error',
+                    'Failed to create accounts: '.$e->getMessage(),
+                );
+        }
+    }
+
+    /**
+     * Sort accounts so parents are created before children.
+     */
+    private function sortAccountsByDependency(array $accounts): array
+    {
+        $sorted = [];
+        $tempIdMap = [];
+
+        // First, index all accounts by their temp_id
+        foreach ($accounts as $account) {
+            $tempId = $account['_temp_id'] ?? null;
+            if ($tempId) {
+                $tempIdMap[$tempId] = $account;
+            }
+        }
+
+        // Add accounts without parent_temp_id first
+        foreach ($accounts as $account) {
+            if (empty($account['parent_temp_id'])) {
+                $sorted[] = $account;
+            }
+        }
+
+        // Add accounts with parent_temp_id
+        foreach ($accounts as $account) {
+            if (! empty($account['parent_temp_id'])) {
+                $sorted[] = $account;
+            }
+        }
+
+        return $sorted;
+    }
+
+    /**
      * Show the form for editing the specified resource.
      */
     public function edit(CoaAccount $coa)
     {
         return Inertia::render('config/coa/Edit', [
-            'account' => $coa,
+            'account' => $coa->only([
+                'id',
+                'site_id',
+                'account_code',
+                'account_name',
+                'account_type',
+                'short_description',
+                'parent_account_id',
+                'is_active',
+                'first_transaction_at',
+            ]),
             'sites' => \App\Models\Site::all(),
             'parents' => CoaAccount::select(
                 'id',
@@ -115,7 +242,7 @@ class CoaAccountController extends Controller
 
         // If parent_account_id is strictly provided (even if null)
         if (array_key_exists('parent_account_id', $data)) {
-            if (!empty($data['parent_account_id'])) {
+            if (! empty($data['parent_account_id'])) {
                 $parent = CoaAccount::find($data['parent_account_id']);
                 $data['hierarchy_level'] = $parent
                     ? $parent->hierarchy_level + 1
@@ -137,8 +264,28 @@ class CoaAccountController extends Controller
      */
     public function destroy(CoaAccount $coa)
     {
-        // Check if there are related transactions before deleting
-        // For now, we'll just delete. In production this should safeguard data.
+        // Check for transactions before allowing deletion
+        $transactionCount = $coa->getTransactionCount();
+
+        if ($transactionCount > 0) {
+            return redirect()
+                ->back()
+                ->with(
+                    'error',
+                    "Cannot delete account with {$transactionCount} transaction(s). Please deactivate the account instead.",
+                );
+        }
+
+        // Check if there are child accounts
+        if ($coa->childAccounts()->exists()) {
+            return redirect()
+                ->back()
+                ->with(
+                    'error',
+                    'Cannot delete account with child accounts. Please remove or reassign child accounts first.',
+                );
+        }
+
         $coa->delete();
 
         return redirect()

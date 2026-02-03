@@ -40,6 +40,7 @@ interface CoaAccount {
     short_description?: string;
     parent_account_id?: number | null;
     is_active: boolean;
+    first_transaction_at?: string | null;
 }
 
 interface EditProps {
@@ -59,6 +60,8 @@ export default function Edit({ account, sites, parents }: EditProps) {
             href: '#',
         },
     ];
+
+    const isLocked = !!account.first_transaction_at;
 
     const { data, setData, put, processing, errors } = useForm({
         site_id: account.site_id.toString(),
@@ -98,6 +101,11 @@ export default function Edit({ account, sites, parents }: EditProps) {
                                 <div className="grid gap-2">
                                     <Label htmlFor="account_code">
                                         Account Code
+                                        {isLocked && (
+                                            <span className="ml-2 text-xs text-muted-foreground">
+                                                (Locked - has transactions)
+                                            </span>
+                                        )}
                                     </Label>
                                     <Input
                                         id="account_code"
@@ -109,10 +117,17 @@ export default function Edit({ account, sites, parents }: EditProps) {
                                             )
                                         }
                                         placeholder="e.g. KLT-EXP-001"
+                                        disabled={isLocked}
                                     />
                                     {errors.account_code && (
                                         <p className="text-sm text-destructive">
                                             {errors.account_code}
+                                        </p>
+                                    )}
+                                    {isLocked && (
+                                        <p className="text-xs text-muted-foreground">
+                                            Account code cannot be changed after
+                                            transactions have been recorded.
                                         </p>
                                     )}
                                 </div>
@@ -253,7 +268,14 @@ export default function Edit({ account, sites, parents }: EditProps) {
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="account_type">Type</Label>
+                                    <Label htmlFor="account_type">
+                                        Type
+                                        {isLocked && (
+                                            <span className="ml-2 text-xs text-muted-foreground">
+                                                (Locked - has transactions)
+                                            </span>
+                                        )}
+                                    </Label>
                                     <Select
                                         value={data.account_type}
                                         onValueChange={(val) =>
@@ -262,6 +284,7 @@ export default function Edit({ account, sites, parents }: EditProps) {
                                                 val as 'REVENUE' | 'EXPENSE',
                                             )
                                         }
+                                        disabled={isLocked}
                                     >
                                         <SelectTrigger id="account_type">
                                             <SelectValue placeholder="Select type" />
@@ -278,6 +301,12 @@ export default function Edit({ account, sites, parents }: EditProps) {
                                     {errors.account_type && (
                                         <p className="text-sm text-destructive">
                                             {errors.account_type}
+                                        </p>
+                                    )}
+                                    {isLocked && (
+                                        <p className="text-xs text-muted-foreground">
+                                            Account type cannot be changed after
+                                            transactions have been recorded.
                                         </p>
                                     )}
                                 </div>
