@@ -11,7 +11,8 @@ class UpdateCoaAccountRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()->can('coa.view.all') ||
+            $this->user()->can('coa.view.site');
     }
 
     /**
@@ -28,6 +29,7 @@ class UpdateCoaAccountRequest extends FormRequest
         $rules = [
             'account_name' => ['sometimes', 'required', 'string', 'max:255'],
             'short_description' => ['nullable', 'string'],
+            'abbreviation' => ['nullable', 'string', 'max:10'],
             'is_active' => ['boolean'],
             'parent_account_id' => ['nullable', 'exists:coa_accounts,id'],
             'initial_budget' => ['nullable', 'numeric', 'min:0'],
@@ -39,18 +41,43 @@ class UpdateCoaAccountRequest extends FormRequest
                 'sometimes',
                 'required',
                 'string',
-                'max:255',
+                'max:10', // Base Code e.g. 5211
+                'regex:/^[a-zA-Z0-9]+$/',
+            ];
+            $rules['category'] = [
+                'sometimes',
+                'required',
+                'string',
+                'max:5',
+                'regex:/^[A-Z0-9]+$/',
+            ];
+            $rules['subcategory'] = [
+                'sometimes',
+                'required',
+                'string',
+                'max:5',
+                'regex:/^[A-Z0-9]+$/',
+            ];
+            $rules['sequence_number'] = [
+                'sometimes',
+                'required',
+                'string',
+                'max:5',
+                'regex:/^[0-9]+$/',
+            ];
+
+            // As with Store request, simple unique check on account_code (base)
+            $rules['account_code'][] =
                 'unique:coa_accounts,account_code,'.
                 $coaId.
                 ',id,site_id,'.
-                $siteId,
-            ];
+                $siteId;
 
             $rules['account_type'] = [
                 'sometimes',
                 'required',
                 'string',
-                'in:REVENUE,EXPENSE',
+                'in:ASSET,LIABILITY,EQUITY,REVENUE,EXPENSE',
             ];
         } else {
             // Add prohibited rules for locked fields
@@ -70,6 +97,8 @@ class UpdateCoaAccountRequest extends FormRequest
             ];
         }
 
+        $rules['budget_control'] = ['boolean'];
+
         return $rules;
     }
 
@@ -85,7 +114,7 @@ class UpdateCoaAccountRequest extends FormRequest
             'account_code.in' => 'Account code cannot be changed after transactions have been recorded.',
             'account_type.in' => $coa->isLocked()
                 ? 'Account type cannot be changed after transactions have been recorded.'
-                : 'Account type must be either REVENUE or EXPENSE.',
+                : 'Account type must be one of ASSET, LIABILITY, EQUITY, REVENUE, or EXPENSE.',
             'parent_account_id.exists' => 'The selected parent account does not exist.',
         ];
     }

@@ -1,24 +1,55 @@
+import { ProgramsTable } from '@/components/programs/ProgramsTable';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import PageAction from '@/components/page/page-action';
+import PageHeader from '@/components/page/page-header';
+import PageLayout from '@/components/page/page-layout';
+import programRoutes from '@/routes/programs';
+import { BreadcrumbItem, Program } from '@/types';
+import { Head, Link } from '@inertiajs/react';
+import { ArrowLeft } from 'lucide-react';
 
-export default function ArchivedPrograms() {
+export default function ArchivedPrograms({
+    programs,
+    site_code,
+}: {
+    programs: Program[];
+    site_code: string;
+}) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: 'Archived Programs',
-            href: '#',
+            title: 'Programs',
+            href: programRoutes.index.url({ site: site_code }),
+        },
+        {
+            title: 'Archived',
+            href: programRoutes.archived.url({ site: site_code }),
         },
     ];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Archived Programs" />
-            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <div className="flex flex-col items-center justify-center rounded-xl border border-sidebar-border/70 p-12 dark:border-sidebar-border">
-                    <h1 className="text-3xl font-bold">Archived Programs</h1>
-                    <p className="mt-4 text-muted-foreground">Coming soon...</p>
-                </div>
-            </div>
+            <PageLayout>
+                <PageHeader
+                    pageTitle="Archived Programs"
+                    pageSubtitle="Programs that have been archived."
+                >
+                    <PageAction>
+                        <Link
+                            href={programRoutes.index.url({
+                                site: site_code,
+                            })}
+                        >
+                            <Button variant="outline">
+                                <ArrowLeft className="mr-2 h-4 w-4" /> Back to
+                                Programs
+                            </Button>
+                        </Link>
+                    </PageAction>
+                </PageHeader>
+                <ProgramsTable programs={programs} site_code={site_code} />
+            </PageLayout>
         </AppLayout>
     );
 }

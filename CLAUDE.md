@@ -20,12 +20,15 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - laravel/sail (SAIL) - v1
 - pestphp/pest (PEST) - v4
 - phpunit/phpunit (PHPUNIT) - v12
-- @inertiajs/react (INERTIA) - v2
+- @inertiajs/react (INERTIA) - v2 - Always find the latest docs references for Inertia.js v2 before implementation using context7 mcp tools with "/websites/inertiajs_v2" library id.
 - react (REACT) - v19
 - tailwindcss (TAILWINDCSS) - v4
 - @laravel/vite-plugin-wayfinder (WAYFINDER) - v0
 - eslint (ESLINT) - v9
 - prettier (PRETTIER) - v3
+- recharts (RECHARTS) - v3
+- shadcn/ui (SHADCN) - v3 - Always use shadcn/ui component for a better UI/UX consistency using shadcn mcp tool.
+- @tanstack/react-table (TANSTACK) - v8 - Always use @tanstack/react-table when tyring to create a data table. Use context7 mcp tools with "/websites/tanstack_table" library id to get the latest docs references
 
 ## Skills Activation
 
@@ -92,7 +95,7 @@ This project has domain-specific skills available. You MUST activate the relevan
 - Boost comes with a powerful `search-docs` tool you should use before trying other approaches when working with Laravel or Laravel ecosystem packages. This tool automatically passes a list of installed packages and their versions to the remote Boost API, so it returns only version-specific documentation for the user's circumstance. You should pass an array of packages to filter on if you know you need docs for particular packages.
 - Search the documentation before making code changes to ensure we are taking the correct approach.
 - Use multiple, broad, simple, topic-based queries at once. For example: `['rate limiting', 'routing rate limiting', 'routing']`. The most relevant results will be returned first.
-- Do not add package names to queries; package information is already shared. For example, use `test resource table`, not `{package name} 4 test resource table`.
+- Do not add package names to queries; package information is already shared. For example, use `test resource table`, not `filament 4 test resource table`.
 
 ### Available Search Syntax
 

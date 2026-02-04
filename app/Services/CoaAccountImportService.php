@@ -26,7 +26,10 @@ class CoaAccountImportService
             // Resolve and cache site
             $siteCode = $row['site_code'] ?? '';
             if (! isset($siteCache[$siteCode])) {
-                $siteCache[$siteCode] = Site::where('site_code', $siteCode)->first();
+                $siteCache[$siteCode] = Site::where(
+                    'site_code',
+                    $siteCode,
+                )->first();
             }
             $site = $siteCache[$siteCode];
 
@@ -38,30 +41,42 @@ class CoaAccountImportService
                 $batchKey = "{$site->id}:{$accountCode}";
 
                 if (isset($seenCodes[$batchKey])) {
-                    $rowErrors['account_code'] = "Duplicate account code '{$accountCode}' in import (also at row ".($seenCodes[$batchKey] + 1).').';
+                    $rowErrors['account_code'] =
+                        "Duplicate account code '{$accountCode}' in import (also at row ".
+                        ($seenCodes[$batchKey] + 1).
+                        ').';
                 } else {
                     $seenCodes[$batchKey] = $index;
                 }
 
                 // Check if account code already exists in the database
-                if (CoaAccount::where('site_id', $site->id)
-                    ->where('account_code', $accountCode)->exists()
+                if (
+                    CoaAccount::where('site_id', $site->id)
+                        ->where('account_code', $accountCode)
+                        ->exists()
                 ) {
-                    $rowErrors['account_code'] = "Account code '{$accountCode}' already exists for site '{$siteCode}'.";
+                    $rowErrors[
+                        'account_code'
+                    ] = "Account code '{$accountCode}' already exists for site '{$siteCode}'.";
                 }
 
                 // Validate parent_account_code reference
                 $parentCode = $row['parent_account_code'] ?? null;
                 if ($parentCode) {
                     $parentExistsInDb = CoaAccount::where('site_id', $site->id)
-                        ->where('account_code', $parentCode)->exists();
-                    $parentExistsInBatch = collect($rows)->contains(function ($r) use ($parentCode, $siteCode) {
-                        return ($r['site_code'] ?? '') === $siteCode
-                            && ($r['account_code'] ?? '') === $parentCode;
+                        ->where('account_code', $parentCode)
+                        ->exists();
+                    $parentExistsInBatch = collect($rows)->contains(function (
+                        $r,
+                    ) use ($parentCode, $siteCode) {
+                        return ($r['site_code'] ?? '') === $siteCode &&
+                            ($r['account_code'] ?? '') === $parentCode;
                     });
 
                     if (! $parentExistsInDb && ! $parentExistsInBatch) {
-                        $rowErrors['parent_account_code'] = "Parent account code '{$parentCode}' not found for site '{$siteCode}'.";
+                        $rowErrors[
+                            'parent_account_code'
+                        ] = "Parent account code '{$parentCode}' not found for site '{$siteCode}'.";
                     }
                 }
             }
@@ -80,9 +95,9 @@ class CoaAccountImportService
      * @param  array<int, array<string, mixed>>  $rows
      * @return int Number of accounts created.
      */
-    public function import(array $rows): int
+    public function import(array $rows, ?int $createdBy = null): int
     {
-        return DB::transaction(function () use ($rows) {
+        return DB::transaction(function () use ($rows, $createdBy) {
             $siteCache = [];
             $createdCount = 0;
 
@@ -96,16 +111,17 @@ class CoaAccountImportService
 
                 if ($parentCode) {
                     $parent = CoaAccount::where('site_id', $site->id)
-                        ->where('account_code', $parentCode)->first();
+                        ->where('account_code', $parentCode)
+                        ->first();
 
                     if ($parent) {
-                        $this->createAccount($row, $site->id, $parent);
+                        $this->createAccount($row, $site->id, $parent, $createdBy);
                         $createdCount++;
                     } else {
                         $pending[] = $row;
                     }
                 } else {
-                    $this->createAccount($row, $site->id);
+                    $this->createAccount($row, $site->id, null, $createdBy);
                     $createdCount++;
                 }
             }
@@ -114,9 +130,10 @@ class CoaAccountImportService
             foreach ($pending as $row) {
                 $site = $this->resolveSite($row['site_code'], $siteCache);
                 $parent = CoaAccount::where('site_id', $site->id)
-                    ->where('account_code', $row['parent_account_code'])->first();
+                    ->where('account_code', $row['parent_account_code'])
+                    ->first();
 
-                $this->createAccount($row, $site->id, $parent);
+                $this->createAccount($row, $site->id, $parent, $createdBy);
                 $createdCount++;
             }
 
@@ -127,23 +144,32 @@ class CoaAccountImportService
     private function resolveSite(string $siteCode, array &$cache): Site
     {
         if (! isset($cache[$siteCode])) {
-            $cache[$siteCode] = Site::where('site_code', $siteCode)->firstOrFail();
+            $cache[$siteCode] = Site::where(
+                'site_code',
+                $siteCode,
+            )->firstOrFail();
         }
 
         return $cache[$siteCode];
     }
 
-    private function createAccount(array $row, int $siteId, ?CoaAccount $parent = null): CoaAccount
-    {
+    private function createAccount(
+        array $row,
+        int $siteId,
+        ?CoaAccount $parent = null,
+        ?int $createdBy = null,
+    ): CoaAccount {
         return CoaAccount::create([
             'site_id' => $siteId,
             'account_code' => $row['account_code'],
             'account_name' => $row['account_name'],
             'account_type' => $row['account_type'],
             'short_description' => $row['short_description'] ?? null,
+            'abbreviation' => $row['abbreviation'] ?? null,
             'parent_account_id' => $parent?->id,
             'hierarchy_level' => $parent ? $parent->hierarchy_level + 1 : 1,
             'is_active' => $row['is_active'],
+            'created_by' => $createdBy,
         ]);
     }
 }

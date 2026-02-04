@@ -265,39 +265,46 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('config.')
             ->group(function () {
                 // COA auxiliary routes (must come before resource routes)
-                Route::post(
-                    'coa/bulk',
-                    [\App\Http\Controllers\CoaAccountController::class, 'bulkStore'],
-                )
+                Route::post('coa/bulk', [
+                    \App\Http\Controllers\CoaAccountController::class,
+                    'bulkStore',
+                ])
                     ->name('coa.bulk-store')
                     ->middleware('permission:coa.view.all|coa.view.site');
 
-                Route::post(
-                    'coa/import/validate',
-                    [\App\Http\Controllers\CoaAccountImportController::class, 'validate'],
-                )
+                Route::post('coa/import/validate', [
+                    \App\Http\Controllers\CoaAccountImportController::class,
+                    'validate',
+                ])
                     ->name('coa.import.validate')
                     ->middleware('permission:coa.view.all|coa.view.site');
 
-                Route::post(
-                    'coa/import',
-                    [\App\Http\Controllers\CoaAccountImportController::class, 'import'],
-                )
+                Route::post('coa/import', [
+                    \App\Http\Controllers\CoaAccountImportController::class,
+                    'import',
+                ])
                     ->name('coa.import')
                     ->middleware('permission:coa.view.all|coa.view.site');
 
-                Route::get(
-                    'coa/templates',
-                    [\App\Http\Controllers\CoaAccountTemplateController::class, 'index'],
-                )
+                Route::get('coa/templates', [
+                    \App\Http\Controllers\CoaAccountTemplateController::class,
+                    'index',
+                ])
                     ->name('coa.templates.index')
                     ->middleware('permission:coa.view.all|coa.view.site');
 
-                Route::post(
-                    'coa/templates/apply',
-                    [\App\Http\Controllers\CoaAccountTemplateController::class, 'apply'],
-                )
+                Route::post('coa/templates/apply', [
+                    \App\Http\Controllers\CoaAccountTemplateController::class,
+                    'apply',
+                ])
                     ->name('coa.templates.apply')
+                    ->middleware('permission:coa.view.all|coa.view.site');
+
+                Route::get('coa/next-code', [
+                    \App\Http\Controllers\CoaAccountController::class,
+                    'nextCode',
+                ])
+                    ->name('coa.next-code')
                     ->middleware('permission:coa.view.all|coa.view.site');
 
                 Route::resource(
@@ -434,43 +441,84 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 Route::prefix('programs')
                     ->name('programs.')
                     ->group(function () {
-                        Route::get('my', function (Site $site) {
-                            Inertia::share('site_code', $site->site_code);
-
-                            return Inertia::render('programs/my');
-                        })
+                        Route::get('my', [
+                            \App\Http\Controllers\ProgramController::class,
+                            'myPrograms',
+                        ])
                             ->name('my')
                             ->middleware([
                                 'permission:programs.view.own|programs.view.assigned',
                             ]);
 
-                        Route::get('/', function (Site $site) {
-                            Inertia::share('site_code', $site->site_code);
-
-                            return Inertia::render('programs/index');
-                        })
+                        Route::get('/', [
+                            \App\Http\Controllers\ProgramController::class,
+                            'index',
+                        ])
                             ->name('index')
                             ->middleware(
                                 'permission:programs.view.site|programs.view.all',
                             );
 
-                        Route::get('create', function (Site $site) {
-                            Inertia::share('site_code', $site->site_code);
-
-                            return Inertia::render('programs/create');
-                        })
+                        Route::get('create', [
+                            \App\Http\Controllers\ProgramController::class,
+                            'create',
+                        ])
                             ->name('create')
                             ->middleware(
                                 'permission:programs.create.site|programs.create.all',
                             );
 
-                        Route::get('archived', function (Site $site) {
-                            Inertia::share('site_code', $site->site_code);
+                        Route::post('/', [
+                            \App\Http\Controllers\ProgramController::class,
+                            'store',
+                        ])
+                            ->name('store')
+                            ->middleware(
+                                'permission:programs.create.site|programs.create.all',
+                            );
 
-                            return Inertia::render('programs/archived');
-                        })
+                        Route::get('{program}/edit', [
+                            \App\Http\Controllers\ProgramController::class,
+                            'edit',
+                        ])
+                            ->name('edit')
+                            ->middleware(
+                                'permission:programs.update.site|programs.update.all',
+                            );
+
+                        Route::put('{program}', [
+                            \App\Http\Controllers\ProgramController::class,
+                            'update',
+                        ])
+                            ->name('update')
+                            ->middleware(
+                                'permission:programs.update.site|programs.update.all',
+                            );
+
+                        Route::delete('{program}', [
+                            \App\Http\Controllers\ProgramController::class,
+                            'destroy',
+                        ])
+                            ->name('destroy')
+                            ->middleware(
+                                'permission:programs.delete.site|programs.delete.all',
+                            );
+
+                        Route::get('archived', [
+                            \App\Http\Controllers\ProgramController::class,
+                            'archived',
+                        ])
                             ->name('archived')
                             ->middleware('permission:programs.archive.view');
+
+                        Route::get('{program}', [
+                            \App\Http\Controllers\ProgramController::class,
+                            'show',
+                        ])
+                            ->name('show')
+                            ->middleware(
+                                'permission:programs.view.site|programs.view.all|programs.view.own|programs.view.assigned',
+                            );
                     });
 
                 // Payment Requests

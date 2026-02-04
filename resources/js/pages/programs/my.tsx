@@ -1,24 +1,35 @@
+import { ProgramsTable } from '@/components/programs/ProgramsTable';
 import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem } from '@/types';
+import PageHeader from '@/components/page/page-header';
+import PageLayout from '@/components/page/page-layout';
+import programRoutes from '@/routes/programs';
+import { BreadcrumbItem, Program } from '@/types';
 import { Head } from '@inertiajs/react';
 
-export default function MyPrograms() {
+export default function MyPrograms({
+    programs,
+    site_code,
+}: {
+    programs: Program[];
+    site_code: string;
+}) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'My Programs',
-            href: '#',
+            href: programRoutes.my.url({ site: site_code }),
         },
     ];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="My Programs" />
-            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <div className="flex flex-col items-center justify-center rounded-xl border border-sidebar-border/70 p-12 dark:border-sidebar-border">
-                    <h1 className="text-3xl font-bold">My Programs</h1>
-                    <p className="mt-4 text-muted-foreground">Coming soon...</p>
-                </div>
-            </div>
+            <PageLayout>
+                <PageHeader
+                    pageTitle="My Programs"
+                    pageSubtitle="Programs you are assigned to."
+                />
+                <ProgramsTable programs={programs} site_code={site_code} />
+            </PageLayout>
         </AppLayout>
     );
 }

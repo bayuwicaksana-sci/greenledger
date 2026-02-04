@@ -8,7 +8,8 @@ class ImportCoaAccountsRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('coa.view.all') || $this->user()->can('coa.view.site');
+        return $this->user()->can('coa.view.all') ||
+            $this->user()->can('coa.view.site');
     }
 
     /**
@@ -21,8 +22,13 @@ class ImportCoaAccountsRequest extends FormRequest
             'rows.*.site_code' => ['required', 'string', 'max:50'],
             'rows.*.account_code' => ['required', 'string', 'max:50'],
             'rows.*.account_name' => ['required', 'string', 'max:255'],
-            'rows.*.account_type' => ['required', 'string', 'in:REVENUE,EXPENSE'],
+            'rows.*.account_type' => [
+                'required',
+                'string',
+                'in:REVENUE,EXPENSE',
+            ],
             'rows.*.short_description' => ['nullable', 'string', 'max:500'],
+            'rows.*.abbreviation' => ['nullable', 'string', 'max:10'],
             'rows.*.parent_account_code' => ['nullable', 'string', 'max:50'],
             'rows.*.is_active' => ['required', 'boolean'],
         ];

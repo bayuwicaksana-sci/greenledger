@@ -31,7 +31,10 @@ class CoaAccountTemplateController extends Controller
             ];
 
             if ($siteId) {
-                $conflicts = $this->templateService->checkConflicts($key, $siteId);
+                $conflicts = $this->templateService->checkConflicts(
+                    $key,
+                    $siteId,
+                );
                 $entry['conflicts'] = $conflicts;
                 $entry['has_conflicts'] = in_array(true, $conflicts, true);
             }
@@ -58,6 +61,7 @@ class CoaAccountTemplateController extends Controller
                 $validated['template_key'],
                 $validated['site_id'],
                 $validated['skip_existing'] ?? false,
+                $request->user()->id,
             );
 
             return response()->json([
@@ -66,10 +70,13 @@ class CoaAccountTemplateController extends Controller
                 'count' => $count,
             ]);
         } catch (\InvalidArgumentException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 422);
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ],
+                422,
+            );
         }
     }
 }

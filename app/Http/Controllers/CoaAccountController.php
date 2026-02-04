@@ -48,10 +48,15 @@ class CoaAccountController extends Controller
     {
         return Inertia::render('config/coa/Create', [
             'sites' => \App\Models\Site::all(),
+            'standardAccounts' => config(
+                'coa_templates.standard_agricultural.accounts',
+                [],
+            ),
             'parents' => CoaAccount::select(
                 'id',
                 'account_code',
                 'account_name',
+                'account_type',
                 'site_id',
                 'hierarchy_level',
             )
@@ -71,7 +76,7 @@ class CoaAccountController extends Controller
     {
         $data = $request->validated();
 
-        if (!empty($data['parent_account_id'])) {
+        if (! empty($data['parent_account_id'])) {
             $parent = CoaAccount::find($data['parent_account_id']);
             $data['hierarchy_level'] = $parent
                 ? $parent->hierarchy_level + 1
@@ -79,6 +84,8 @@ class CoaAccountController extends Controller
         } else {
             $data['hierarchy_level'] = 1;
         }
+
+        $data['created_by'] = $request->user()->id;
 
         CoaAccount::create($data);
 
@@ -109,7 +116,7 @@ class CoaAccountController extends Controller
 
                 // Resolve parent_temp_id to actual parent_account_id
                 if (
-                    !empty($accountData['parent_temp_id']) &&
+                    ! empty($accountData['parent_temp_id']) &&
                     isset($tempIdMap[$accountData['parent_temp_id']])
                 ) {
                     $accountData['parent_account_id'] =
@@ -121,7 +128,7 @@ class CoaAccountController extends Controller
                 unset($accountData['_temp_id']);
 
                 // Calculate hierarchy level
-                if (!empty($accountData['parent_account_id'])) {
+                if (! empty($accountData['parent_account_id'])) {
                     $parent = CoaAccount::find(
                         $accountData['parent_account_id'],
                     );
@@ -131,6 +138,8 @@ class CoaAccountController extends Controller
                 } else {
                     $accountData['hierarchy_level'] = 1;
                 }
+
+                $accountData['created_by'] = $request->user()->id;
 
                 // Create the account
                 $account = CoaAccount::create($accountData);
@@ -156,7 +165,7 @@ class CoaAccountController extends Controller
                 ->withInput()
                 ->with(
                     'error',
-                    'Failed to create accounts: ' . $e->getMessage(),
+                    'Failed to create accounts: '.$e->getMessage(),
                 );
         }
     }
@@ -186,7 +195,7 @@ class CoaAccountController extends Controller
 
         // Add accounts with parent_temp_id
         foreach ($accounts as $account) {
-            if (!empty($account['parent_temp_id'])) {
+            if (! empty($account['parent_temp_id'])) {
                 $sorted[] = $account;
             }
         }
@@ -205,6 +214,7 @@ class CoaAccountController extends Controller
                 'site_id',
                 'account_code',
                 'account_name',
+                'abbreviation',
                 'account_type',
                 'short_description',
                 'parent_account_id',
@@ -217,6 +227,7 @@ class CoaAccountController extends Controller
                 'id',
                 'account_code',
                 'account_name',
+                'account_type',
                 'hierarchy_level',
             )
                 ->where('is_active', true)
@@ -234,7 +245,7 @@ class CoaAccountController extends Controller
 
         // If parent_account_id is strictly provided (even if null)
         if (array_key_exists('parent_account_id', $data)) {
-            if (!empty($data['parent_account_id'])) {
+            if (! empty($data['parent_account_id'])) {
                 $parent = CoaAccount::find($data['parent_account_id']);
                 $data['hierarchy_level'] = $parent
                     ? $parent->hierarchy_level + 1
@@ -243,6 +254,8 @@ class CoaAccountController extends Controller
                 $data['hierarchy_level'] = 1;
             }
         }
+
+        $data['updated_by'] = $request->user()->id;
 
         $coa->update($data);
 
@@ -283,5 +296,77 @@ class CoaAccountController extends Controller
         return redirect()
             ->back()
             ->with('success', 'COA Account deleted successfully.');
+    }
+
+    /**
+     * Get the next available account code.
+     */
+    public function nextCode(Request $request)
+    {
+        $siteId = $request->input('site_id');
+        $parentId = $request->input('parent_id');
+
+        if (! $siteId) {
+            return response()->json(['code' => '']);
+        }
+
+        $query = CoaAccount::where('site_id', $siteId);
+
+        if ($parentId) {
+            $parent = CoaAccount::find($parentId);
+            if (! $parent || ! is_numeric($parent->account_code)) {
+                return response()->json(['code' => '']);
+            }
+
+            $query->where('parent_account_id', $parentId);
+            $maxCode = $query->max('account_code');
+            $pCode = (int) $parent->account_code;
+
+            // Determine step based on parent's level (trailing zeros)
+            $step = 1;
+            if ($pCode % 1000 == 0) {
+                // Parent is Root (Level 1, e.g. 5000). Children are Level 2 (step 100: 5100, 5200)
+                $step = 100;
+            } elseif ($pCode % 100 == 0) {
+                // Parent is Level 2 (e.g. 5100). Children are Level 3 (step 10: 5110, 5120)
+                $step = 10;
+            } else {
+                // Parent is Level 3 (e.g. 5110). Children are Level 4 (step 1: 5111, 5112)
+                $step = 1;
+            }
+
+            if ($maxCode && is_numeric($maxCode)) {
+                // Sibling exists, increment from max sibling
+                return response()->json([
+                    'code' => (string) ($maxCode + $step),
+                ]);
+            } else {
+                // First child, increment from parent
+                return response()->json(['code' => (string) ($pCode + $step)]);
+            }
+        } else {
+            // Root level (Level 1). Step 1000 (1000, 2000, 3000)
+            $query->whereNull('parent_account_id');
+            $maxCode = $query->max('account_code');
+            $step = 1000;
+
+            if ($maxCode && is_numeric($maxCode)) {
+                // Check if we are following standard x000 format
+                if ($maxCode % 1000 == 0) {
+                    return response()->json([
+                        'code' => (string) ($maxCode + $step),
+                    ]);
+                }
+                // If weird non-standard roots exist, just +1000 safely or +1?
+                // Let's stick to +1000 to encourage structure.
+                // Actually, if max is 1005, we probably want 2000, not 2005.
+                // Let's round up to next thousand.
+                $next = ceil(($maxCode + 1) / 1000) * 1000;
+
+                return response()->json(['code' => (string) $next]);
+            } else {
+                return response()->json(['code' => '1000']);
+            }
+        }
     }
 }

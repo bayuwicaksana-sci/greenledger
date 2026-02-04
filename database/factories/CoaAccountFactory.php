@@ -19,7 +19,7 @@ class CoaAccountFactory extends Factory
     {
         return [
             'site_id' => Site::factory(),
-            'account_code' => $this->faker->unique()->bothify('###-???-###'),
+            'account_code' => $this->faker->numerify('####'),
             'account_name' => $this->faker->words(3, true),
             'account_type' => $this->faker->randomElement([
                 'REVENUE',
@@ -27,6 +27,7 @@ class CoaAccountFactory extends Factory
             ]),
             'hierarchy_level' => 1,
             'short_description' => $this->faker->sentence(),
+            'abbreviation' => $this->faker->lexify('???'),
             'is_active' => true,
             'initial_budget' => $this->faker->randomFloat(2, 0, 500000),
         ];

@@ -19,20 +19,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import MainLayout from '@/layouts/main-layout';
 import config from '@/routes/config';
 import { BreadcrumbItem, Site } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import {
-    flexRender,
     getCoreRowModel,
     getFilteredRowModel,
     getPaginationRowModel,
@@ -99,7 +90,7 @@ export default function ChartOfAccounts({ accounts, sites = [] }: Props) {
     );
     const [globalFilter, setGlobalFilter] = useState('');
     const [selectedSiteId, setSelectedSiteId] = useState<string>('all');
-    const [viewMode, setViewMode] = useState<'table' | 'tree'>('table');
+    // const [viewMode, setViewMode] = useState<'table' | 'tree'>('table');
 
     const [importDialogOpen, setImportDialogOpen] = useState(false);
     const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
@@ -398,7 +389,7 @@ export default function ChartOfAccounts({ accounts, sites = [] }: Props) {
                                     ))}
                             </DropdownMenuContent>
                         </DropdownMenu>
-                        <div className="flex rounded-md border">
+                        {/* <div className="flex rounded-md border">
                             <Button
                                 variant={
                                     viewMode === 'table' ? 'default' : 'ghost'
@@ -419,10 +410,11 @@ export default function ChartOfAccounts({ accounts, sites = [] }: Props) {
                             >
                                 Tree
                             </Button>
-                        </div>
+                        </div> */}
                     </div>
 
-                    {viewMode === 'tree' ? (
+                    <CoaTreeView accounts={filteredAccounts} sites={sites} />
+                    {/* {viewMode === 'tree' ? (
                         <CoaTreeView
                             accounts={filteredAccounts}
                             sites={sites}
@@ -535,7 +527,7 @@ export default function ChartOfAccounts({ accounts, sites = [] }: Props) {
                                 </div>
                             </div>
                         </>
-                    )}
+                    )} */}
                 </div>
             </PageLayout>
 

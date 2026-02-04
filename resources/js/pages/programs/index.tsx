@@ -1,24 +1,49 @@
+import { ProgramsTable } from '@/components/programs/ProgramsTable';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import PageAction from '@/components/page/page-action';
+import PageHeader from '@/components/page/page-header';
+import PageLayout from '@/components/page/page-layout';
+import programRoutes from '@/routes/programs';
+import { BreadcrumbItem, Program } from '@/types';
+import { Head, Link } from '@inertiajs/react';
+import { Plus } from 'lucide-react';
 
-export default function AllPrograms() {
+export default function ProgramsIndex({
+    programs,
+    site_code,
+}: {
+    programs: Program[];
+    site_code: string;
+}) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: 'All Programs',
-            href: '#',
+            title: 'Programs',
+            href: programRoutes.index.url({ site: site_code }),
         },
     ];
-
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="All Programs" />
-            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <div className="flex flex-col items-center justify-center rounded-xl border border-sidebar-border/70 p-12 dark:border-sidebar-border">
-                    <h1 className="text-3xl font-bold">All Programs</h1>
-                    <p className="mt-4 text-muted-foreground">Coming soon...</p>
-                </div>
-            </div>
+            <Head title="Programs" />
+            <PageLayout>
+                <PageHeader
+                    pageTitle="Programs"
+                    pageSubtitle="Manage research programs for this site."
+                >
+                    <PageAction>
+                        <Link
+                            href={programRoutes.create.url({
+                                site: site_code,
+                            })}
+                        >
+                            <Button>
+                                <Plus className="mr-2 h-4 w-4" /> New Program
+                            </Button>
+                        </Link>
+                    </PageAction>
+                </PageHeader>
+                <ProgramsTable programs={programs} site_code={site_code} />
+            </PageLayout>
         </AppLayout>
     );
 }

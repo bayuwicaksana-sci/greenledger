@@ -27,7 +27,6 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - eslint (ESLINT) - v9
 - prettier (PRETTIER) - v3
 - recharts - v3.7.0
-- react-hook-form - v7.71.0
 - shadcn/ui - v3.7.0
 
 ## Conventions
@@ -370,7 +369,7 @@ If your application uses the `<Form>` component from Inertia, you can use Wayfin
   it('returns all', function () {
   $response = $this->postJson('/api/docs', []);
 
-                  $response->assertSuccessful();
+                    $response->assertSuccessful();
 
     });
     </code-snippet>

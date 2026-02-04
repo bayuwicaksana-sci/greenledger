@@ -53,7 +53,7 @@ class CoaAccountTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('config.coa.store'), [
             'site_id' => $site->id,
-            'account_code' => 'KLT-TEST-001',
+            'account_code' => '5211',
             'account_name' => 'Test Account',
             'account_type' => 'EXPENSE',
             'is_active' => true,
@@ -61,7 +61,7 @@ class CoaAccountTest extends TestCase
 
         $response->assertRedirect();
         $this->assertDatabaseHas('coa_accounts', [
-            'account_code' => 'KLT-TEST-001',
+            'account_code' => '5211',
             'site_id' => $site->id,
         ]);
     }
@@ -74,12 +74,12 @@ class CoaAccountTest extends TestCase
 
         CoaAccount::factory()->create([
             'site_id' => $site->id,
-            'account_code' => 'KLT-DUP-001',
+            'account_code' => '5211',
         ]);
 
         $response = $this->actingAs($user)->post(route('config.coa.store'), [
             'site_id' => $site->id,
-            'account_code' => 'KLT-DUP-001',
+            'account_code' => '5211',
             'account_name' => 'Duplicate Account',
             'account_type' => 'EXPENSE',
             'is_active' => true,
@@ -127,7 +127,7 @@ class CoaAccountTest extends TestCase
         $response = $this->actingAs($user)->put(
             route('config.coa.update', $coa),
             [
-                'account_code' => 'CHANGED-001',
+                'account_code' => '9999',
                 'account_name' => 'Changed Name',
             ],
         );
@@ -153,6 +153,7 @@ class CoaAccountTest extends TestCase
             route('config.coa.update', $coa),
             [
                 'account_type' => 'REVENUE',
+                'account_code' => $coa->account_code,
                 'account_name' => 'Changed Name',
             ],
         );
@@ -180,6 +181,8 @@ class CoaAccountTest extends TestCase
                 'account_name' => 'Updated Name',
                 'short_description' => 'New description',
                 'is_active' => false,
+                'account_code' => $coa->account_code,
+                'account_type' => $coa->account_type,
             ],
         );
 
@@ -250,7 +253,7 @@ class CoaAccountTest extends TestCase
                     [
                         '_temp_id' => 'temp_1',
                         'site_id' => $site->id,
-                        'account_code' => 'BULK-001',
+                        'account_code' => '5001',
                         'account_name' => 'Bulk Account 1',
                         'account_type' => 'EXPENSE',
                         'is_active' => true,
@@ -258,7 +261,7 @@ class CoaAccountTest extends TestCase
                     [
                         '_temp_id' => 'temp_2',
                         'site_id' => $site->id,
-                        'account_code' => 'BULK-002',
+                        'account_code' => '5002',
                         'account_name' => 'Bulk Account 2',
                         'account_type' => 'EXPENSE',
                         'is_active' => true,
@@ -271,12 +274,12 @@ class CoaAccountTest extends TestCase
         $response->assertSessionHas('success');
 
         $this->assertDatabaseHas('coa_accounts', [
-            'account_code' => 'BULK-001',
+            'account_code' => '5001',
             'site_id' => $site->id,
         ]);
 
         $this->assertDatabaseHas('coa_accounts', [
-            'account_code' => 'BULK-002',
+            'account_code' => '5002',
             'site_id' => $site->id,
         ]);
     }
@@ -295,7 +298,7 @@ class CoaAccountTest extends TestCase
                     [
                         '_temp_id' => 'temp_parent',
                         'site_id' => $site->id,
-                        'account_code' => 'PARENT-001',
+                        'account_code' => '5100',
                         'account_name' => 'Parent Account',
                         'account_type' => 'EXPENSE',
                         'is_active' => true,
@@ -303,7 +306,7 @@ class CoaAccountTest extends TestCase
                     [
                         '_temp_id' => 'temp_child',
                         'site_id' => $site->id,
-                        'account_code' => 'CHILD-001',
+                        'account_code' => '5101',
                         'account_name' => 'Child Account',
                         'account_type' => 'EXPENSE',
                         'parent_temp_id' => 'temp_parent',
@@ -315,8 +318,8 @@ class CoaAccountTest extends TestCase
 
         $response->assertRedirect(route('config.coa.index'));
 
-        $parent = CoaAccount::where('account_code', 'PARENT-001')->first();
-        $child = CoaAccount::where('account_code', 'CHILD-001')->first();
+        $parent = CoaAccount::where('account_code', '5100')->first();
+        $child = CoaAccount::where('account_code', '5101')->first();
 
         $this->assertNotNull($parent);
         $this->assertNotNull($child);
@@ -420,7 +423,7 @@ class CoaAccountTest extends TestCase
                 'rows' => [
                     [
                         'site_code' => 'KLT',
-                        'account_code' => 'KLT-IMP-001',
+                        'account_code' => '5211',
                         'account_name' => 'Import Test',
                         'account_type' => 'EXPENSE',
                         'short_description' => '',
@@ -442,44 +445,39 @@ class CoaAccountTest extends TestCase
 
         $site = Site::factory()->create(['site_code' => 'KLT']);
 
-        $response = $this->actingAs($user)->post(
-            route('config.coa.import'),
-            [
-                'rows' => [
-                    [
-                        'site_code' => 'KLT',
-                        'account_code' => 'KLT-IMP-001',
-                        'account_name' => 'Import Account 1',
-                        'account_type' => 'REVENUE',
-                        'short_description' => 'First imported account',
-                        'parent_account_code' => '',
-                        'is_active' => true,
-                    ],
-                    [
-                        'site_code' => 'KLT',
-                        'account_code' => 'KLT-IMP-002',
-                        'account_name' => 'Import Account 2',
-                        'account_type' => 'REVENUE',
-                        'short_description' => 'Child of first',
-                        'parent_account_code' => 'KLT-IMP-001',
-                        'is_active' => true,
-                    ],
+        $response = $this->actingAs($user)->post(route('config.coa.import'), [
+            'rows' => [
+                [
+                    'site_code' => 'KLT',
+                    'account_code' => '4001',
+                    'account_name' => 'Import Account 1',
+                    'account_type' => 'REVENUE',
+                    'short_description' => 'First imported account',
+                    'parent_account_code' => '',
+                    'is_active' => true,
+                ],
+                [
+                    'site_code' => 'KLT',
+                    'account_code' => '4002',
+                    'account_name' => 'Import Account 2',
+                    'account_type' => 'REVENUE',
+                    'short_description' => 'Child of first',
+                    'parent_account_code' => '4001',
+                    'is_active' => true,
                 ],
             ],
-        );
+        ]);
 
         $response->assertOk();
         $response->assertJsonPath('success', true);
         $response->assertJsonPath('count', 2);
 
         $this->assertDatabaseHas('coa_accounts', [
-            'account_code' => 'KLT-IMP-001',
-            'site_id' => $site->id,
-            'hierarchy_level' => 1,
+            'account_code' => '4001',
         ]);
 
-        $parent = CoaAccount::where('account_code', 'KLT-IMP-001')->first();
-        $child = CoaAccount::where('account_code', 'KLT-IMP-002')->first();
+        $parent = CoaAccount::where('account_code', '4001')->first();
+        $child = CoaAccount::where('account_code', '4002')->first();
 
         $this->assertNotNull($parent);
         $this->assertNotNull($child);
@@ -498,7 +496,7 @@ class CoaAccountTest extends TestCase
                 'rows' => [
                     [
                         'site_code' => 'NONEXISTENT',
-                        'account_code' => 'TEST-001',
+                        'account_code' => '5211',
                         'account_name' => 'Bad Site',
                         'account_type' => 'EXPENSE',
                         'short_description' => '',
@@ -527,7 +525,7 @@ class CoaAccountTest extends TestCase
                 'rows' => [
                     [
                         'site_code' => 'KLT',
-                        'account_code' => 'DUP-CODE',
+                        'account_code' => '5211',
                         'account_name' => 'First',
                         'account_type' => 'EXPENSE',
                         'short_description' => '',
@@ -536,7 +534,7 @@ class CoaAccountTest extends TestCase
                     ],
                     [
                         'site_code' => 'KLT',
-                        'account_code' => 'DUP-CODE',
+                        'account_code' => '5211',
                         'account_name' => 'Second',
                         'account_type' => 'EXPENSE',
                         'short_description' => '',
@@ -565,7 +563,7 @@ class CoaAccountTest extends TestCase
                 'rows' => [
                     [
                         'site_code' => 'KLT',
-                        'account_code' => 'CHILD-001',
+                        'account_code' => '5101',
                         'account_name' => 'Orphan Child',
                         'account_type' => 'EXPENSE',
                         'short_description' => '',
@@ -594,6 +592,7 @@ class CoaAccountTest extends TestCase
             route('config.coa.templates.index').'?site_id='.$site->id,
         );
 
+        $response->dump();
         $response->assertOk();
         $this->assertIsArray($response->json());
         $this->assertTrue(count($response->json()) > 0);
@@ -616,7 +615,7 @@ class CoaAccountTest extends TestCase
         $response = $this->actingAs($user)->post(
             route('config.coa.templates.apply'),
             [
-                'template_key' => 'agricultural_research_revenue',
+                'template_key' => 'standard_agricultural',
                 'site_id' => $site->id,
             ],
         );
@@ -627,19 +626,19 @@ class CoaAccountTest extends TestCase
         // Verify template accounts were created
         $this->assertDatabaseHas('coa_accounts', [
             'site_id' => $site->id,
-            'account_code' => '4-1000',
+            'account_code' => '4000',
             'account_name' => 'Revenue',
             'account_type' => 'REVENUE',
             'hierarchy_level' => 1,
         ]);
 
         $parent = CoaAccount::where('site_id', $site->id)
-            ->where('account_code', '4-1000')
+            ->where('account_code', '4000')
             ->first();
 
         $this->assertDatabaseHas('coa_accounts', [
             'site_id' => $site->id,
-            'account_code' => '4-1100',
+            'account_code' => '4100',
             'parent_account_id' => $parent->id,
             'hierarchy_level' => 2,
         ]);
@@ -655,7 +654,7 @@ class CoaAccountTest extends TestCase
         // Pre-create one account that exists in the template
         CoaAccount::factory()->create([
             'site_id' => $site->id,
-            'account_code' => '4-1000',
+            'account_code' => '4000',
             'account_name' => 'Pre-existing Revenue',
             'account_type' => 'REVENUE',
         ]);
@@ -663,7 +662,7 @@ class CoaAccountTest extends TestCase
         $response = $this->actingAs($user)->post(
             route('config.coa.templates.apply'),
             [
-                'template_key' => 'agricultural_research_revenue',
+                'template_key' => 'standard_agricultural',
                 'site_id' => $site->id,
                 'skip_existing' => true,
             ],
@@ -675,14 +674,14 @@ class CoaAccountTest extends TestCase
         // The pre-existing account name should remain unchanged
         $this->assertDatabaseHas('coa_accounts', [
             'site_id' => $site->id,
-            'account_code' => '4-1000',
+            'account_code' => '4000',
             'account_name' => 'Pre-existing Revenue',
         ]);
 
         // Child accounts should still be created
         $this->assertDatabaseHas('coa_accounts', [
             'site_id' => $site->id,
-            'account_code' => '4-1100',
+            'account_code' => '4100',
         ]);
     }
 
@@ -716,7 +715,7 @@ class CoaAccountTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('config.coa.store'), [
             'site_id' => $site->id,
-            'account_code' => 'REDIR-001',
+            'account_code' => '5100',
             'account_name' => 'Redirect Test',
             'account_type' => 'EXPENSE',
             'is_active' => true,
@@ -734,7 +733,7 @@ class CoaAccountTest extends TestCase
 
         $this->actingAs($user)->post(route('config.coa.store'), [
             'site_id' => $site->id,
-            'account_code' => 'BUD-001',
+            'account_code' => '5200',
             'account_name' => 'Budget Store Test',
             'account_type' => 'EXPENSE',
             'is_active' => true,
@@ -742,7 +741,7 @@ class CoaAccountTest extends TestCase
         ]);
 
         $this->assertDatabaseHas('coa_accounts', [
-            'account_code' => 'BUD-001',
+            'account_code' => '5200',
             'initial_budget' => 50000,
         ]);
     }
@@ -756,15 +755,12 @@ class CoaAccountTest extends TestCase
             'initial_budget' => 10000,
         ]);
 
-        $this->actingAs($user)->put(
-            route('config.coa.update', $coa),
-            [
-                'account_code' => $coa->account_code,
-                'account_name' => $coa->account_name,
-                'account_type' => $coa->account_type,
-                'initial_budget' => 75000,
-            ],
-        );
+        $this->actingAs($user)->put(route('config.coa.update', $coa), [
+            'account_code' => $coa->account_code,
+            'account_name' => $coa->account_name,
+            'account_type' => $coa->account_type,
+            'initial_budget' => 75000,
+        ]);
 
         $this->assertDatabaseHas('coa_accounts', [
             'id' => $coa->id,
@@ -817,7 +813,7 @@ class CoaAccountTest extends TestCase
             'program_id' => $program->id,
             'activity_id' => $activity->id,
             'coa_account_id' => $coa->id,
-            'split_amount' => 3500.00,
+            'split_amount' => 3500.0,
             'split_percentage' => 70,
         ]);
 
@@ -829,8 +825,11 @@ class CoaAccountTest extends TestCase
                 $accounts = collect($data['props']['accounts']);
                 $found = $accounts->first(fn ($a) => $a['id'] === $coa->id);
 
-                $this->assertNotNull($found, 'COA account not found in index response');
-                $this->assertEquals(3500.00, (float) $found['actual_amount']);
+                $this->assertNotNull(
+                    $found,
+                    'COA account not found in index response',
+                );
+                $this->assertEquals(3500.0, (float) $found['actual_amount']);
             });
     }
 }

@@ -1,4 +1,4 @@
-import AppLayout from '@/layouts/app-layout';
+import MainLayout from '@/layouts/main-layout';
 import { BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 
@@ -11,7 +11,7 @@ export default function AccessLogs() {
     ];
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <MainLayout breadcrumbs={breadcrumbs}>
             <Head title="Access Logs" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="flex flex-col items-center justify-center rounded-xl border border-sidebar-border/70 p-12 dark:border-sidebar-border">
@@ -19,6 +19,6 @@ export default function AccessLogs() {
                     <p className="mt-4 text-muted-foreground">Coming soon...</p>
                 </div>
             </div>
-        </AppLayout>
+        </MainLayout>
     );
 }

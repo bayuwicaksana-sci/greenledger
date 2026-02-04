@@ -17,6 +17,7 @@
         "laravel/wayfinder": "^0.1.9",
         "spatie/eloquent-sortable": "^4.5",
         "spatie/laravel-activitylog": "^4.10",
+        "spatie/laravel-medialibrary": "^11.17",
         "spatie/laravel-model-states": "^2.12",
         "spatie/laravel-permission": "^6.24",
         "tightenco/parental": "^1.5"

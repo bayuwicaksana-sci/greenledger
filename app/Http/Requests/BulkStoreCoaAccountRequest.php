@@ -12,7 +12,8 @@ class BulkStoreCoaAccountRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()->can('coa.view.all') ||
+            $this->user()->can('coa.view.site');
     }
 
     /**
@@ -33,6 +34,7 @@ class BulkStoreCoaAccountRequest extends FormRequest
                 'in:REVENUE,EXPENSE',
             ],
             'accounts.*.short_description' => ['nullable', 'string'],
+            'accounts.*.abbreviation' => ['nullable', 'string', 'max:10'],
             'accounts.*.parent_account_id' => [
                 'nullable',
                 'exists:coa_accounts,id',
@@ -40,6 +42,8 @@ class BulkStoreCoaAccountRequest extends FormRequest
             'accounts.*.parent_temp_id' => ['nullable', 'string', 'max:255'],
             'accounts.*._temp_id' => ['nullable', 'string', 'max:255'],
             'accounts.*.is_active' => ['boolean'],
+            'accounts.*.budget_control' => ['boolean'],
+            'accounts.*.initial_budget' => ['nullable', 'numeric', 'min:0'],
         ];
     }
 

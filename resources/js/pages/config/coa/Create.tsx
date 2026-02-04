@@ -1,16 +1,13 @@
 import {
     bulkStore,
     index,
-    store,
 } from '@/actions/App/Http/Controllers/CoaAccountController';
 import { Button } from '@/components/ui/button';
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -20,19 +17,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
-import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import MainLayout from '@/layouts/main-layout';
 import { BreadcrumbItem, Site } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import { Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Plus, Save, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 interface ParentAccount {
@@ -40,6 +29,7 @@ interface ParentAccount {
     site_id: number;
     account_code: string;
     account_name: string;
+    account_type: string;
     hierarchy_level: number;
 }
 
@@ -48,110 +38,86 @@ interface ExistingCode {
     account_code: string;
 }
 
+interface StandardAccount {
+    code: string;
+    name: string;
+    type: string;
+    description: string;
+    parent: string | null;
+    abbreviation?: string;
+}
+
 interface CreateProps {
     sites: Site[];
     parents: ParentAccount[];
     existingCodes: ExistingCode[];
+    standardAccounts: StandardAccount[];
 }
 
 interface AccountFormData {
     _temp_id: string;
     site_id: string;
     account_code: string;
+    abbreviation: string;
     account_name: string;
-    account_type: 'REVENUE' | 'EXPENSE';
+    account_type: string;
     short_description: string;
     parent_account_id: string;
     parent_temp_id: string;
     is_active: boolean;
+    budget_control: boolean;
     initial_budget: string;
+    is_standard: boolean;
 }
 
-// Parse the trailing number from a code like "klaten-expense-003" → 3
-function parseTrailingNumber(code: string): number {
-    const match = code.match(/-(\d+)$/);
-    return match ? parseInt(match[1], 10) : 0;
-}
-
-// Build the prefix for a site + type: "klaten-expense-"
-function buildPrefix(siteCode: string, accountType: string): string {
-    return `${siteCode.toLowerCase()}-${accountType.toLowerCase()}-`;
-}
-
-export default function Create({ sites, parents, existingCodes }: CreateProps) {
+export default function Create({
+    sites,
+    parents, // eslint-disable-line
+    existingCodes, // eslint-disable-line
+    standardAccounts, // eslint-disable-line
+}: CreateProps) {
     const breadcrumbs: BreadcrumbItem[] = [
-        {
-            title: 'Chart of Accounts',
-            href: index.url(),
-        },
-        {
-            title: 'Create Account',
-            href: '#',
-        },
+        { title: 'Chart of Accounts', href: index.url() },
+        { title: 'Create Account', href: '#' },
     ];
 
-    const [bulkMode, setBulkMode] = useState(false);
     const [accounts, setAccounts] = useState<AccountFormData[]>([
         createEmptyAccount(),
     ]);
     const [processing, setProcessing] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [collapsedCards, setCollapsedCards] = useState<Set<string>>(
+        new Set(),
+    );
+
+    const toggleCard = (tempId: string) => {
+        setCollapsedCards((prev) => {
+            const next = new Set(prev);
+            if (next.has(tempId)) {
+                next.delete(tempId);
+            } else {
+                next.add(tempId);
+            }
+            return next;
+        });
+    };
 
     function createEmptyAccount(): AccountFormData {
         return {
             _temp_id: `temp_${Date.now()}_${Math.random()}`,
             site_id: '',
             account_code: '',
+            abbreviation: '',
             account_name: '',
             account_type: 'EXPENSE',
             short_description: '',
             parent_account_id: '',
             parent_temp_id: '',
             is_active: true,
+            budget_control: false,
             initial_budget: '0',
+            is_standard: false,
         };
-    }
-
-    // Compute the next auto-generated code for a given site + type,
-    // taking into account both DB codes and codes already in the current batch.
-    function generateNextCode(
-        siteId: string,
-        accountType: string,
-        excludeIndex?: number,
-    ): string {
-        if (!siteId) return '';
-
-        const site = sites.find((s) => s.id.toString() === siteId);
-        if (!site) return '';
-
-        const prefix = buildPrefix(site.site_code, accountType);
-
-        // Max from existing DB codes matching this prefix + site
-        const dbMax = existingCodes
-            .filter(
-                (c) =>
-                    c.site_id.toString() === siteId &&
-                    c.account_code.toLowerCase().startsWith(prefix),
-            )
-            .reduce(
-                (max, c) => Math.max(max, parseTrailingNumber(c.account_code)),
-                0,
-            );
-
-        // Max from other rows already in the batch
-        const batchMax = accounts.reduce((max, acc, idx) => {
-            if (idx === excludeIndex) return max;
-            if (
-                acc.site_id === siteId &&
-                acc.account_code.toLowerCase().startsWith(prefix)
-            ) {
-                return Math.max(max, parseTrailingNumber(acc.account_code));
-            }
-            return max;
-        }, 0);
-
-        const nextNum = Math.max(dbMax, batchMax) + 1;
-        return `${prefix}${nextNum.toString().padStart(3, '0')}`;
     }
 
     const handleAddAccount = () => {
@@ -164,6 +130,41 @@ export default function Create({ sites, parents, existingCodes }: CreateProps) {
         }
     };
 
+    const fetchNextCode = async (
+        idx: number,
+        siteId: string,
+        parentId: string,
+    ) => {
+        if (!siteId) return;
+        try {
+            const params = new URLSearchParams({
+                site_id: siteId,
+                parent_id: parentId || '',
+            });
+            const res = await fetch(
+                `/app/config/coa/next-code?${params.toString()}`,
+                {
+                    headers: { Accept: 'application/json' },
+                },
+            );
+            if (res.ok) {
+                const data = await res.json();
+                if (data.code) {
+                    setAccounts((prev) => {
+                        const updated = [...prev];
+                        updated[idx] = {
+                            ...updated[idx],
+                            account_code: data.code,
+                        };
+                        return updated;
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Failed to fetch next code', error);
+        }
+    };
+
     const handleUpdateAccount = (
         index: number,
         field: keyof AccountFormData,
@@ -171,768 +172,540 @@ export default function Create({ sites, parents, existingCodes }: CreateProps) {
     ) => {
         setAccounts((prev) => {
             const updated = [...prev];
-            updated[index] = { ...updated[index], [field]: value };
-            return updated;
-        });
-    };
+            const oldRow = updated[index];
+            let newRow = { ...oldRow, [field]: value };
 
-    // When site or type changes, regenerate the account code for that row.
-    const handleSiteOrTypeChange = (
-        index: number,
-        field: 'site_id' | 'account_type',
-        value: string,
-    ) => {
-        setAccounts((prev) => {
-            const updated = [...prev];
-            updated[index] = { ...updated[index], [field]: value };
+            if (field === 'parent_account_id') {
+                const raw = value as string;
 
-            // Regenerate code based on the new site/type
-            const siteId = field === 'site_id' ? value : updated[index].site_id;
-            const accountType =
-                field === 'account_type' ? value : updated[index].account_type;
+                if (raw.startsWith('temp:')) {
+                    // In-batch sibling selected as parent
+                    const tempId = raw.slice('temp:'.length);
+                    newRow.parent_account_id = '';
+                    newRow.parent_temp_id = tempId;
 
-            if (siteId) {
-                const site = sites.find((s) => s.id.toString() === siteId);
-                if (site) {
-                    const prefix = buildPrefix(site.site_code, accountType);
+                    // Auto-set account_type from the sibling
+                    const sibling = prev.find(
+                        (a) => a._temp_id === tempId,
+                    );
+                    if (sibling) {
+                        newRow.account_type = sibling.account_type;
+                    }
+                } else if (raw === 'root' || raw === '') {
+                    // Root / no parent
+                    newRow.parent_account_id = '';
+                    newRow.parent_temp_id = '';
+                } else {
+                    // Existing DB parent
+                    newRow.parent_account_id = raw;
+                    newRow.parent_temp_id = '';
 
-                    const dbMax = existingCodes
-                        .filter(
-                            (c) =>
-                                c.site_id.toString() === siteId &&
-                                c.account_code.toLowerCase().startsWith(prefix),
-                        )
-                        .reduce(
-                            (max, c) =>
-                                Math.max(
-                                    max,
-                                    parseTrailingNumber(c.account_code),
-                                ),
-                            0,
-                        );
-
-                    const batchMax = updated.reduce((max, acc, idx) => {
-                        if (idx === index) return max;
-                        if (
-                            acc.site_id === siteId &&
-                            acc.account_code.toLowerCase().startsWith(prefix)
-                        ) {
-                            return Math.max(
-                                max,
-                                parseTrailingNumber(acc.account_code),
-                            );
-                        }
-                        return max;
-                    }, 0);
-
-                    const nextNum = Math.max(dbMax, batchMax) + 1;
-                    updated[index].account_code =
-                        `${prefix}${nextNum.toString().padStart(3, '0')}`;
+                    const parent = parents.find(
+                        (p) => p.id.toString() === raw,
+                    );
+                    if (parent) {
+                        newRow.account_type = parent.account_type;
+                    }
                 }
             }
 
+            updated[index] = newRow;
+            return updated;
+        });
+
+        // Trigger code generation if core fields change (skip for temp parents)
+        if (field === 'site_id' || field === 'parent_account_id') {
+            const acc = accounts[index];
+            const siteId =
+                field === 'site_id' ? (value as string) : acc.site_id;
+            const rawParent =
+                field === 'parent_account_id'
+                    ? (value as string)
+                    : acc.parent_account_id;
+
+            // Don't call nextCode when a temp: parent is selected
+            const isTempParent =
+                typeof rawParent === 'string' && rawParent.startsWith('temp:');
+
+            if (siteId && !isTempParent) {
+                const parentId =
+                    rawParent === 'root' ? '' : (rawParent as string);
+                fetchNextCode(index, siteId, parentId);
+            }
+        }
+    };
+
+    const handleStandardAccountSelect = (
+        index: number,
+        standardCode: string,
+    ) => {
+        const standard = standardAccounts.find((s) => s.code === standardCode);
+        if (!standard) return;
+
+        setAccounts((prev) => {
+            const updated = [...prev];
+            const current = updated[index];
+            const newRow = {
+                ...current,
+                account_code: standard.code,
+                account_name: standard.name,
+                account_type: standard.type,
+                short_description: standard.description,
+                abbreviation: standard.abbreviation || '',
+                is_standard: true,
+            };
+            updated[index] = newRow;
             return updated;
         });
     };
 
-    // Single atomic update for parent selection — avoids stale-state
-    // overwrite that happened when calling handleUpdateAccount twice.
-    const handleParentChange = (index: number, val: string) => {
-        setAccounts((prev) => {
-            const updated = [...prev];
-            if (val.startsWith('temp_')) {
-                updated[index] = {
-                    ...updated[index],
-                    parent_temp_id: val,
-                    parent_account_id: '',
-                };
-            } else if (val === 'none') {
-                updated[index] = {
-                    ...updated[index],
-                    parent_temp_id: '',
-                    parent_account_id: '',
-                };
-            } else {
-                updated[index] = {
-                    ...updated[index],
-                    parent_account_id: val,
-                    parent_temp_id: '',
-                };
-            }
-            return updated;
-        });
-    };
+    // Kept for potential future use — no current UI wires it
+    void handleStandardAccountSelect;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setProcessing(true);
         setErrors({});
 
-        if (bulkMode) {
-            router.post(
-                bulkStore.url(),
-                { accounts },
-                {
-                    onSuccess: () => {
-                        setProcessing(false);
-                    },
-                    onError: (errors) => {
-                        setProcessing(false);
-                        setErrors(errors);
-                    },
-                },
-            );
-        } else {
-            router.post(store.url(), accounts[0], {
-                onSuccess: () => {
-                    setProcessing(false);
-                },
-                onError: (errors) => {
-                    setProcessing(false);
-                    setErrors(errors);
-                },
-            });
-        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        router.post(bulkStore.url(), { accounts } as any, {
+            onSuccess: () => setProcessing(false),
+            onError: (err) => {
+                setErrors(err);
+                setProcessing(false);
+            },
+        });
     };
 
-    // Available parents for a given row: existing DB parents for the same site,
-    // plus earlier rows in the batch (which will be created first).
-    const getAvailableParents = (currentIndex: number) => {
-        const currentSiteId = accounts[currentIndex]?.site_id;
+    /**
+     * Build parent options for a given sub-card:
+     *   - DB parents filtered by site_id
+     *   - In-batch siblings with non-empty account_name (prefixed NEW:)
+     */
+    const getParentOptions = (currentIdx: number, siteId: string) => {
+        const dbParents = parents.filter(
+            (p) => p.site_id.toString() === siteId,
+        );
 
-        const existingParents = parents
+        const siblingOptions = accounts
+            .map((a, i) => ({ ...a, _idx: i }))
             .filter(
-                (p) => !currentSiteId || p.site_id.toString() === currentSiteId,
+                (a) =>
+                    a._idx !== currentIdx &&
+                    a.site_id === siteId &&
+                    a.account_name.trim() !== '',
             )
-            .map((p) => ({
-                id: p.id.toString(),
-                label: `${p.account_code} - ${p.account_name}`,
+            .map((a) => ({
+                value: `temp:${a._temp_id}`,
+                label: `NEW: ${a.account_name}`,
             }));
 
-        const batchParents = accounts
-            .slice(0, currentIndex)
-            .map((acc, idx) => ({
-                id: acc._temp_id,
-                label: acc.account_code
-                    ? `${acc.account_code} - ${acc.account_name || 'unnamed'} (in batch)`
-                    : `Account ${idx + 1} (in batch)`,
-            }))
-            .filter(
-                (_, idx) =>
-                    !currentSiteId || accounts[idx].site_id === currentSiteId,
-            );
+        return { dbParents, siblingOptions };
+    };
 
-        return [...existingParents, ...batchParents];
+    /** Derive the current Select value for parent dropdown */
+    const getParentValue = (acc: AccountFormData): string => {
+        if (acc.parent_temp_id) return `temp:${acc.parent_temp_id}`;
+        if (acc.parent_account_id) return acc.parent_account_id;
+        return 'root';
     };
 
     return (
         <MainLayout breadcrumbs={breadcrumbs}>
-            <Head title="Create Account" />
+            <Head title="Create COA Account" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
+                {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h2 className="text-2xl font-bold">
+                        <h1 className="text-3xl font-bold">
                             Create COA Accounts
-                        </h2>
-                        <p className="text-sm text-muted-foreground">
-                            {bulkMode
-                                ? 'Create multiple accounts at once'
-                                : 'Create a single account'}
+                        </h1>
+                        <p className="text-muted-foreground">
+                            Add one or multiple accounts at once
                         </p>
                     </div>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => {
-                            setBulkMode(!bulkMode);
-                            setAccounts([accounts[0] || createEmptyAccount()]);
-                        }}
-                    >
-                        {bulkMode ? 'Single Mode' : 'Bulk Mode'}
-                    </Button>
+                    <Link href={index.url()}>
+                        <Button variant="outline">
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Back
+                        </Button>
+                    </Link>
                 </div>
 
-                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                    {bulkMode ? (
-                        <Card>
-                            <CardHeader className="pb-3">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <CardTitle>
-                                            Accounts to Create
-                                        </CardTitle>
-                                        <CardDescription>
-                                            Create multiple accounts in one
-                                            submission. Account codes are
-                                            auto-generated when you pick a site.
-                                        </CardDescription>
-                                    </div>
-                                    <Button
-                                        type="button"
-                                        size="sm"
-                                        onClick={handleAddAccount}
+                {/* Form */}
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="rounded-lg border p-6">
+                        <h2 className="mb-4 text-lg font-semibold">
+                            Accounts
+                        </h2>
+
+                        <div className="space-y-4">
+                            {accounts.map((acc, idx) => {
+                                const { dbParents, siblingOptions } =
+                                    getParentOptions(idx, acc.site_id);
+
+                                return (
+                                    <Collapsible
+                                        key={acc._temp_id}
+                                        open={
+                                            !collapsedCards.has(acc._temp_id)
+                                        }
+                                        onOpenChange={() =>
+                                            toggleCard(acc._temp_id)
+                                        }
                                     >
-                                        <Plus className="mr-2 h-4 w-4" />
-                                        Add Account
-                                    </Button>
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="overflow-x-auto">
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead>#</TableHead>
-                                                <TableHead>Site</TableHead>
-                                                <TableHead>Code</TableHead>
-                                                <TableHead>Name</TableHead>
-                                                <TableHead>Type</TableHead>
-                                                <TableHead>Parent</TableHead>
-                                                <TableHead>
-                                                    Description
-                                                </TableHead>
-                                                <TableHead>Active</TableHead>
-                                                <TableHead></TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {accounts.map((account, index) => (
-                                                <TableRow
-                                                    key={account._temp_id}
+                                    <div className="rounded-lg border bg-muted/20 p-4">
+                                        {/* Header */}
+                                        <div className="flex items-center justify-between">
+                                            <CollapsibleTrigger asChild>
+                                                <button className="flex flex-1 items-center gap-2 text-left">
+                                                    <ChevronDown
+                                                        className={`h-4 w-4 text-muted-foreground transition-transform ${collapsedCards.has(acc._temp_id) ? '-rotate-90' : ''}`}
+                                                    />
+                                                    <span className="text-sm font-semibold">
+                                                        Account #{idx + 1}
+                                                        {acc.account_name.trim() && (
+                                                            <span className="font-normal text-muted-foreground">
+                                                                {' '}— {acc.account_name}
+                                                            </span>
+                                                        )}
+                                                    </span>
+                                                </button>
+                                            </CollapsibleTrigger>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() =>
+                                                    handleRemoveAccount(idx)
+                                                }
+                                                disabled={
+                                                    accounts.length === 1
+                                                }
+                                            >
+                                                <Trash2 className="h-4 w-4 text-destructive" />
+                                            </Button>
+                                        </div>
+
+                                        <CollapsibleContent>
+                                        {/* Row 1: Site | Parent Account */}
+                                        <div className="mt-3 grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label>Site</Label>
+                                                <Select
+                                                    value={acc.site_id}
+                                                    onValueChange={(val) =>
+                                                        handleUpdateAccount(
+                                                            idx,
+                                                            'site_id',
+                                                            val,
+                                                        )
+                                                    }
                                                 >
-                                                    <TableCell>
-                                                        {index + 1}
-                                                    </TableCell>
-
-                                                    {/* Site */}
-                                                    <TableCell>
-                                                        <Select
-                                                            value={
-                                                                account.site_id
-                                                            }
-                                                            onValueChange={(
-                                                                val,
-                                                            ) =>
-                                                                handleSiteOrTypeChange(
-                                                                    index,
-                                                                    'site_id',
-                                                                    val,
-                                                                )
-                                                            }
-                                                        >
-                                                            <SelectTrigger className="w-36">
-                                                                <SelectValue placeholder="Site" />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                {sites.map(
-                                                                    (site) => (
-                                                                        <SelectItem
-                                                                            key={
-                                                                                site.id
-                                                                            }
-                                                                            value={site.id.toString()}
-                                                                        >
-                                                                            {
-                                                                                site.site_name
-                                                                            }
-                                                                        </SelectItem>
-                                                                    ),
-                                                                )}
-                                                            </SelectContent>
-                                                        </Select>
-                                                        {errors[
-                                                            `accounts.${index}.site_id`
-                                                        ] && (
-                                                            <p className="text-xs text-destructive">
-                                                                {
-                                                                    errors[
-                                                                        `accounts.${index}.site_id`
-                                                                    ]
-                                                                }
-                                                            </p>
-                                                        )}
-                                                    </TableCell>
-
-                                                    {/* Code — auto-generated, still editable */}
-                                                    <TableCell>
-                                                        <Input
-                                                            value={
-                                                                account.account_code
-                                                            }
-                                                            onChange={(e) =>
-                                                                handleUpdateAccount(
-                                                                    index,
-                                                                    'account_code',
-                                                                    e.target
-                                                                        .value,
-                                                                )
-                                                            }
-                                                            placeholder="Auto"
-                                                            className="w-36"
-                                                        />
-                                                        {errors[
-                                                            `accounts.${index}.account_code`
-                                                        ] && (
-                                                            <p className="text-xs text-destructive">
-                                                                {
-                                                                    errors[
-                                                                        `accounts.${index}.account_code`
-                                                                    ]
-                                                                }
-                                                            </p>
-                                                        )}
-                                                    </TableCell>
-
-                                                    {/* Name */}
-                                                    <TableCell>
-                                                        <Input
-                                                            value={
-                                                                account.account_name
-                                                            }
-                                                            onChange={(e) =>
-                                                                handleUpdateAccount(
-                                                                    index,
-                                                                    'account_name',
-                                                                    e.target
-                                                                        .value,
-                                                                )
-                                                            }
-                                                            placeholder="Name"
-                                                            className="w-48"
-                                                        />
-                                                        {errors[
-                                                            `accounts.${index}.account_name`
-                                                        ] && (
-                                                            <p className="text-xs text-destructive">
-                                                                {
-                                                                    errors[
-                                                                        `accounts.${index}.account_name`
-                                                                    ]
-                                                                }
-                                                            </p>
-                                                        )}
-                                                    </TableCell>
-
-                                                    {/* Type */}
-                                                    <TableCell>
-                                                        <Select
-                                                            value={
-                                                                account.account_type
-                                                            }
-                                                            onValueChange={(
-                                                                val,
-                                                            ) =>
-                                                                handleSiteOrTypeChange(
-                                                                    index,
-                                                                    'account_type',
-                                                                    val,
-                                                                )
-                                                            }
-                                                        >
-                                                            <SelectTrigger className="w-32">
-                                                                <SelectValue />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                <SelectItem value="REVENUE">
-                                                                    Revenue
-                                                                </SelectItem>
-                                                                <SelectItem value="EXPENSE">
-                                                                    Expense
-                                                                </SelectItem>
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </TableCell>
-
-                                                    {/* Parent — uses single atomic handler */}
-                                                    <TableCell>
-                                                        <Select
-                                                            value={
-                                                                account.parent_temp_id ||
-                                                                account.parent_account_id ||
-                                                                'none'
-                                                            }
-                                                            onValueChange={(
-                                                                val,
-                                                            ) =>
-                                                                handleParentChange(
-                                                                    index,
-                                                                    val,
-                                                                )
-                                                            }
-                                                        >
-                                                            <SelectTrigger className="w-52">
-                                                                <SelectValue placeholder="None" />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                <SelectItem value="none">
-                                                                    None
-                                                                </SelectItem>
-                                                                {getAvailableParents(
-                                                                    index,
-                                                                ).map(
-                                                                    (
-                                                                        parent,
-                                                                    ) => (
-                                                                        <SelectItem
-                                                                            key={
-                                                                                parent.id
-                                                                            }
-                                                                            value={
-                                                                                parent.id
-                                                                            }
-                                                                        >
-                                                                            {
-                                                                                parent.label
-                                                                            }
-                                                                        </SelectItem>
-                                                                    ),
-                                                                )}
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </TableCell>
-
-                                                    {/* Description */}
-                                                    <TableCell>
-                                                        <Input
-                                                            value={
-                                                                account.short_description
-                                                            }
-                                                            onChange={(e) =>
-                                                                handleUpdateAccount(
-                                                                    index,
-                                                                    'short_description',
-                                                                    e.target
-                                                                        .value,
-                                                                )
-                                                            }
-                                                            placeholder="Description"
-                                                            className="w-48"
-                                                        />
-                                                    </TableCell>
-
-                                                    {/* Active */}
-                                                    <TableCell>
-                                                        <Select
-                                                            value={
-                                                                account.is_active
-                                                                    ? 'true'
-                                                                    : 'false'
-                                                            }
-                                                            onValueChange={(
-                                                                val,
-                                                            ) =>
-                                                                handleUpdateAccount(
-                                                                    index,
-                                                                    'is_active',
-                                                                    val ===
-                                                                        'true',
-                                                                )
-                                                            }
-                                                        >
-                                                            <SelectTrigger className="w-24">
-                                                                <SelectValue />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                <SelectItem value="true">
-                                                                    Active
-                                                                </SelectItem>
-                                                                <SelectItem value="false">
-                                                                    Inactive
-                                                                </SelectItem>
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </TableCell>
-
-                                                    {/* Remove */}
-                                                    <TableCell>
-                                                        {accounts.length >
-                                                            1 && (
-                                                            <Button
-                                                                type="button"
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                onClick={() =>
-                                                                    handleRemoveAccount(
-                                                                        index,
-                                                                    )
-                                                                }
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select Site" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {sites.map((site) => (
+                                                            <SelectItem
+                                                                key={site.id}
+                                                                value={site.id.toString()}
                                                             >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
+                                                                {site.site_code}{' '}
+                                                                - {site.site_name}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                {errors[
+                                                    `accounts.${idx}.site_id`
+                                                ] && (
+                                                    <p className="text-xs text-destructive">
+                                                        {
+                                                            errors[
+                                                                `accounts.${idx}.site_id`
+                                                            ]
+                                                        }
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label>Parent Account</Label>
+                                                <Select
+                                                    value={getParentValue(acc)}
+                                                    onValueChange={(val) =>
+                                                        handleUpdateAccount(
+                                                            idx,
+                                                            'parent_account_id',
+                                                            val,
+                                                        )
+                                                    }
+                                                    disabled={!acc.site_id}
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue
+                                                            placeholder={
+                                                                acc.site_id
+                                                                    ? 'Select Parent'
+                                                                    : 'Select Site First'
+                                                            }
+                                                        />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="root">
+                                                            None (Root Account)
+                                                        </SelectItem>
+                                                        {dbParents.map((p) => (
+                                                            <SelectItem
+                                                                key={p.id}
+                                                                value={p.id.toString()}
+                                                            >
+                                                                {p.account_code}{' '}
+                                                                -{' '}
+                                                                {p.account_name}
+                                                            </SelectItem>
+                                                        ))}
+                                                        {siblingOptions.map(
+                                                            (s) => (
+                                                                <SelectItem
+                                                                    key={
+                                                                        s.value
+                                                                    }
+                                                                    value={
+                                                                        s.value
+                                                                    }
+                                                                >
+                                                                    {s.label}
+                                                                </SelectItem>
+                                                            ),
                                                         )}
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ) : (
-                        /* Single account creation form */
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                            <div className="flex flex-col gap-4 md:col-span-2">
-                                <Card>
-                                    <CardHeader className="pb-3">
-                                        <CardTitle>Account Details</CardTitle>
-                                        <CardDescription>
-                                            Basic information about the account.
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="grid gap-4">
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="account_code">
-                                                Account Code
-                                            </Label>
-                                            <Input
-                                                id="account_code"
-                                                value={accounts[0].account_code}
-                                                onChange={(e) =>
-                                                    handleUpdateAccount(
-                                                        0,
-                                                        'account_code',
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                placeholder="Auto-generated on site select"
-                                            />
-                                            {errors.account_code && (
-                                                <p className="text-sm text-destructive">
-                                                    {errors.account_code}
-                                                </p>
-                                            )}
+                                                    </SelectContent>
+                                                </Select>
+                                                {errors[
+                                                    `accounts.${idx}.parent_temp_id`
+                                                ] && (
+                                                    <p className="text-xs text-destructive">
+                                                        {
+                                                            errors[
+                                                                `accounts.${idx}.parent_temp_id`
+                                                            ]
+                                                        }
+                                                    </p>
+                                                )}
+                                            </div>
                                         </div>
 
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="account_name">
-                                                Account Name
-                                            </Label>
-                                            <Input
-                                                id="account_name"
-                                                value={accounts[0].account_name}
-                                                onChange={(e) =>
-                                                    handleUpdateAccount(
-                                                        0,
-                                                        'account_name',
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                placeholder="e.g. Fertilizer Expenses"
-                                            />
-                                            {errors.account_name && (
-                                                <p className="text-sm text-destructive">
-                                                    {errors.account_name}
-                                                </p>
-                                            )}
+                                        {/* Row 2: Account Code | Account Type */}
+                                        <div className="mt-4 grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label>Account Code</Label>
+                                                <Input
+                                                    value={acc.account_code}
+                                                    onChange={(e) =>
+                                                        handleUpdateAccount(
+                                                            idx,
+                                                            'account_code',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    placeholder="Auto"
+                                                    readOnly={acc.is_standard}
+                                                    className={
+                                                        acc.is_standard
+                                                            ? 'bg-muted'
+                                                            : ''
+                                                    }
+                                                    maxLength={20}
+                                                />
+                                                {errors[
+                                                    `accounts.${idx}.account_code`
+                                                ] && (
+                                                    <p className="text-xs text-destructive">
+                                                        {
+                                                            errors[
+                                                                `accounts.${idx}.account_code`
+                                                            ]
+                                                        }
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label>Account Type</Label>
+                                                <Select
+                                                    value={acc.account_type}
+                                                    onValueChange={(val) =>
+                                                        handleUpdateAccount(
+                                                            idx,
+                                                            'account_type',
+                                                            val,
+                                                        )
+                                                    }
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select Type" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="REVENUE">
+                                                            Revenue
+                                                        </SelectItem>
+                                                        <SelectItem value="EXPENSE">
+                                                            Expense
+                                                        </SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                {errors[
+                                                    `accounts.${idx}.account_type`
+                                                ] && (
+                                                    <p className="text-xs text-destructive">
+                                                        {
+                                                            errors[
+                                                                `accounts.${idx}.account_type`
+                                                            ]
+                                                        }
+                                                    </p>
+                                                )}
+                                            </div>
                                         </div>
 
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="short_description">
-                                                Description
-                                            </Label>
-                                            <Textarea
-                                                id="short_description"
-                                                value={
-                                                    accounts[0]
-                                                        .short_description
-                                                }
+                                        {/* Row 3: Account Name | Abbreviation */}
+                                        <div className="mt-4 grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label>Account Name</Label>
+                                                <Input
+                                                    value={acc.account_name}
+                                                    onChange={(e) =>
+                                                        handleUpdateAccount(
+                                                            idx,
+                                                            'account_name',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    placeholder="Account Name"
+                                                />
+                                                {errors[
+                                                    `accounts.${idx}.account_name`
+                                                ] && (
+                                                    <p className="text-xs text-destructive">
+                                                        {
+                                                            errors[
+                                                                `accounts.${idx}.account_name`
+                                                            ]
+                                                        }
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label>Abbreviation</Label>
+                                                <Input
+                                                    value={acc.abbreviation}
+                                                    onChange={(e) =>
+                                                        handleUpdateAccount(
+                                                            idx,
+                                                            'abbreviation',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    placeholder="Optional"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Short Description (full width) */}
+                                        <div className="mt-4 space-y-2">
+                                            <Label>Short Description</Label>
+                                            <Input
+                                                value={acc.short_description}
                                                 onChange={(e) =>
                                                     handleUpdateAccount(
-                                                        0,
+                                                        idx,
                                                         'short_description',
                                                         e.target.value,
                                                     )
                                                 }
-                                                rows={4}
+                                                placeholder="Short Description"
                                             />
-                                            {errors.short_description && (
-                                                <p className="text-sm text-destructive">
-                                                    {errors.short_description}
-                                                </p>
-                                            )}
                                         </div>
 
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="initial_budget">
-                                                Initial Budget
-                                            </Label>
-                                            <Input
-                                                id="initial_budget"
-                                                type="number"
-                                                min="0"
-                                                step="0.01"
-                                                value={
-                                                    accounts[0].initial_budget
-                                                }
-                                                onChange={(e) =>
-                                                    handleUpdateAccount(
-                                                        0,
-                                                        'initial_budget',
-                                                        e.target.value,
-                                                    )
-                                                }
-                                            />
-                                            {errors.initial_budget && (
-                                                <p className="text-sm text-destructive">
-                                                    {errors.initial_budget}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </div>
-
-                            <div className="flex flex-col gap-4">
-                                <Card className="h-full">
-                                    <CardHeader className="pb-3">
-                                        <CardTitle>Classification</CardTitle>
-                                        <CardDescription>
-                                            Organize this account.
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="grid gap-4">
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="site_id">
-                                                Site
-                                            </Label>
-                                            <Select
-                                                value={accounts[0].site_id}
-                                                onValueChange={(val) =>
-                                                    handleSiteOrTypeChange(
-                                                        0,
-                                                        'site_id',
-                                                        val,
-                                                    )
-                                                }
-                                            >
-                                                <SelectTrigger id="site_id">
-                                                    <SelectValue placeholder="Select site" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {sites.map((site) => (
-                                                        <SelectItem
-                                                            key={site.id}
-                                                            value={site.id.toString()}
-                                                        >
-                                                            {site.site_name}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                            {errors.site_id && (
-                                                <p className="text-sm text-destructive">
-                                                    {errors.site_id}
-                                                </p>
-                                            )}
-                                        </div>
-
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="parent_account_id">
-                                                Parent Account
-                                            </Label>
-                                            <Select
-                                                value={
-                                                    accounts[0]
-                                                        .parent_account_id ||
-                                                    'none'
-                                                }
-                                                onValueChange={(val) =>
-                                                    handleUpdateAccount(
-                                                        0,
-                                                        'parent_account_id',
-                                                        val === 'none'
-                                                            ? ''
-                                                            : val,
-                                                    )
-                                                }
-                                            >
-                                                <SelectTrigger id="parent_account_id">
-                                                    <SelectValue placeholder="None" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="none">
-                                                        None
-                                                    </SelectItem>
-                                                    {parents
-                                                        .filter(
-                                                            (p) =>
-                                                                !accounts[0]
-                                                                    .site_id ||
-                                                                p.site_id.toString() ===
-                                                                    accounts[0]
-                                                                        .site_id,
+                                        {/* Budget Control + Initial Budget */}
+                                        <div className="mt-4 grid grid-cols-2 gap-4">
+                                            <div className="flex items-end space-x-2">
+                                                <Switch
+                                                    checked={acc.budget_control}
+                                                    onCheckedChange={(c) =>
+                                                        handleUpdateAccount(
+                                                            idx,
+                                                            'budget_control',
+                                                            c,
                                                         )
-                                                        .map((parent) => (
-                                                            <SelectItem
-                                                                key={parent.id}
-                                                                value={parent.id.toString()}
-                                                            >
-                                                                {
-                                                                    parent.account_code
-                                                                }{' '}
-                                                                -{' '}
-                                                                {
-                                                                    parent.account_name
-                                                                }
-                                                            </SelectItem>
-                                                        ))}
-                                                </SelectContent>
-                                            </Select>
-                                            {errors.parent_account_id && (
-                                                <p className="text-sm text-destructive">
-                                                    {errors.parent_account_id}
-                                                </p>
-                                            )}
-                                        </div>
+                                                    }
+                                                />
+                                                <Label className="text-sm">
+                                                    Budget Control
+                                                </Label>
+                                            </div>
 
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="account_type">
-                                                Type
-                                            </Label>
-                                            <Select
-                                                value={accounts[0].account_type}
-                                                onValueChange={(val) =>
-                                                    handleSiteOrTypeChange(
-                                                        0,
-                                                        'account_type',
-                                                        val,
-                                                    )
-                                                }
-                                            >
-                                                <SelectTrigger id="account_type">
-                                                    <SelectValue placeholder="Select type" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="REVENUE">
-                                                        Revenue
-                                                    </SelectItem>
-                                                    <SelectItem value="EXPENSE">
-                                                        Expense
-                                                    </SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                            {errors.account_type && (
-                                                <p className="text-sm text-destructive">
-                                                    {errors.account_type}
-                                                </p>
-                                            )}
+                                            <div className="space-y-2">
+                                                <Label>Initial Budget</Label>
+                                                <Input
+                                                    type="number"
+                                                    min="0"
+                                                    step="0.01"
+                                                    value={acc.initial_budget}
+                                                    onChange={(e) =>
+                                                        handleUpdateAccount(
+                                                            idx,
+                                                            'initial_budget',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                />
+                                                {errors[
+                                                    `accounts.${idx}.initial_budget`
+                                                ] && (
+                                                    <p className="text-xs text-destructive">
+                                                        {
+                                                            errors[
+                                                                `accounts.${idx}.initial_budget`
+                                                            ]
+                                                        }
+                                                    </p>
+                                                )}
+                                            </div>
                                         </div>
-                                    </CardContent>
-                                </Card>
-                            </div>
+                                        </CollapsibleContent>
+                                    </div>
+                                    </Collapsible>
+                                );
+                            })}
                         </div>
-                    )}
 
+                        {/* Add Another Account */}
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleAddAccount}
+                            className="mt-4"
+                        >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add Another Account
+                        </Button>
+                    </div>
+
+                    {/* Actions */}
                     <div className="flex justify-end gap-2">
                         <Link href={index.url()}>
-                            <Button type="button" variant="secondary">
+                            <Button type="button" variant="outline">
                                 Cancel
                             </Button>
                         </Link>
                         <Button type="submit" disabled={processing}>
-                            {bulkMode
-                                ? `Create ${accounts.length} Account(s)`
-                                : 'Create Account'}
+                            <Save className="mr-2 h-4 w-4" />
+                            {processing
+                                ? 'Saving...'
+                                : 'Save All Accounts'}
                         </Button>
                     </div>
                 </form>

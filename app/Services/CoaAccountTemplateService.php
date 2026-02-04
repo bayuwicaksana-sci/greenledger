@@ -33,8 +33,11 @@ class CoaAccountTemplateService
 
         $conflicts = [];
         foreach ($template['accounts'] as $account) {
+            // New logic: Check explicit base code
+            $baseCode = $account['code'];
+
             $conflicts[$account['code']] = CoaAccount::where('site_id', $siteId)
-                ->where('account_code', $account['code'])
+                ->where('account_code', $baseCode)
                 ->exists();
         }
 
@@ -48,23 +51,40 @@ class CoaAccountTemplateService
      *
      * @throws \InvalidArgumentException If template does not exist or site has conflicts.
      */
-    public function applyTemplate(string $templateKey, int $siteId, bool $skipExisting = false): int
-    {
+    public function applyTemplate(
+        string $templateKey,
+        int $siteId,
+        bool $skipExisting = false,
+        ?int $createdBy = null,
+    ): int {
         $templates = $this->getTemplates();
         $template = $templates[$templateKey] ?? null;
 
         if (! $template) {
-            throw new \InvalidArgumentException("Template '{$templateKey}' not found.");
+            throw new \InvalidArgumentException(
+                "Template '{$templateKey}' not found.",
+            );
         }
 
         $conflicts = $this->checkConflicts($templateKey, $siteId);
         $hasConflicts = in_array(true, $conflicts, true);
 
         if ($hasConflicts && ! $skipExisting) {
-            throw new \InvalidArgumentException('Template has conflicting accounts. Use skipExisting to skip them.');
+            throw new \InvalidArgumentException(
+                'Template has conflicting accounts. Use skipExisting to skip them.',
+            );
         }
 
-        return DB::transaction(function () use ($template, $siteId, $conflicts, $skipExisting) {
+        // Fetch site code for prefixing
+        $site = \App\Models\Site::find($siteId);
+        $siteCode = $site ? $site->site_code : 'UNK';
+
+        return DB::transaction(function () use (
+            $template,
+            $siteId,
+            $skipExisting,
+            $createdBy,
+        ) {
             $createdCount = 0;
             $codeToId = [];
 
@@ -72,39 +92,65 @@ class CoaAccountTemplateService
             $sorted = $this->sortTemplateAccounts($template['accounts']);
 
             foreach ($sorted as $account) {
-                // Skip if account already exists and skipExisting is true
-                if ($skipExisting && ($conflicts[$account['code']] ?? false)) {
-                    // Still map the existing account's ID for child resolution
-                    $existing = CoaAccount::where('site_id', $siteId)
-                        ->where('account_code', $account['code'])->first();
-                    if ($existing) {
-                        $codeToId[$account['code']] = $existing->id;
-                    }
+                // New logic: Use explicit columns
+                $baseCode = $account['code']; // e.g. 5211
 
-                    continue;
+                $abbr = $account['abbreviation'] ?? null;
+
+                // Check if exists
+                $exists = CoaAccount::where('site_id', $siteId)
+                    ->where('account_code', $baseCode)
+                    ->exists();
+
+                if ($exists) {
+                    if ($skipExisting) {
+                        // Find existing to link children
+                        $existing = CoaAccount::where('site_id', $siteId)
+                            ->where('account_code', $baseCode)
+                            ->first();
+                        if ($existing) {
+                            $codeToId[$baseCode] = $existing->id;
+                        }
+
+                        continue;
+                    } else {
+                        throw new \InvalidArgumentException(
+                            "Account code {$baseCode} already exists.",
+                        );
+                    }
                 }
 
                 $parentId = null;
                 $hierarchyLevel = 1;
 
-                if ($account['parent'] && isset($codeToId[$account['parent']])) {
+                // Parent Handling
+                // 'parent' in config is '1000' (base code of parent).
+                if (
+                    $account['parent'] &&
+                    isset($codeToId[$account['parent']])
+                ) {
                     $parentId = $codeToId[$account['parent']];
-                    $parent = CoaAccount::find($parentId);
-                    $hierarchyLevel = $parent ? $parent->hierarchy_level + 1 : 2;
+                    $parentModel = CoaAccount::find($parentId);
+                    $hierarchyLevel = $parentModel
+                        ? $parentModel->hierarchy_level + 1
+                        : 2;
                 }
 
                 $created = CoaAccount::create([
                     'site_id' => $siteId,
-                    'account_code' => $account['code'],
+                    'account_code' => $baseCode,
+                    'abbreviation' => $abbr,
                     'account_name' => $account['name'],
                     'account_type' => $account['type'],
                     'short_description' => $account['description'] ?? null,
                     'parent_account_id' => $parentId,
                     'hierarchy_level' => $hierarchyLevel,
                     'is_active' => true,
+                    'budget_control' => in_array($account['type'], ['EXPENSE']),
+                    'created_by' => $createdBy,
                 ]);
 
-                $codeToId[$account['code']] = $created->id;
+                $codeToId[$baseCode] = $created->id;
                 $createdCount++;
             }
 
@@ -120,17 +166,12 @@ class CoaAccountTemplateService
      */
     private function sortTemplateAccounts(array $accounts): array
     {
-        $withoutParent = [];
-        $withParent = [];
+        // Sort by account code to ensure parents (smaller numbers/shorter) exist before children
+        // unique strings sort: "1000", "1100", "1110" -> correct order.
+        usort($accounts, function ($a, $b) {
+            return strcmp($a['code'], $b['code']);
+        });
 
-        foreach ($accounts as $account) {
-            if ($account['parent'] === null) {
-                $withoutParent[] = $account;
-            } else {
-                $withParent[] = $account;
-            }
-        }
-
-        return array_merge($withoutParent, $withParent);
+        return $accounts;
     }
 }

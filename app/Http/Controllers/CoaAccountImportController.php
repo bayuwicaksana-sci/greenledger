@@ -43,7 +43,7 @@ class CoaAccountImportController extends Controller
             ], 422);
         }
 
-        $count = $this->importService->import($rows);
+        $count = $this->importService->import($rows, $request->user()->id);
 
         return response()->json([
             'success' => true,

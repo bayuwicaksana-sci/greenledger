@@ -12,6 +12,12 @@ class CoaAccount extends Model
     use HasFactory;
 
     // Account type constants
+    public const TYPE_ASSET = 'ASSET';
+
+    public const TYPE_LIABILITY = 'LIABILITY';
+
+    public const TYPE_EQUITY = 'EQUITY';
+
     public const TYPE_REVENUE = 'REVENUE';
 
     public const TYPE_EXPENSE = 'EXPENSE';
@@ -19,6 +25,7 @@ class CoaAccount extends Model
     protected $fillable = [
         'site_id',
         'account_code',
+        'abbreviation',
         'account_name',
         'short_description',
         'account_type',
@@ -26,17 +33,33 @@ class CoaAccount extends Model
         'hierarchy_level',
         'is_active',
         'initial_budget',
+        'budget_control',
         'first_transaction_at',
         'created_by',
         'updated_by',
     ];
 
+    /**
+     * Get the display attribute.
+     */
+    protected $appends = ['display_code'];
+
     protected function casts(): array
     {
         return [
             'is_active' => 'boolean',
+            'budget_control' => 'boolean',
             'first_transaction_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Get the formatted account code.
+     * Now just returns the account_code as the logic is simplified.
+     */
+    public function getDisplayCodeAttribute(): string
+    {
+        return (string) $this->account_code;
     }
 
     /**
@@ -130,6 +153,7 @@ class CoaAccount extends Model
     {
         return $this->first_transaction_at !== null;
     }
+
     /**
      * Get the balance (Actual - Budget).
      */

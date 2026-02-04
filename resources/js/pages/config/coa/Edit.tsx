@@ -3,13 +3,6 @@ import {
     update,
 } from '@/actions/App/Http/Controllers/CoaAccountController';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -19,10 +12,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import MainLayout from '@/layouts/main-layout';
 import { BreadcrumbItem, Site } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { ArrowLeft } from 'lucide-react';
 
 interface ParentAccount {
     id: number;
@@ -36,10 +31,12 @@ interface CoaAccount {
     site_id: number;
     account_code: string;
     account_name: string;
-    account_type: 'REVENUE' | 'EXPENSE';
+    abbreviation?: string;
+    account_type: 'ASSET' | 'LIABILITY' | 'EQUITY' | 'REVENUE' | 'EXPENSE';
     short_description?: string;
     parent_account_id?: number | null;
     is_active: boolean;
+    budget_control: boolean;
     initial_budget: number;
     first_transaction_at?: string | null;
 }
@@ -68,12 +65,14 @@ export default function Edit({ account, sites, parents }: EditProps) {
         site_id: account.site_id.toString(),
         account_code: account.account_code,
         account_name: account.account_name,
+        abbreviation: account.abbreviation || '',
         account_type: account.account_type,
         short_description: account.short_description || '',
         parent_account_id: account.parent_account_id
             ? account.parent_account_id.toString()
             : '',
         is_active: account.is_active,
+        budget_control: account.budget_control,
         initial_budget: account.initial_budget.toString(),
     });
 
@@ -86,287 +85,360 @@ export default function Edit({ account, sites, parents }: EditProps) {
         <MainLayout breadcrumbs={breadcrumbs}>
             <Head title="Edit Account" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <form
-                    onSubmit={handleSubmit}
-                    className="grid grid-cols-1 gap-4 md:grid-cols-3"
-                >
-                    <div className="flex flex-col gap-4 md:col-span-2">
-                        <Card>
-                            <CardHeader className="pb-3">
-                                <CardTitle>Account Details</CardTitle>
-                                <CardDescription>
-                                    Update the basic information of this
-                                    account.
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="grid gap-4">
-                                <div className="grid gap-2">
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold">Edit Account</h1>
+                        <p className="text-muted-foreground">
+                            Update account details and classification
+                        </p>
+                    </div>
+                    <Link href={index.url()}>
+                        <Button variant="outline">
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Back
+                        </Button>
+                    </Link>
+                </div>
+
+                {/* Form */}
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Section 1: Account Details */}
+                    <div className="rounded-lg border p-6">
+                        <h2 className="mb-4 text-lg font-semibold">
+                            Account Details
+                        </h2>
+                        <div className="space-y-4">
+                            {/* Account Code */}
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2">
                                     <Label htmlFor="account_code">
                                         Account Code
-                                        {isLocked && (
-                                            <span className="ml-2 text-xs text-muted-foreground">
-                                                (Locked - has transactions)
-                                            </span>
-                                        )}
                                     </Label>
-                                    <Input
-                                        id="account_code"
-                                        value={data.account_code}
-                                        onChange={(e) =>
-                                            setData(
-                                                'account_code',
-                                                e.target.value,
-                                            )
-                                        }
-                                        placeholder="e.g. KLT-EXP-001"
-                                        disabled={isLocked}
-                                    />
-                                    {errors.account_code && (
-                                        <p className="text-sm text-destructive">
-                                            {errors.account_code}
-                                        </p>
-                                    )}
                                     {isLocked && (
-                                        <p className="text-xs text-muted-foreground">
-                                            Account code cannot be changed after
-                                            transactions have been recorded.
-                                        </p>
+                                        <span className="rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                                            Locked
+                                        </span>
                                     )}
                                 </div>
+                                <Input
+                                    id="account_code"
+                                    value={data.account_code}
+                                    onChange={(e) =>
+                                        setData(
+                                            'account_code',
+                                            e.target.value,
+                                        )
+                                    }
+                                    placeholder="e.g. 5211"
+                                    disabled={isLocked}
+                                />
+                                {errors.account_code && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.account_code}
+                                    </p>
+                                )}
+                                {isLocked && (
+                                    <p className="text-xs text-muted-foreground">
+                                        Account code cannot be changed after
+                                        transactions have been recorded.
+                                    </p>
+                                )}
+                            </div>
 
-                                <div className="grid gap-2">
-                                    <Label htmlFor="account_name">
-                                        Account Name
-                                    </Label>
-                                    <Input
-                                        id="account_name"
-                                        value={data.account_name}
-                                        onChange={(e) =>
-                                            setData(
-                                                'account_name',
-                                                e.target.value,
-                                            )
-                                        }
-                                        placeholder="e.g. Fertilizer Expenses"
-                                    />
-                                    {errors.account_name && (
-                                        <p className="text-sm text-destructive">
-                                            {errors.account_name}
-                                        </p>
-                                    )}
-                                </div>
+                            {/* Account Name */}
+                            <div className="space-y-2">
+                                <Label htmlFor="account_name">
+                                    Account Name
+                                </Label>
+                                <Input
+                                    id="account_name"
+                                    value={data.account_name}
+                                    onChange={(e) =>
+                                        setData(
+                                            'account_name',
+                                            e.target.value,
+                                        )
+                                    }
+                                    placeholder="e.g. Fertilizer Expenses"
+                                />
+                                {errors.account_name && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.account_name}
+                                    </p>
+                                )}
+                            </div>
 
-                                <div className="grid gap-2">
-                                    <Label htmlFor="short_description">
-                                        Description
-                                    </Label>
-                                    <Textarea
-                                        id="short_description"
-                                        value={data.short_description}
-                                        onChange={(e) =>
-                                            setData(
-                                                'short_description',
-                                                e.target.value,
-                                            )
-                                        }
-                                        rows={4}
-                                    />
-                                    {errors.short_description && (
-                                        <p className="text-sm text-destructive">
-                                            {errors.short_description}
-                                        </p>
-                                    )}
-                                </div>
+                            {/* Abbreviation */}
+                            <div className="space-y-2">
+                                <Label htmlFor="abbreviation">
+                                    Abbreviation
+                                </Label>
+                                <Input
+                                    id="abbreviation"
+                                    value={data.abbreviation}
+                                    onChange={(e) =>
+                                        setData(
+                                            'abbreviation',
+                                            e.target.value,
+                                        )
+                                    }
+                                    placeholder="Optional"
+                                />
+                                {errors.abbreviation && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.abbreviation}
+                                    </p>
+                                )}
+                            </div>
 
-                                <div className="grid gap-2">
-                                    <Label htmlFor="initial_budget">
-                                        Initial Budget
-                                    </Label>
-                                    <Input
-                                        id="initial_budget"
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        value={data.initial_budget}
-                                        onChange={(e) =>
-                                            setData(
-                                                'initial_budget',
-                                                e.target.value,
-                                            )
-                                        }
-                                    />
-                                    {errors.initial_budget && (
-                                        <p className="text-sm text-destructive">
-                                            {errors.initial_budget}
-                                        </p>
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
+                            {/* Description */}
+                            <div className="space-y-2">
+                                <Label htmlFor="short_description">
+                                    Description
+                                </Label>
+                                <Textarea
+                                    id="short_description"
+                                    value={data.short_description}
+                                    onChange={(e) =>
+                                        setData(
+                                            'short_description',
+                                            e.target.value,
+                                        )
+                                    }
+                                    rows={3}
+                                />
+                                {errors.short_description && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.short_description}
+                                    </p>
+                                )}
+                            </div>
 
-                        <div className="flex justify-end gap-2">
-                            <Link href={index.url()}>
-                                <Button type="button" variant="secondary">
-                                    Cancel
-                                </Button>
-                            </Link>
-                            <Button type="submit" disabled={processing}>
-                                Update Account
-                            </Button>
+                            {/* Initial Budget */}
+                            <div className="space-y-2">
+                                <Label htmlFor="initial_budget">
+                                    Initial Budget
+                                </Label>
+                                <Input
+                                    id="initial_budget"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={data.initial_budget}
+                                    onChange={(e) =>
+                                        setData(
+                                            'initial_budget',
+                                            e.target.value,
+                                        )
+                                    }
+                                />
+                                {errors.initial_budget && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.initial_budget}
+                                    </p>
+                                )}
+                            </div>
                         </div>
                     </div>
 
-                    <div className="flex flex-col gap-4">
-                        <Card>
-                            <CardHeader className="pb-3">
-                                <CardTitle>Classification</CardTitle>
-                                <CardDescription>
-                                    Organize this account.
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="grid gap-4">
-                                <div className="grid gap-2">
-                                    <Label htmlFor="site_id">Site</Label>
-                                    <Select
-                                        value={data.site_id}
-                                        onValueChange={(val) =>
-                                            setData('site_id', val)
-                                        }
-                                        disabled={true}
-                                    >
-                                        <SelectTrigger id="site_id">
-                                            <SelectValue placeholder="Select site" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {sites.map((site) => (
-                                                <SelectItem
-                                                    key={site.id}
-                                                    value={site.id.toString()}
-                                                >
-                                                    {site.site_name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    {errors.site_id && (
-                                        <p className="text-sm text-destructive">
-                                            {errors.site_id}
-                                        </p>
-                                    )}
-                                </div>
-
-                                <div className="grid gap-2">
-                                    <Label htmlFor="parent_account_id">
-                                        Parent Account
-                                    </Label>
-                                    <Select
-                                        value={data.parent_account_id}
-                                        onValueChange={(val) =>
-                                            setData(
-                                                'parent_account_id',
-                                                val === 'none' ? '' : val,
-                                            )
-                                        }
-                                    >
-                                        <SelectTrigger id="parent_account_id">
-                                            <SelectValue placeholder="None" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="none">
-                                                None
+                    {/* Section 2: Classification */}
+                    <div className="rounded-lg border p-6">
+                        <h2 className="mb-4 text-lg font-semibold">
+                            Classification
+                        </h2>
+                        <div className="space-y-4">
+                            {/* Site (always disabled) */}
+                            <div className="space-y-2">
+                                <Label htmlFor="site_id">Site</Label>
+                                <Select
+                                    value={data.site_id}
+                                    onValueChange={(val) =>
+                                        setData('site_id', val)
+                                    }
+                                    disabled={true}
+                                >
+                                    <SelectTrigger id="site_id">
+                                        <SelectValue placeholder="Select site" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {sites.map((site) => (
+                                            <SelectItem
+                                                key={site.id}
+                                                value={site.id.toString()}
+                                            >
+                                                {site.site_name}
                                             </SelectItem>
-                                            {parents.map((parent) => (
-                                                <SelectItem
-                                                    key={parent.id}
-                                                    value={parent.id.toString()}
-                                                >
-                                                    {parent.account_code} -{' '}
-                                                    {parent.account_name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    {errors.parent_account_id && (
-                                        <p className="text-sm text-destructive">
-                                            {errors.parent_account_id}
-                                        </p>
-                                    )}
-                                </div>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
 
-                                <div className="grid gap-2">
+                            {/* Parent Account */}
+                            <div className="space-y-2">
+                                <Label htmlFor="parent_account_id">
+                                    Parent Account
+                                </Label>
+                                <Select
+                                    value={
+                                        data.parent_account_id || 'none'
+                                    }
+                                    onValueChange={(val) =>
+                                        setData(
+                                            'parent_account_id',
+                                            val === 'none' ? '' : val,
+                                        )
+                                    }
+                                >
+                                    <SelectTrigger id="parent_account_id">
+                                        <SelectValue placeholder="None" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">
+                                            None
+                                        </SelectItem>
+                                        {parents.map((parent) => (
+                                            <SelectItem
+                                                key={parent.id}
+                                                value={parent.id.toString()}
+                                            >
+                                                {parent.account_code} -{' '}
+                                                {parent.account_name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                {errors.parent_account_id && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.parent_account_id}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Account Type */}
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2">
                                     <Label htmlFor="account_type">
-                                        Type
-                                        {isLocked && (
-                                            <span className="ml-2 text-xs text-muted-foreground">
-                                                (Locked - has transactions)
-                                            </span>
-                                        )}
+                                        Account Type
                                     </Label>
-                                    <Select
-                                        value={data.account_type}
-                                        onValueChange={(val) =>
-                                            setData(
-                                                'account_type',
-                                                val as 'REVENUE' | 'EXPENSE',
-                                            )
-                                        }
-                                        disabled={isLocked}
-                                    >
-                                        <SelectTrigger id="account_type">
-                                            <SelectValue placeholder="Select type" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="REVENUE">
-                                                Revenue
-                                            </SelectItem>
-                                            <SelectItem value="EXPENSE">
-                                                Expense
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    {errors.account_type && (
-                                        <p className="text-sm text-destructive">
-                                            {errors.account_type}
-                                        </p>
-                                    )}
                                     {isLocked && (
-                                        <p className="text-xs text-muted-foreground">
-                                            Account type cannot be changed after
-                                            transactions have been recorded.
-                                        </p>
+                                        <span className="rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                                            Locked
+                                        </span>
                                     )}
                                 </div>
+                                <Select
+                                    value={data.account_type}
+                                    onValueChange={(val) =>
+                                        setData(
+                                            'account_type',
+                                            val as
+                                                | 'ASSET'
+                                                | 'LIABILITY'
+                                                | 'EQUITY'
+                                                | 'REVENUE'
+                                                | 'EXPENSE',
+                                        )
+                                    }
+                                    disabled={isLocked}
+                                >
+                                    <SelectTrigger id="account_type">
+                                        <SelectValue placeholder="Select type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="ASSET">
+                                            Asset
+                                        </SelectItem>
+                                        <SelectItem value="LIABILITY">
+                                            Liability
+                                        </SelectItem>
+                                        <SelectItem value="EQUITY">
+                                            Equity
+                                        </SelectItem>
+                                        <SelectItem value="REVENUE">
+                                            Revenue
+                                        </SelectItem>
+                                        <SelectItem value="EXPENSE">
+                                            Expense
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                {errors.account_type && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.account_type}
+                                    </p>
+                                )}
+                                {isLocked && (
+                                    <p className="text-xs text-muted-foreground">
+                                        Account type cannot be changed after
+                                        transactions have been recorded.
+                                    </p>
+                                )}
+                            </div>
 
-                                <div className="grid gap-2">
-                                    <Label htmlFor="is_active">Status</Label>
-                                    <Select
-                                        value={
-                                            data.is_active ? 'true' : 'false'
+                            {/* Status */}
+                            <div className="space-y-2">
+                                <Label htmlFor="is_active">Status</Label>
+                                <Select
+                                    value={
+                                        data.is_active ? 'true' : 'false'
+                                    }
+                                    onValueChange={(val) =>
+                                        setData('is_active', val === 'true')
+                                    }
+                                >
+                                    <SelectTrigger id="is_active">
+                                        <SelectValue placeholder="Select status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="true">
+                                            Active
+                                        </SelectItem>
+                                        <SelectItem value="false">
+                                            Inactive
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                {errors.is_active && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.is_active}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Budget Control */}
+                            <div className="space-y-2">
+                                <Label htmlFor="budget_control">
+                                    Budget Control
+                                </Label>
+                                <div className="flex items-center space-x-2">
+                                    <Switch
+                                        id="budget_control"
+                                        checked={data.budget_control}
+                                        onCheckedChange={(val) =>
+                                            setData('budget_control', val)
                                         }
-                                        onValueChange={(val) =>
-                                            setData('is_active', val === 'true')
-                                        }
-                                    >
-                                        <SelectTrigger id="is_active">
-                                            <SelectValue placeholder="Select status" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="true">
-                                                Active
-                                            </SelectItem>
-                                            <SelectItem value="false">
-                                                Inactive
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    {errors.is_active && (
-                                        <p className="text-sm text-destructive">
-                                            {errors.is_active}
-                                        </p>
-                                    )}
+                                    />
+                                    <Label htmlFor="budget_control">
+                                        {data.budget_control
+                                            ? 'Enabled'
+                                            : 'Disabled'}
+                                    </Label>
                                 </div>
-                            </CardContent>
-                        </Card>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex justify-end gap-2">
+                        <Link href={index.url()}>
+                            <Button type="button" variant="outline">
+                                Cancel
+                            </Button>
+                        </Link>
+                        <Button type="submit" disabled={processing}>
+                            Update Account
+                        </Button>
                     </div>
                 </form>
             </div>
