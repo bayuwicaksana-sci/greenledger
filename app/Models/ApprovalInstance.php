@@ -2,7 +2,13 @@
 
 namespace App\Models;
 
+use App\States\ApprovalInstance\Approved;
 use App\States\ApprovalInstance\ApprovalInstanceState;
+use App\States\ApprovalInstance\Cancelled;
+use App\States\ApprovalInstance\ChangesRequested;
+use App\States\ApprovalInstance\InProgress;
+use App\States\ApprovalInstance\Pending;
+use App\States\ApprovalInstance\Rejected;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,6 +22,8 @@ use Spatie\ModelStates\HasStates;
 class ApprovalInstance extends Model
 {
     use HasFactory, HasStates, LogsActivity, SoftDeletes;
+
+    protected $appends = ['status_value', 'status_label', 'status_color'];
 
     protected $fillable = [
         'approval_workflow_id',
@@ -90,5 +98,37 @@ class ApprovalInstance extends Model
     public function actions(): HasMany
     {
         return $this->hasMany(ApprovalAction::class)->orderBy('created_at');
+    }
+
+    /**
+     * Get a frontend-compatible status string value.
+     */
+    public function getStatusValueAttribute(): string
+    {
+        return match (true) {
+            $this->status instanceof Approved => 'approved',
+            $this->status instanceof Rejected => 'rejected',
+            $this->status instanceof Cancelled => 'cancelled',
+            $this->status instanceof ChangesRequested => 'changes_requested',
+            $this->status instanceof InProgress => 'pending_approval',
+            $this->status instanceof Pending => 'pending',
+            default => 'pending',
+        };
+    }
+
+    /**
+     * Get the human-readable status label from the state class.
+     */
+    public function getStatusLabelAttribute(): string
+    {
+        return $this->status->label();
+    }
+
+    /**
+     * Get the UI color for the current status.
+     */
+    public function getStatusColorAttribute(): string
+    {
+        return $this->status->color();
     }
 }

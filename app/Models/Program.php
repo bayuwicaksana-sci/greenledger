@@ -113,6 +113,14 @@ class Program extends Model implements HasMedia
     }
 
     /**
+     * Get the fiscal year for this program.
+     */
+    public function fiscalYear(): BelongsTo
+    {
+        return $this->belongsTo(FiscalYear::class, 'fiscal_year', 'year');
+    }
+
+    /**
      * Get the activities for the program.
      */
     public function activities(): HasMany

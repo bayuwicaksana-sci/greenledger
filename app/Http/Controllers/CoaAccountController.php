@@ -5,39 +5,77 @@ namespace App\Http\Controllers;
 use App\Http\Requests\BulkStoreCoaAccountRequest;
 use App\Http\Requests\StoreCoaAccountRequest;
 use App\Http\Requests\UpdateCoaAccountRequest;
+use App\Models\ApprovalInstance;
+use App\Models\ApprovalWorkflow;
 use App\Models\CoaAccount;
+use App\Models\FiscalYear;
+use App\Services\Approval\WorkflowEngine;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class CoaAccountController extends Controller
 {
+    public function __construct(protected WorkflowEngine $workflowEngine) {}
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
+        $selectedYear = (int) ($request->input('fiscal_year') ?? date('Y'));
+        $fiscalYearId = FiscalYear::where('year', $selectedYear)->value('id');
+
         $accounts = CoaAccount::query()
-            ->with('site')
+            ->with(['site', 'approvalInstances' => fn ($q) => $q->latest()])
             ->select('coa_accounts.*')
             ->selectRaw(
+                'COALESCE((
+                    SELECT cba.budget_amount
+                    FROM coa_budget_allocations cba
+                    WHERE cba.coa_account_id = coa_accounts.id AND cba.fiscal_year_id = ?
+                ), 0) AS allocated_budget',
+                [$fiscalYearId],
+            )
+            ->selectRaw(
                 'CASE
-                WHEN coa_accounts.account_type = ? THEN
-                    COALESCE((SELECT SUM(split_amount) FROM payment_request_splits WHERE payment_request_splits.coa_account_id = coa_accounts.id), 0)
-                WHEN coa_accounts.account_type = ? THEN
-                    COALESCE((SELECT SUM(total_revenue) FROM revenue_harvest WHERE revenue_harvest.coa_account_id = coa_accounts.id), 0)
-                    + COALESCE((SELECT SUM(contract_value) FROM revenue_testing_services WHERE revenue_testing_services.coa_account_id = coa_accounts.id), 0)
-                ELSE 0
-            END AS actual_amount',
-                ['EXPENSE', 'REVENUE'],
+                    WHEN account_type = ? THEN
+                        COALESCE((SELECT SUM(prs.split_amount)
+                                  FROM payment_request_splits prs
+                                  INNER JOIN programs p ON p.id = prs.program_id
+                                  WHERE prs.coa_account_id = coa_accounts.id AND p.fiscal_year = ?
+                        ), 0)
+                    WHEN account_type = ? THEN
+                        COALESCE((SELECT SUM(rh.total_revenue)
+                                  FROM revenue_harvest rh
+                                  INNER JOIN programs p ON p.id = rh.program_id
+                                  WHERE rh.coa_account_id = coa_accounts.id AND p.fiscal_year = ?
+                        ), 0)
+                        + COALESCE((SELECT SUM(rts.contract_value)
+                                    FROM revenue_testing_services rts
+                                    INNER JOIN programs p ON p.id = rts.program_id
+                                    WHERE rts.coa_account_id = coa_accounts.id AND p.fiscal_year = ?
+                        ), 0)
+                    ELSE 0
+                END AS actual_amount',
+                ['EXPENSE', $selectedYear, 'REVENUE', $selectedYear, $selectedYear],
             )
             ->orderBy('account_code', 'asc')
             ->get()
             ->append('balance');
 
+        $accounts->each(function (CoaAccount $account) {
+            $instance = $account->approvalInstances->first();
+            $account->approval_status = $instance
+                ? $this->resolveApprovalStatus($instance)
+                : null;
+        });
+
         return Inertia::render('config/coa/Index', [
             'accounts' => $accounts,
             'sites' => \App\Models\Site::all(),
+            'fiscalYears' => FiscalYear::orderByDesc('year')->get(['id', 'year', 'is_closed']),
+            'selectedFiscalYear' => $selectedYear,
         ]);
     }
 
@@ -86,8 +124,15 @@ class CoaAccountController extends Controller
         }
 
         $data['created_by'] = $request->user()->id;
+        $data['is_active'] = false;
 
-        CoaAccount::create($data);
+        $account = CoaAccount::create($data);
+
+        $workflow = ApprovalWorkflow::active()->forModel(CoaAccount::class)->first();
+        if ($workflow) {
+            $instance = $this->workflowEngine->initializeWorkflow($account, $workflow, $request->user());
+            $this->workflowEngine->submitForApproval($instance, $request->user());
+        }
 
         return redirect()
             ->route('config.coa.index')
@@ -140,9 +185,17 @@ class CoaAccountController extends Controller
                 }
 
                 $accountData['created_by'] = $request->user()->id;
+                $accountData['is_active'] = false;
 
                 // Create the account
                 $account = CoaAccount::create($accountData);
+
+                // Trigger approval workflow if active
+                $workflow = ApprovalWorkflow::active()->forModel(CoaAccount::class)->first();
+                if ($workflow) {
+                    $instance = $this->workflowEngine->initializeWorkflow($account, $workflow, $request->user());
+                    $this->workflowEngine->submitForApproval($instance, $request->user());
+                }
 
                 // Store mapping if temp_id exists
                 if ($tempId) {
@@ -208,8 +261,10 @@ class CoaAccountController extends Controller
      */
     public function edit(CoaAccount $coa)
     {
+        $instance = $coa->approvalInstances()->latest()->first();
+
         return Inertia::render('config/coa/Edit', [
-            'account' => $coa->only([
+            'account' => array_merge($coa->only([
                 'id',
                 'site_id',
                 'account_code',
@@ -221,6 +276,14 @@ class CoaAccountController extends Controller
                 'is_active',
                 'initial_budget',
                 'first_transaction_at',
+                'category',
+                'sub_category',
+                'typical_usage',
+                'tax_applicable',
+            ]), [
+                'approval_status' => $instance
+                    ? $this->resolveApprovalStatus($instance)
+                    : null,
             ]),
             'sites' => \App\Models\Site::all(),
             'parents' => CoaAccount::select(
@@ -296,6 +359,22 @@ class CoaAccountController extends Controller
         return redirect()
             ->back()
             ->with('success', 'COA Account deleted successfully.');
+    }
+
+    /**
+     * Map an ApprovalInstance state to a frontend-friendly status string.
+     */
+    private function resolveApprovalStatus(ApprovalInstance $instance): string
+    {
+        return match (true) {
+            $instance->status instanceof \App\States\ApprovalInstance\Approved => 'approved',
+            $instance->status instanceof \App\States\ApprovalInstance\Rejected => 'rejected',
+            $instance->status instanceof \App\States\ApprovalInstance\Cancelled => 'cancelled',
+            $instance->status instanceof \App\States\ApprovalInstance\InProgress => 'pending_approval',
+            $instance->status instanceof \App\States\ApprovalInstance\ChangesRequested => 'pending_approval',
+            $instance->status instanceof \App\States\ApprovalInstance\Pending => 'draft',
+            default => 'draft',
+        };
     }
 
     /**

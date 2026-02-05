@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FiscalYear extends Model
@@ -24,5 +26,36 @@ class FiscalYear extends Model
             'end_date' => 'date',
             'is_closed' => 'boolean',
         ];
+    }
+
+    /**
+     * Get the programs for this fiscal year.
+     */
+    public function programs(): HasMany
+    {
+        return $this->hasMany(Program::class, 'fiscal_year', 'year');
+    }
+
+    /**
+     * Get the budget allocations for this fiscal year.
+     */
+    public function budgetAllocations(): HasMany
+    {
+        return $this->hasMany(CoaBudgetAllocation::class);
+    }
+
+    public function scopeOpen(Builder $query): Builder
+    {
+        return $query->where('is_closed', false);
+    }
+
+    public function scopeClosed(Builder $query): Builder
+    {
+        return $query->where('is_closed', true);
+    }
+
+    public function scopeForYear(Builder $query, int $year): Builder
+    {
+        return $query->where('year', $year);
     }
 }

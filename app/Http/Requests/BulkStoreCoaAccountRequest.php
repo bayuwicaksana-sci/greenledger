@@ -44,6 +44,10 @@ class BulkStoreCoaAccountRequest extends FormRequest
             'accounts.*.is_active' => ['boolean'],
             'accounts.*.budget_control' => ['boolean'],
             'accounts.*.initial_budget' => ['nullable', 'numeric', 'min:0'],
+            'accounts.*.category' => ['required', 'string', 'in:PROGRAM,NON_PROGRAM'],
+            'accounts.*.sub_category' => ['nullable', 'string', 'max:50'],
+            'accounts.*.typical_usage' => ['nullable', 'string'],
+            'accounts.*.tax_applicable' => ['boolean'],
         ];
     }
 

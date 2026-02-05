@@ -14,21 +14,19 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - laravel/fortify (FORTIFY) - v1
 - laravel/framework (LARAVEL) - v12
 - laravel/prompts (PROMPTS) - v0
+- laravel/reverb (REVERB) - v1
 - laravel/wayfinder (WAYFINDER) - v0
 - laravel/mcp (MCP) - v0
 - laravel/pint (PINT) - v1
 - laravel/sail (SAIL) - v1
 - pestphp/pest (PEST) - v4
 - phpunit/phpunit (PHPUNIT) - v12
-- @inertiajs/react (INERTIA) - v2 - Always find the latest docs references for Inertia.js v2 before implementation using context7 mcp tools with "/websites/inertiajs_v2" library id.
+- @inertiajs/react (INERTIA) - v2
 - react (REACT) - v19
 - tailwindcss (TAILWINDCSS) - v4
 - @laravel/vite-plugin-wayfinder (WAYFINDER) - v0
 - eslint (ESLINT) - v9
 - prettier (PRETTIER) - v3
-- recharts (RECHARTS) - v3
-- shadcn/ui (SHADCN) - v3 - Always use shadcn/ui component for a better UI/UX consistency using shadcn mcp tool.
-- @tanstack/react-table (TANSTACK) - v8 - Always use @tanstack/react-table when tyring to create a data table. Use context7 mcp tools with "/websites/tanstack_table" library id to get the latest docs references
 
 ## Skills Activation
 
@@ -114,7 +112,7 @@ This project has domain-specific skills available. You MUST activate the relevan
 ## Constructors
 
 - Use PHP 8 constructor property promotion in `__construct()`.
-    - <code-snippet>public function \_\_construct(public GitHub $github) { }</code-snippet>
+    - <code-snippet>public function __construct(public GitHub $github) { }</code-snippet>
 - Do not allow empty `__construct()` methods with zero parameters unless the constructor is private.
 
 ## Type Declarations
@@ -321,8 +319,8 @@ Fortify is a headless authentication backend that provides authentication routes
 - `Features::registration()` for user registration.
 - `Features::emailVerification()` to verify new user emails.
 - `Features::twoFactorAuthentication()` for 2FA with QR codes and recovery codes.
-    - Add options: `['confirmPassword' => true, 'confirm' => true]` to require password confirmation and OTP confirmation before enabling 2FA.
+  - Add options: `['confirmPassword' => true, 'confirm' => true]` to require password confirmation and OTP confirmation before enabling 2FA.
 - `Features::updateProfileInformation()` to let users update their profile.
 - `Features::updatePasswords()` to let users change their passwords.
 - `Features::resetPasswords()` for password reset via email.
-  </laravel-boost-guidelines>
+</laravel-boost-guidelines>

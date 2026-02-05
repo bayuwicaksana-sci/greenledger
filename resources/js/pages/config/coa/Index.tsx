@@ -21,12 +21,11 @@ import {
 } from '@/components/ui/select';
 import MainLayout from '@/layouts/main-layout';
 import config from '@/routes/config';
-import { BreadcrumbItem, Site } from '@/types';
+import { BreadcrumbItem, CoaAccount, FiscalYear, Site } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import {
     getCoreRowModel,
     getFilteredRowModel,
-    getPaginationRowModel,
     getSortedRowModel,
     useReactTable,
     type ColumnDef,
@@ -45,25 +44,11 @@ import {
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-interface CoaAccount {
-    id: number;
-    site_id: number;
-    account_code: string;
-    account_name: string;
-    account_type: 'REVENUE' | 'EXPENSE';
-    short_description?: string;
-    is_active: boolean;
-    hierarchy_level: number;
-    parent_account_id: number | null;
-    initial_budget: number;
-    actual_amount: number;
-    balance: number;
-    site?: Site;
-}
-
 interface Props {
     accounts: CoaAccount[];
     sites: Site[];
+    fiscalYears: FiscalYear[];
+    selectedFiscalYear: number;
 }
 
 function formatCurrency(value: number): string {
@@ -76,7 +61,7 @@ function formatCurrency(value: number): string {
     });
 }
 
-export default function ChartOfAccounts({ accounts, sites = [] }: Props) {
+export default function ChartOfAccounts({ accounts, sites = [], fiscalYears = [], selectedFiscalYear }: Props) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Chart of Accounts',
@@ -90,25 +75,32 @@ export default function ChartOfAccounts({ accounts, sites = [] }: Props) {
     );
     const [globalFilter, setGlobalFilter] = useState('');
     const [selectedSiteId, setSelectedSiteId] = useState<string>('all');
+    const [selectedCategory, setSelectedCategory] = useState<string>('all');
     // const [viewMode, setViewMode] = useState<'table' | 'tree'>('table');
 
     const [importDialogOpen, setImportDialogOpen] = useState(false);
     const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+
+    const handleFiscalYearChange = (value: string) => {
+        router.get(config.coa.index(), { fiscal_year: value }, { preserveScroll: true });
+    };
 
     const handleDialogSuccess = () => {
         router.reload();
     };
 
     const filteredAccounts = useMemo(() => {
-        if (selectedSiteId === 'all') {
-            return accounts;
-        }
-        return accounts.filter((a) => a.site_id.toString() === selectedSiteId);
-    }, [accounts, selectedSiteId]);
+        return accounts.filter((a) => {
+            if (selectedSiteId !== 'all' && a.site_id.toString() !== selectedSiteId) return false;
+            if (selectedCategory !== 'all' && a.category !== selectedCategory) return false;
+            return true;
+        });
+    }, [accounts, selectedSiteId, selectedCategory]);
 
     const columns: ColumnDef<CoaAccount>[] = [
         {
             accessorKey: 'account_code',
+            enableHiding: false,
             header: ({ column }) => (
                 <Button
                     variant="ghost"
@@ -193,10 +185,50 @@ export default function ChartOfAccounts({ accounts, sites = [] }: Props) {
             },
         },
         {
+            accessorKey: 'category',
+            header: ({ column }) => (
+                <Button
+                    variant="ghost"
+                    onClick={() =>
+                        column.toggleSorting(column.getIsSorted() === 'asc')
+                    }
+                >
+                    Category
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+            ),
+            cell: ({ row }) => {
+                const category = row.getValue<string>('category');
+                return (
+                    <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                            category === 'PROGRAM'
+                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+                                : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                        }`}
+                    >
+                        {category === 'PROGRAM' ? 'Program' : 'Non-Program'}
+                    </span>
+                );
+            },
+        },
+        {
             accessorKey: 'is_active',
             header: 'Status',
             cell: ({ row }) => {
                 const isActive = row.getValue<boolean>('is_active');
+                const approvalStatus = row.original.approval_status;
+
+                if (approvalStatus === 'pending_approval') {
+                    return <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300">Pending</span>;
+                }
+                if (approvalStatus === 'draft') {
+                    return <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">Draft</span>;
+                }
+                if (approvalStatus === 'rejected') {
+                    return <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">Rejected</span>;
+                }
+
                 return isActive ? (
                     <span className="text-green-600">Active</span>
                 ) : (
@@ -205,11 +237,30 @@ export default function ChartOfAccounts({ accounts, sites = [] }: Props) {
             },
         },
         {
-            accessorKey: 'initial_budget',
+            id: 'utilization',
+            header: () => <span className="block text-right">Utilization</span>,
+            cell: ({ row }) => {
+                const budget = row.original.allocated_budget;
+                const actual = row.original.actual_amount;
+                if (budget <= 0) return <span className="block text-right text-muted-foreground">—</span>;
+                const pct = Math.round((actual / budget) * 100);
+                const colorClass = pct > 90 ? 'bg-red-500' : pct > 70 ? 'bg-amber-500' : 'bg-green-500';
+                return (
+                    <div className="flex items-center justify-end gap-2">
+                        <div className="w-16 overflow-hidden rounded-full bg-muted h-2">
+                            <div className={`h-full ${colorClass}`} style={{ width: `${Math.min(pct, 100)}%` }} />
+                        </div>
+                        <span className="text-xs text-right">{pct}%</span>
+                    </div>
+                );
+            },
+        },
+        {
+            accessorKey: 'allocated_budget',
             header: () => <span className="block text-right">Budget</span>,
             cell: ({ row }) => (
                 <span className="block text-right">
-                    {formatCurrency(row.getValue<number>('initial_budget'))}
+                    {formatCurrency(row.getValue<number>('allocated_budget'))}
                 </span>
             ),
         },
@@ -246,6 +297,7 @@ export default function ChartOfAccounts({ accounts, sites = [] }: Props) {
         },
         {
             id: 'actions',
+            enableHiding: false,
             header: 'Actions',
             cell: ({ row }) => {
                 const account = row.original;
@@ -284,7 +336,6 @@ export default function ChartOfAccounts({ accounts, sites = [] }: Props) {
         columns,
         onSortingChange: setSorting,
         getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
         getSortedRowModel: getSortedRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
         onColumnVisibilityChange: setColumnVisibility,
@@ -293,11 +344,6 @@ export default function ChartOfAccounts({ accounts, sites = [] }: Props) {
             sorting,
             columnVisibility,
             globalFilter,
-        },
-        initialState: {
-            pagination: {
-                pageSize: 10,
-            },
         },
     });
 
@@ -364,6 +410,37 @@ export default function ChartOfAccounts({ accounts, sites = [] }: Props) {
                                 ))}
                             </SelectContent>
                         </Select>
+                        <Select
+                            value={selectedFiscalYear.toString()}
+                            onValueChange={handleFiscalYearChange}
+                        >
+                            <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="Fiscal Year" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {fiscalYears.map((fy) => (
+                                    <SelectItem
+                                        key={fy.id}
+                                        value={fy.year.toString()}
+                                    >
+                                        {fy.year}{fy.is_closed ? ' (Closed)' : ''}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Select
+                            value={selectedCategory}
+                            onValueChange={setSelectedCategory}
+                        >
+                            <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="All Categories" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Categories</SelectItem>
+                                <SelectItem value="PROGRAM">Program</SelectItem>
+                                <SelectItem value="NON_PROGRAM">Non-Program</SelectItem>
+                            </SelectContent>
+                        </Select>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline" className="ml-auto">
@@ -413,7 +490,7 @@ export default function ChartOfAccounts({ accounts, sites = [] }: Props) {
                         </div> */}
                     </div>
 
-                    <CoaTreeView accounts={filteredAccounts} sites={sites} />
+                    <CoaTreeView accounts={filteredAccounts} sites={sites} columnVisibility={columnVisibility} />
                     {/* {viewMode === 'tree' ? (
                         <CoaTreeView
                             accounts={filteredAccounts}

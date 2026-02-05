@@ -12,28 +12,33 @@ class CoaTemplateTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_template_application_prefixes_site_code(): void
+    public function test_template_application_creates_accounts_with_hierarchy(): void
     {
-        // Mock template config with NEW structure
         Config::set('coa_templates.test_template', [
             'name' => 'Test Template',
             'accounts' => [
                 [
                     'code' => '5211',
-                    'category' => 'MAT',
-                    'subcategory' => 'SED',
                     'name' => 'Seeds',
                     'type' => 'EXPENSE',
+                    'description' => 'Seed costs',
                     'parent' => null,
+                    'category' => 'PROGRAM',
+                    'sub_category' => 'Research',
+                    'typical_usage' => 'Planting',
+                    'tax_applicable' => false,
                 ],
                 [
                     'code' => '5212',
-                    'category' => 'MAT',
-                    'subcategory' => 'FER',
                     'name' => 'Fertilizer',
                     'type' => 'EXPENSE',
-                    'parent' => '5211', // Parent is referenced by base code
-                ], // Child
+                    'description' => 'Fertilizer costs',
+                    'parent' => '5211',
+                    'category' => 'PROGRAM',
+                    'sub_category' => 'Research',
+                    'typical_usage' => 'Soil treatment',
+                    'tax_applicable' => true,
+                ],
             ],
         ]);
 
@@ -48,20 +53,21 @@ class CoaTemplateTest extends TestCase
         $this->assertDatabaseHas('coa_accounts', [
             'site_id' => $site->id,
             'account_code' => '5211',
-            'category' => 'MAT',
-            'subcategory' => 'SED',
-            'sequence_number' => '001', // Default
             'account_name' => 'Seeds',
+            'category' => 'PROGRAM',
+            'sub_category' => 'Research',
+            'is_active' => true,
         ]);
 
         // Check Child creation
         $this->assertDatabaseHas('coa_accounts', [
             'site_id' => $site->id,
             'account_code' => '5212',
-            'category' => 'MAT',
-            'subcategory' => 'FER',
-            'sequence_number' => '001', // Default
             'account_name' => 'Fertilizer',
+            'category' => 'PROGRAM',
+            'sub_category' => 'Research',
+            'tax_applicable' => true,
+            'is_active' => true,
         ]);
 
         // Verify parent-child relationship

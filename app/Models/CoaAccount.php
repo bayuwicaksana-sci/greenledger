@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Traits\RequiresApproval;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,7 +10,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CoaAccount extends Model
 {
-    use HasFactory;
+    use HasFactory, RequiresApproval;
+
+    public const APPROVAL_DISPLAY_NAME = 'COA Account';
 
     // Account type constants
     public const TYPE_ASSET = 'ASSET';
@@ -34,6 +37,10 @@ class CoaAccount extends Model
         'is_active',
         'initial_budget',
         'budget_control',
+        'category',
+        'sub_category',
+        'typical_usage',
+        'tax_applicable',
         'first_transaction_at',
         'created_by',
         'updated_by',
@@ -49,8 +56,18 @@ class CoaAccount extends Model
         return [
             'is_active' => 'boolean',
             'budget_control' => 'boolean',
+            'tax_applicable' => 'boolean',
             'first_transaction_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Called after the approval workflow transitions to Approved.
+     */
+    public function onApproved(): void
+    {
+        $this->is_active = true;
+        $this->save();
     }
 
     /**
@@ -84,6 +101,14 @@ class CoaAccount extends Model
     public function childAccounts(): HasMany
     {
         return $this->hasMany(CoaAccount::class, 'parent_account_id');
+    }
+
+    /**
+     * Get the budget allocations for this account.
+     */
+    public function budgetAllocations(): HasMany
+    {
+        return $this->hasMany(CoaBudgetAllocation::class);
     }
 
     /**
@@ -156,11 +181,16 @@ class CoaAccount extends Model
 
     /**
      * Get the balance (Actual - Budget).
+     *
+     * When allocated_budget is available (index page), uses it.
+     * Otherwise falls back to initial_budget (edit form).
      */
     public function getBalanceAttribute(): float
     {
-        // actual_amount is not a DB column but selected at runtime in Controller
-        return (float) ($this->actual_amount ?? 0) -
-            (float) $this->initial_budget;
+        $budget = array_key_exists('allocated_budget', $this->attributes)
+            ? (float) $this->allocated_budget
+            : (float) $this->initial_budget;
+
+        return (float) ($this->actual_amount ?? 0) - $budget;
     }
 }

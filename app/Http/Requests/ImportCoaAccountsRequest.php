@@ -31,6 +31,10 @@ class ImportCoaAccountsRequest extends FormRequest
             'rows.*.abbreviation' => ['nullable', 'string', 'max:10'],
             'rows.*.parent_account_code' => ['nullable', 'string', 'max:50'],
             'rows.*.is_active' => ['required', 'boolean'],
+            'rows.*.category' => ['required', 'string', 'in:PROGRAM,NON_PROGRAM'],
+            'rows.*.sub_category' => ['nullable', 'string', 'max:50'],
+            'rows.*.typical_usage' => ['nullable', 'string'],
+            'rows.*.tax_applicable' => ['nullable', 'boolean'],
         ];
     }
 

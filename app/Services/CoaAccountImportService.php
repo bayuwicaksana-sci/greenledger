@@ -169,6 +169,10 @@ class CoaAccountImportService
             'parent_account_id' => $parent?->id,
             'hierarchy_level' => $parent ? $parent->hierarchy_level + 1 : 1,
             'is_active' => $row['is_active'],
+            'category' => $row['category'],
+            'sub_category' => $row['sub_category'] ?? null,
+            'typical_usage' => $row['typical_usage'] ?? null,
+            'tax_applicable' => $row['tax_applicable'] ?? false,
             'created_by' => $createdBy,
         ]);
     }

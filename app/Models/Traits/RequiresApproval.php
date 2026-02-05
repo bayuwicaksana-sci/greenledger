@@ -2,8 +2,11 @@
 
 namespace App\Models\Traits;
 
-use App\Enums\ApprovalInstanceStatus;
 use App\Models\ApprovalInstance;
+use App\States\ApprovalInstance\Approved;
+use App\States\ApprovalInstance\ChangesRequested;
+use App\States\ApprovalInstance\InProgress;
+use App\States\ApprovalInstance\Pending;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 trait RequiresApproval
@@ -23,8 +26,9 @@ trait RequiresApproval
     {
         return $this->approvalInstances()
             ->whereIn('status', [
-                ApprovalInstanceStatus::Draft,
-                ApprovalInstanceStatus::PendingApproval,
+                Pending::class,
+                InProgress::class,
+                ChangesRequested::class,
             ])
             ->latest()
             ->first();
@@ -53,21 +57,13 @@ trait RequiresApproval
     }
 
     /**
-     * Get the latest approval status.
-     */
-    public function getApprovalStatus(): ?ApprovalInstanceStatus
-    {
-        $instance = $this->approvalInstances()->latest()->first();
-
-        return $instance?->status;
-    }
-
-    /**
      * Check if this model is approved.
      */
     public function isApproved(): bool
     {
-        return $this->getApprovalStatus() === ApprovalInstanceStatus::Approved;
+        $instance = $this->approvalInstances()->latest()->first();
+
+        return $instance?->status instanceof Approved;
     }
 
     /**
@@ -75,8 +71,9 @@ trait RequiresApproval
      */
     public function isPendingApproval(): bool
     {
-        return $this->getApprovalStatus() ===
-            ApprovalInstanceStatus::PendingApproval;
+        $instance = $this->approvalInstances()->latest()->first();
+
+        return $instance?->status instanceof InProgress;
     }
 
     /**

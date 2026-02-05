@@ -68,7 +68,16 @@ interface AccountFormData {
     budget_control: boolean;
     initial_budget: string;
     is_standard: boolean;
+    category: string;
+    sub_category: string;
+    typical_usage: string;
+    tax_applicable: boolean;
 }
+
+const SUB_CATEGORY_OPTIONS: Record<string, string[]> = {
+    PROGRAM: ['Research', 'Knowledge'],
+    NON_PROGRAM: ['Administrative', 'Financial', 'Operational', 'Research', 'Knowledge'],
+};
 
 export default function Create({
     sites,
@@ -113,10 +122,14 @@ export default function Create({
             short_description: '',
             parent_account_id: '',
             parent_temp_id: '',
-            is_active: true,
+            is_active: false,
             budget_control: false,
             initial_budget: '0',
             is_standard: false,
+            category: 'NON_PROGRAM',
+            sub_category: '',
+            typical_usage: '',
+            tax_applicable: false,
         };
     }
 
@@ -334,6 +347,12 @@ export default function Create({
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950">
+                        <p className="text-sm text-blue-700 dark:text-blue-300">
+                            New accounts are created as <strong>Draft</strong> and automatically submitted for approval. They become active once approved.
+                        </p>
+                    </div>
+
                     <div className="rounded-lg border p-6">
                         <h2 className="mb-4 text-lg font-semibold">
                             Accounts
@@ -627,6 +646,76 @@ export default function Create({
                                                 }
                                                 placeholder="Short Description"
                                             />
+                                        </div>
+
+                                        {/* Row: Category | Sub-Category */}
+                                        <div className="mt-4 grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label>Category</Label>
+                                                <Select
+                                                    value={acc.category}
+                                                    onValueChange={(val) => {
+                                                        handleUpdateAccount(idx, 'category', val);
+                                                        handleUpdateAccount(idx, 'sub_category', '');
+                                                    }}
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select Category" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="PROGRAM">Program</SelectItem>
+                                                        <SelectItem value="NON_PROGRAM">Non-Program</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                {errors[`accounts.${idx}.category`] && (
+                                                    <p className="text-xs text-destructive">
+                                                        {errors[`accounts.${idx}.category`]}
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label>Sub-Category</Label>
+                                                <Select
+                                                    value={acc.sub_category}
+                                                    onValueChange={(val) =>
+                                                        handleUpdateAccount(idx, 'sub_category', val)
+                                                    }
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select Sub-Category" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {(SUB_CATEGORY_OPTIONS[acc.category] || []).map((opt) => (
+                                                            <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        </div>
+
+                                        {/* Row: Typical Usage | Tax Applicable */}
+                                        <div className="mt-4 grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label>Typical Usage</Label>
+                                                <Input
+                                                    value={acc.typical_usage}
+                                                    onChange={(e) =>
+                                                        handleUpdateAccount(idx, 'typical_usage', e.target.value)
+                                                    }
+                                                    placeholder="Optional"
+                                                />
+                                            </div>
+
+                                            <div className="flex items-end space-x-2">
+                                                <Switch
+                                                    checked={acc.tax_applicable}
+                                                    onCheckedChange={(c) =>
+                                                        handleUpdateAccount(idx, 'tax_applicable', c)
+                                                    }
+                                                />
+                                                <Label className="text-sm">Tax Applicable</Label>
+                                            </div>
                                         </div>
 
                                         {/* Budget Control + Initial Budget */}

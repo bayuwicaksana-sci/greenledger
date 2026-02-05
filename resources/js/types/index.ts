@@ -1,5 +1,7 @@
 export type * from './approval';
 export type * from './auth';
+export type * from './coa';
+export type * from './fiscal_year';
 export type * from './navigation';
 export type * from './permissions';
 export type * from './programs';

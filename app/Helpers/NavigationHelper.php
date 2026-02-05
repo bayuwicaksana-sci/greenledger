@@ -77,6 +77,8 @@ class NavigationHelper
     private static function getBadgeCount(string $badgeType, User $user): int
     {
         return match ($badgeType) {
+            'pending_notifications' => $user->unreadNotifications()->count(),
+
             'pending_approvals' => PaymentRequest::query()
                 ->where('status', 'pending')
                 ->when(
@@ -440,6 +442,7 @@ class NavigationHelper
                         'route' => 'notifications.index',
                         'icon' => 'Bell',
                         'permission' => ['notifications.view.own'],
+                        'badge' => 'pending_notifications',
                     ],
                 ],
             ],

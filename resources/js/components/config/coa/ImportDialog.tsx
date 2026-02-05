@@ -30,6 +30,10 @@ interface ImportRow {
     short_description: string;
     parent_account_code: string;
     is_active: boolean;
+    category: string;
+    sub_category: string;
+    typical_usage: string;
+    tax_applicable: boolean;
 }
 
 interface RowErrors {
@@ -47,6 +51,7 @@ const REQUIRED_HEADERS = [
     'account_code',
     'account_name',
     'account_type',
+    'category',
 ];
 
 export function ImportDialog({
@@ -167,6 +172,9 @@ export function ImportDialog({
             const isActiveRaw = (row[headerMap.is_active] ?? 'true')
                 .toLowerCase()
                 .trim();
+            const taxApplicableRaw = (row[headerMap.tax_applicable] ?? 'false')
+                .toLowerCase()
+                .trim();
 
             return {
                 site_code: row[headerMap.site_code] ?? '',
@@ -178,6 +186,10 @@ export function ImportDialog({
                 short_description: row[headerMap.short_description] ?? '',
                 parent_account_code: row[headerMap.parent_account_code] ?? '',
                 is_active: isActiveRaw === 'true' || isActiveRaw === '1',
+                category: (row[headerMap.category] ?? '').toUpperCase().trim(),
+                sub_category: row[headerMap.sub_category] ?? '',
+                typical_usage: row[headerMap.typical_usage] ?? '',
+                tax_applicable: taxApplicableRaw === 'true' || taxApplicableRaw === '1',
             };
         });
 
@@ -305,13 +317,17 @@ export function ImportDialog({
                     {/* CSV format reference */}
                     <div className="rounded-md bg-muted p-3">
                         <p className="text-xs font-medium text-muted-foreground">
-                            Expected CSV format:
+                            Expected CSV format (required columns in <strong>bold</strong>):
                         </p>
                         <code className="text-xs text-muted-foreground">
-                            site_code, account_code, account_name,
-                            account_type, short_description,
-                            parent_account_code, is_active
+                            <strong>site_code</strong>, <strong>account_code</strong>, <strong>account_name</strong>,
+                            <strong>account_type</strong>, <strong>category</strong>, short_description,
+                            parent_account_code, is_active, sub_category,
+                            typical_usage, tax_applicable
                         </code>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            category: PROGRAM or NON_PROGRAM
+                        </p>
                     </div>
 
                     {/* Preview table */}
@@ -348,6 +364,7 @@ export function ImportDialog({
                                             <TableHead>Code</TableHead>
                                             <TableHead>Name</TableHead>
                                             <TableHead>Type</TableHead>
+                                            <TableHead>Category</TableHead>
                                             <TableHead>Parent</TableHead>
                                             <TableHead>Active</TableHead>
                                         </TableRow>
@@ -410,6 +427,24 @@ export function ImportDialog({
                                                             {row.account_type ||
                                                                 '—'}
                                                         </span>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <span
+                                                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                                                                row.category === 'PROGRAM'
+                                                                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+                                                                    : row.category === 'NON_PROGRAM'
+                                                                      ? 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                                                                      : 'bg-red-100 text-red-800'
+                                                            }`}
+                                                        >
+                                                            {row.category === 'PROGRAM' ? 'Program' : row.category === 'NON_PROGRAM' ? 'Non-Program' : row.category || '—'}
+                                                        </span>
+                                                        {rowErrors.category && (
+                                                            <p className="text-xs text-destructive">
+                                                                {rowErrors.category}
+                                                            </p>
+                                                        )}
                                                     </TableCell>
                                                     <TableCell>
                                                         <div>

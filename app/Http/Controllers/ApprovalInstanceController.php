@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\ApprovalInstance;
 use App\Models\Site;
 use App\Services\Approval\WorkflowEngine;
@@ -58,6 +57,7 @@ class ApprovalInstanceController extends Controller
         ]);
 
         Inertia::share('site_code', $site->site_code);
+
         return Inertia::render('approvals/show', [
             'approval' => $approvalInstance,
         ]);
@@ -81,7 +81,7 @@ class ApprovalInstanceController extends Controller
         $user = $request->user();
 
         try {
-            if (!$approvalInstance->currentStep) {
+            if (! $approvalInstance->currentStep) {
                 return back()->with(
                     'error',
                     'No active step found for this approval.',
@@ -90,7 +90,7 @@ class ApprovalInstanceController extends Controller
 
             $actionEnum = \App\Enums\ApprovalActionType::tryFrom($action);
 
-            if (!$actionEnum) {
+            if (! $actionEnum) {
                 return back()->with('error', 'Invalid action type.');
             }
 
@@ -116,9 +116,35 @@ class ApprovalInstanceController extends Controller
         } catch (\Exception $e) {
             return back()->with(
                 'error',
-                'Error processing action: ' . $e->getMessage(),
+                'Error processing action: '.$e->getMessage(),
             );
         }
+    }
+
+    /**
+     * Resubmit an approval instance after changes were requested.
+     */
+    public function resubmit(
+        Request $request,
+        Site $site,
+        ApprovalInstance $approvalInstance,
+    ) {
+        $user = $request->user();
+
+        if ($approvalInstance->submitted_by !== $user->id) {
+            return back()->with('error', 'Only the original submitter can resubmit.');
+        }
+
+        if (! $approvalInstance->status instanceof \App\States\ApprovalInstance\ChangesRequested) {
+            return back()->with('error', 'This approval cannot be resubmitted in its current state.');
+        }
+
+        $success = $this->workflowEngine->resubmitWorkflow($approvalInstance, $user);
+
+        return back()->with(
+            $success ? 'success' : 'error',
+            $success ? 'Resubmitted for approval successfully.' : 'Failed to resubmit.',
+        );
     }
 
     protected function getPendingInstancesForUser($user)
@@ -129,10 +155,7 @@ class ApprovalInstanceController extends Controller
 
         return ApprovalInstance::query()
             ->with(['approvable', 'currentStep', 'submittedBy', 'workflow'])
-            ->where(
-                'status',
-                \App\Enums\ApprovalInstanceStatus::PendingApproval,
-            )
+            ->where('status', \App\States\ApprovalInstance\InProgress::class)
             ->whereHas('currentStep', function ($query) use ($user) {
                 $query
                     ->where(function ($q) use ($user) {
@@ -151,13 +174,26 @@ class ApprovalInstanceController extends Controller
                                 foreach ($user->roles as $role) {
                                     $subQ->orWhereJsonContains(
                                         'approver_identifiers',
-                                        $role->id,
-                                    ); // assuming stored by ID
-                                    // Use name if stored by name: $role->name
+                                        $role->name,
+                                    );
                                 }
                             });
                         },
-                        // Add permission based if needed
+                    )
+                    ->orWhere(
+                        function ($q) use ($user) {
+                            // Permission-based
+                            $q->where('approver_type', 'permission')->where(function (
+                                $subQ,
+                            ) use ($user) {
+                                foreach ($user->getAllPermissions() as $perm) {
+                                    $subQ->orWhereJsonContains(
+                                        'approver_identifiers',
+                                        $perm->name,
+                                    );
+                                }
+                            });
+                        },
                     );
             })
             ->latest()

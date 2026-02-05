@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\FiscalYear;
 use App\Models\Program;
 use App\Models\Site;
 use App\Models\User;
@@ -19,12 +20,19 @@ class ProgramFactory extends Factory
      */
     public function definition(): array
     {
+        $year = now()->year;
+
+        FiscalYear::firstOrCreate(
+            ['year' => $year],
+            ['start_date' => "{$year}-01-01", 'end_date' => "{$year}-12-31", 'is_closed' => false],
+        );
+
         return [
             'site_id' => Site::factory(),
             'program_code' => $this->faker->unique()->bothify('PROG-####'),
             'program_name' => $this->faker->sentence(3),
             'description' => $this->faker->paragraph(),
-            'fiscal_year' => now()->year,
+            'fiscal_year' => $year,
             'total_budget' => $this->faker->randomFloat(2, 10000, 1000000),
             'status' => Program::STATUS_ACTIVE,
             'start_date' => $this->faker->date(),

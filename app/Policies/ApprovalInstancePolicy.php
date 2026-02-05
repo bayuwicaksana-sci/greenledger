@@ -2,10 +2,11 @@
 
 namespace App\Policies;
 
-use App\Enums\ApprovalInstanceStatus;
 use App\Models\ApprovalInstance;
 use App\Models\User;
 use App\Services\Approval\WorkflowEngine;
+use App\States\ApprovalInstance\InProgress;
+use App\States\ApprovalInstance\Pending;
 
 class ApprovalInstancePolicy
 {
@@ -50,8 +51,8 @@ class ApprovalInstancePolicy
      */
     public function update(User $user, ApprovalInstance $approvalInstance): bool
     {
-        // Can only update if in draft status and submitted by user
-        return $approvalInstance->status === ApprovalInstanceStatus::Draft &&
+        // Can only update if in pending (draft) status and submitted by user
+        return $approvalInstance->status instanceof Pending &&
             $approvalInstance->submitted_by === $user->id;
     }
 
@@ -68,7 +69,7 @@ class ApprovalInstancePolicy
      */
     public function submit(User $user, ApprovalInstance $approvalInstance): bool
     {
-        return $approvalInstance->status === ApprovalInstanceStatus::Draft &&
+        return $approvalInstance->status instanceof Pending &&
             $approvalInstance->submitted_by === $user->id;
     }
 
@@ -79,10 +80,7 @@ class ApprovalInstancePolicy
         User $user,
         ApprovalInstance $approvalInstance,
     ): bool {
-        if (
-            $approvalInstance->status !==
-            ApprovalInstanceStatus::PendingApproval
-        ) {
+        if (! $approvalInstance->status instanceof InProgress) {
             return false;
         }
 

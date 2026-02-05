@@ -41,37 +41,12 @@ class UpdateCoaAccountRequest extends FormRequest
                 'sometimes',
                 'required',
                 'string',
-                'max:10', // Base Code e.g. 5211
-                'regex:/^[a-zA-Z0-9]+$/',
-            ];
-            $rules['category'] = [
-                'sometimes',
-                'required',
-                'string',
-                'max:5',
-                'regex:/^[A-Z0-9]+$/',
-            ];
-            $rules['subcategory'] = [
-                'sometimes',
-                'required',
-                'string',
-                'max:5',
-                'regex:/^[A-Z0-9]+$/',
-            ];
-            $rules['sequence_number'] = [
-                'sometimes',
-                'required',
-                'string',
-                'max:5',
-                'regex:/^[0-9]+$/',
-            ];
-
-            // As with Store request, simple unique check on account_code (base)
-            $rules['account_code'][] =
+                'max:20',
                 'unique:coa_accounts,account_code,'.
                 $coaId.
                 ',id,site_id,'.
-                $siteId;
+                $siteId,
+            ];
 
             $rules['account_type'] = [
                 'sometimes',
@@ -80,24 +55,29 @@ class UpdateCoaAccountRequest extends FormRequest
                 'in:ASSET,LIABILITY,EQUITY,REVENUE,EXPENSE',
             ];
         } else {
-            // Add prohibited rules for locked fields
             $rules['account_code'] = [
                 'sometimes',
                 'required',
                 'string',
                 'max:255',
-                'in:'.$coa->account_code, // Must match current value
+                'in:'.$coa->account_code,
             ];
 
             $rules['account_type'] = [
                 'sometimes',
                 'required',
                 'string',
-                'in:'.$coa->account_type, // Must match current value
+                'in:'.$coa->account_type,
             ];
         }
 
         $rules['budget_control'] = ['boolean'];
+
+        // Category is NOT locked by transactions (only code and type are)
+        $rules['category'] = ['sometimes', 'required', 'string', 'in:PROGRAM,NON_PROGRAM'];
+        $rules['sub_category'] = ['sometimes', 'nullable', 'string', 'max:50'];
+        $rules['typical_usage'] = ['sometimes', 'nullable', 'string'];
+        $rules['tax_applicable'] = ['sometimes', 'boolean'];
 
         return $rules;
     }

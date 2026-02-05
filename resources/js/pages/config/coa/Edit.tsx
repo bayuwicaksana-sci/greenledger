@@ -39,7 +39,17 @@ interface CoaAccount {
     budget_control: boolean;
     initial_budget: number;
     first_transaction_at?: string | null;
+    category?: string;
+    sub_category?: string | null;
+    typical_usage?: string | null;
+    tax_applicable?: boolean;
+    approval_status?: string | null;
 }
+
+const SUB_CATEGORY_OPTIONS: Record<string, string[]> = {
+    PROGRAM: ['Research', 'Knowledge'],
+    NON_PROGRAM: ['Administrative', 'Financial', 'Operational', 'Research', 'Knowledge'],
+};
 
 interface EditProps {
     account: CoaAccount;
@@ -74,6 +84,10 @@ export default function Edit({ account, sites, parents }: EditProps) {
         is_active: account.is_active,
         budget_control: account.budget_control,
         initial_budget: account.initial_budget.toString(),
+        category: account.category || 'NON_PROGRAM',
+        sub_category: account.sub_category || '',
+        typical_usage: account.typical_usage || '',
+        tax_applicable: account.tax_applicable || false,
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -88,7 +102,26 @@ export default function Edit({ account, sites, parents }: EditProps) {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold">Edit Account</h1>
+                        <div className="flex items-center gap-3">
+                            <h1 className="text-3xl font-bold">Edit Account</h1>
+                            {account.approval_status && (
+                                <span
+                                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                        account.approval_status === 'approved'
+                                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                                            : account.approval_status === 'pending_approval'
+                                              ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300'
+                                              : account.approval_status === 'rejected'
+                                                ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                                                : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                                    }`}
+                                >
+                                    {account.approval_status === 'approved' ? 'Approved' :
+                                     account.approval_status === 'pending_approval' ? 'Pending Approval' :
+                                     account.approval_status === 'rejected' ? 'Rejected' : 'Draft'}
+                                </span>
+                            )}
+                        </div>
                         <p className="text-muted-foreground">
                             Update account details and classification
                         </p>
@@ -423,6 +456,79 @@ export default function Edit({ account, sites, parents }: EditProps) {
                                         {data.budget_control
                                             ? 'Enabled'
                                             : 'Disabled'}
+                                    </Label>
+                                </div>
+                            </div>
+
+                            {/* Category */}
+                            <div className="space-y-2">
+                                <Label htmlFor="category">Category</Label>
+                                <Select
+                                    value={data.category}
+                                    onValueChange={(val) => {
+                                        setData('category', val);
+                                        setData('sub_category', '');
+                                    }}
+                                >
+                                    <SelectTrigger id="category">
+                                        <SelectValue placeholder="Select category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="PROGRAM">Program</SelectItem>
+                                        <SelectItem value="NON_PROGRAM">Non-Program</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                {errors.category && (
+                                    <p className="text-sm text-destructive">{errors.category}</p>
+                                )}
+                            </div>
+
+                            {/* Sub-Category */}
+                            <div className="space-y-2">
+                                <Label htmlFor="sub_category">Sub-Category</Label>
+                                <Select
+                                    value={data.sub_category || ''}
+                                    onValueChange={(val) =>
+                                        setData('sub_category', val)
+                                    }
+                                >
+                                    <SelectTrigger id="sub_category">
+                                        <SelectValue placeholder="Select sub-category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {(SUB_CATEGORY_OPTIONS[data.category] || []).map((opt) => (
+                                            <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Typical Usage */}
+                            <div className="space-y-2">
+                                <Label htmlFor="typical_usage">Typical Usage</Label>
+                                <Input
+                                    id="typical_usage"
+                                    value={data.typical_usage}
+                                    onChange={(e) =>
+                                        setData('typical_usage', e.target.value)
+                                    }
+                                    placeholder="Optional"
+                                />
+                            </div>
+
+                            {/* Tax Applicable */}
+                            <div className="space-y-2">
+                                <Label htmlFor="tax_applicable">Tax Applicable</Label>
+                                <div className="flex items-center space-x-2">
+                                    <Switch
+                                        id="tax_applicable"
+                                        checked={data.tax_applicable}
+                                        onCheckedChange={(val) =>
+                                            setData('tax_applicable', val)
+                                        }
+                                    />
+                                    <Label htmlFor="tax_applicable">
+                                        {data.tax_applicable ? 'Yes' : 'No'}
                                     </Label>
                                 </div>
                             </div>

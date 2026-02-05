@@ -16,7 +16,14 @@ use App\States\ApprovalInstance\ChangesRequested;
 use App\States\ApprovalInstance\InProgress;
 use App\States\ApprovalInstance\Pending;
 use App\States\ApprovalInstance\Rejected;
+use App\Notifications\ApprovalApprovedNotification;
+use App\Notifications\ApprovalCancelledNotification;
+use App\Notifications\ApprovalChangesRequestedNotification;
+use App\Notifications\ApprovalRejectedNotification;
+use App\Notifications\ApprovalStepAdvancedNotification;
+use App\Notifications\ApprovalSubmittedNotification;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -90,6 +97,11 @@ class WorkflowEngine
                 ->performedOn($instance)
                 ->causedBy($submitter)
                 ->log('Submitted for approval');
+
+            // Notify eligible approvers
+            $this->resolveEligibleApprovers($firstStep)->each(
+                fn (User $approver) => $approver->notify(new ApprovalSubmittedNotification($instance)),
+            );
 
             return true;
         });
@@ -204,16 +216,30 @@ class WorkflowEngine
                 ->performedOn($instance)
                 ->causedBy($actor)
                 ->log("Approved and moved to step: {$nextStep->name}");
+
+            // Notify eligible approvers of the new step
+            $this->resolveEligibleApprovers($nextStep)->each(
+                fn (User $approver) => $approver->notify(new ApprovalStepAdvancedNotification($instance)),
+            );
         } else {
             // Workflow complete - approved
             $instance->status->transitionTo(Approved::class);
             $instance->completed_at = now();
             $instance->save();
 
+            // Fire the onApproved hook on the approvable model
+            $approvable = $instance->approvable;
+            if ($approvable && method_exists($approvable, 'onApproved')) {
+                $approvable->onApproved();
+            }
+
             activity('approval')
                 ->performedOn($instance)
                 ->causedBy($actor)
                 ->log('Workflow approved');
+
+            // Notify the submitter of approval
+            $instance->submittedBy?->notify(new ApprovalApprovedNotification($instance));
         }
 
         return true;
@@ -235,6 +261,9 @@ class WorkflowEngine
             ->causedBy($actor)
             ->log('Workflow rejected');
 
+        // Notify the submitter of rejection
+        $instance->submittedBy?->notify(new ApprovalRejectedNotification($instance));
+
         return true;
     }
 
@@ -254,6 +283,9 @@ class WorkflowEngine
             ->performedOn($instance)
             ->causedBy($actor)
             ->log('Changes requested');
+
+        // Notify the submitter that changes are needed
+        $instance->submittedBy?->notify(new ApprovalChangesRequestedNotification($instance));
 
         return true;
     }
@@ -318,8 +350,70 @@ class WorkflowEngine
                 ->causedBy($actor)
                 ->log('Workflow cancelled');
 
+            // Notify submitter if they are not the one who cancelled
+            $submitter = $instance->submittedBy;
+            if ($submitter && $submitter->id !== $actor->id) {
+                $submitter->notify(new ApprovalCancelledNotification($instance));
+            }
+
+            // Notify current step approvers if a step was active
+            if ($instance->currentStep) {
+                $this->resolveEligibleApprovers($instance->currentStep)->each(
+                    fn (User $approver) => $approver->notify(new ApprovalCancelledNotification($instance)),
+                );
+            }
+
             return true;
         });
+    }
+
+    /**
+     * Resubmit an instance after changes were requested.
+     */
+    public function resubmitWorkflow(
+        ApprovalInstance $instance,
+        User $submitter,
+    ): bool {
+        if (! $instance->status instanceof ChangesRequested) {
+            return false;
+        }
+
+        return DB::transaction(function () use ($instance, $submitter) {
+            $firstStep = $this->getNextApplicableStep($instance);
+
+            if (! $firstStep) {
+                return false;
+            }
+
+            $instance->status->transitionTo(InProgress::class);
+            $instance->current_step_id = $firstStep->id;
+            $instance->save();
+
+            activity('approval')
+                ->performedOn($instance)
+                ->causedBy($submitter)
+                ->log('Resubmitted for approval');
+
+            // Notify eligible approvers of the resubmission
+            $this->resolveEligibleApprovers($firstStep)->each(
+                fn (User $approver) => $approver->notify(new ApprovalSubmittedNotification($instance)),
+            );
+
+            return true;
+        });
+    }
+
+    /**
+     * Resolve all users eligible to approve a given step.
+     */
+    public function resolveEligibleApprovers(ApprovalStep $step): Collection
+    {
+        return match ($step->approver_type->value) {
+            'user' => User::whereIn('id', $step->approver_identifiers)->get(),
+            'role' => User::role($step->approver_identifiers)->get(),
+            'permission' => User::permission($step->approver_identifiers)->get(),
+            default => collect(),
+        };
     }
 
     /**

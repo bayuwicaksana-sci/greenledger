@@ -39,24 +39,24 @@ The COA module provides site-isolated, hierarchical account management for Green
 
 Table: `coa_accounts`
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | bigint (PK) | Auto-increment |
-| `site_id` | bigint (FK → sites) | Indexed. Determines which site owns this account |
-| `account_code` | string | Indexed. Unique together with `site_id` |
-| `account_name` | string | Required |
-| `abbreviation` | string(10) | Nullable. Short label shown alongside the account name |
-| `account_type` | string | Indexed. One of `ASSET`, `LIABILITY`, `EQUITY`, `REVENUE`, `EXPENSE` |
-| `short_description` | text | Nullable |
-| `parent_account_id` | bigint (FK → coa_accounts) | Nullable. Self-referential for hierarchy |
-| `hierarchy_level` | integer | 1 = root, increments with each parent link |
-| `is_active` | boolean | Default `false`. Inactive accounts cannot receive new transactions |
-| `initial_budget` | decimal | Nullable. The budget allocation for this account |
-| `budget_control` | boolean | Default `false`. When true, the account participates in Budget vs. Actual tracking |
-| `first_transaction_at` | timestamp | Nullable. Set the first time a transaction references this account. Triggers the lock |
-| `created_by` | bigint (FK → users) | Nullable |
-| `updated_by` | bigint (FK → users) | Nullable |
-| `created_at` / `updated_at` | timestamp | Laravel defaults |
+| Column                      | Type                       | Notes                                                                                 |
+| --------------------------- | -------------------------- | ------------------------------------------------------------------------------------- |
+| `id`                        | bigint (PK)                | Auto-increment                                                                        |
+| `site_id`                   | bigint (FK → sites)        | Indexed. Determines which site owns this account                                      |
+| `account_code`              | string                     | Indexed. Unique together with `site_id`                                               |
+| `account_name`              | string                     | Required                                                                              |
+| `abbreviation`              | string(10)                 | Nullable. Short label shown alongside the account name                                |
+| `account_type`              | string                     | Indexed. One of `ASSET`, `LIABILITY`, `EQUITY`, `REVENUE`, `EXPENSE`                  |
+| `short_description`         | text                       | Nullable                                                                              |
+| `parent_account_id`         | bigint (FK → coa_accounts) | Nullable. Self-referential for hierarchy                                              |
+| `hierarchy_level`           | integer                    | 1 = root, increments with each parent link                                            |
+| `is_active`                 | boolean                    | Default `false`. Inactive accounts cannot receive new transactions                    |
+| `initial_budget`            | decimal                    | Nullable. The budget allocation for this account                                      |
+| `budget_control`            | boolean                    | Default `false`. When true, the account participates in Budget vs. Actual tracking    |
+| `first_transaction_at`      | timestamp                  | Nullable. Set the first time a transaction references this account. Triggers the lock |
+| `created_by`                | bigint (FK → users)        | Nullable                                                                              |
+| `updated_by`                | bigint (FK → users)        | Nullable                                                                              |
+| `created_at` / `updated_at` | timestamp                  | Laravel defaults                                                                      |
 
 **Indexes:** `site_id`, `account_code`, `account_type`, `is_active`, `budget_control`, plus a composite index on `(site_id, account_code)` (unique).
 
@@ -70,24 +70,24 @@ Account codes are plain numeric strings. There is no site prefix embedded in the
 
 Conventions by range:
 
-| Range | Account Type |
-|---|---|
-| 1000–1999 | ASSET |
-| 2000–2999 | LIABILITY |
-| 3000–3999 | EQUITY |
-| 4000–4999 | REVENUE |
-| 5000–5999 | EXPENSE |
+| Range     | Account Type |
+| --------- | ------------ |
+| 1000–1999 | ASSET        |
+| 2000–2999 | LIABILITY    |
+| 3000–3999 | EQUITY       |
+| 4000–4999 | REVENUE      |
+| 5000–5999 | EXPENSE      |
 
 ### Hierarchy levels and auto-code logic
 
 The system infers hierarchy from the trailing-zero pattern of the parent's code. The `/coa/next-code` endpoint uses this to suggest the next available code:
 
-| Parent code pattern | Parent level | Child step | Example children |
-|---|---|---|---|
-| `x000` (e.g. 5000) | Level 1 (root) | +100 | 5100, 5200, … |
-| `xx00` (e.g. 5100) | Level 2 | +10 | 5110, 5120, … |
-| `xxx0` or other | Level 3+ | +1 | 5111, 5112, … |
-| No parent (root) | — | +1000 | 1000, 2000, … |
+| Parent code pattern | Parent level   | Child step | Example children |
+| ------------------- | -------------- | ---------- | ---------------- |
+| `x000` (e.g. 5000)  | Level 1 (root) | +100       | 5100, 5200, …    |
+| `xx00` (e.g. 5100)  | Level 2        | +10        | 5110, 5120, …    |
+| `xxx0` or other     | Level 3+       | +1         | 5111, 5112, …    |
+| No parent (root)    | —              | +1000      | 1000, 2000, …    |
 
 The `hierarchy_level` column is set automatically: root accounts get `1`, each child is `parent.hierarchy_level + 1`.
 
@@ -101,22 +101,22 @@ The Index page renders all accounts in a tree layout (`CoaTreeView` component) g
 
 Defined in `config/coa_templates.php` under the key `standard_agricultural`. Contains 14 accounts:
 
-| Code | Name | Type | Abbreviation | Parent |
-|---|---|---|---|---|
-| 1000 | Assets | ASSET | AST | — |
-| 1100 | Current Assets | ASSET | CURR-AST | 1000 |
-| 1110 | Cash and Equivalents | ASSET | CASH | 1100 |
-| 2000 | Liabilities | LIABILITY | LIAB | — |
-| 2100 | Current Liabilities | LIABILITY | CURR-LIAB | 2000 |
-| 3000 | Equity | EQUITY | EQ | — |
-| 3100 | Capital | EQUITY | CAP | 3000 |
-| 4000 | Revenue | REVENUE | REV | — |
-| 4100 | Operational Revenue | REVENUE | OP-REV | 4000 |
-| 4110 | Harvest Revenue | REVENUE | HARV-REV | 4100 |
-| 5000 | Expenses | EXPENSE | EXP | — |
-| 5100 | Operational Expenses | EXPENSE | OP-EXP | 5000 |
-| 5211 | Seeds Material | EXPENSE | MAT-SEED | 5100 |
-| 5212 | Fertilizer Material | EXPENSE | MAT-FERT | 5100 |
+| Code | Name                 | Type      | Abbreviation | Parent |
+| ---- | -------------------- | --------- | ------------ | ------ |
+| 1000 | Assets               | ASSET     | AST          | —      |
+| 1100 | Current Assets       | ASSET     | CURR-AST     | 1000   |
+| 1110 | Cash and Equivalents | ASSET     | CASH         | 1100   |
+| 2000 | Liabilities          | LIABILITY | LIAB         | —      |
+| 2100 | Current Liabilities  | LIABILITY | CURR-LIAB    | 2000   |
+| 3000 | Equity               | EQUITY    | EQ           | —      |
+| 3100 | Capital              | EQUITY    | CAP          | 3000   |
+| 4000 | Revenue              | REVENUE   | REV          | —      |
+| 4100 | Operational Revenue  | REVENUE   | OP-REV       | 4000   |
+| 4110 | Harvest Revenue      | REVENUE   | HARV-REV     | 4100   |
+| 5000 | Expenses             | EXPENSE   | EXP          | —      |
+| 5100 | Operational Expenses | EXPENSE   | OP-EXP       | 5000   |
+| 5211 | Seeds Material       | EXPENSE   | MAT-SEED     | 5100   |
+| 5212 | Fertilizer Material  | EXPENSE   | MAT-FERT     | 5100   |
 
 ### How template application works
 
@@ -136,16 +136,16 @@ The **Create COA Accounts** page (`config/coa/Create`) lets users add one or mor
 
 **Field constraints enforced by the UI and `BulkStoreCoaAccountRequest`:**
 
-| Field | Constraint |
-|---|---|
-| Site | Required. Must reference an existing site |
-| Account Code | Required. Auto-suggested via `nextCode`; user may override |
-| Account Name | Required |
-| Abbreviation | Optional, max 255 characters |
-| Account Type | **REVENUE or EXPENSE only** |
-| Short Description | Optional |
-| Parent Account | Optional. Dropdown includes both existing DB accounts and **in-batch siblings** (displayed as `NEW: <name>`) |
-| Budget Control | Toggle, defaults off |
+| Field             | Constraint                                                                                                   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------ |
+| Site              | Required. Must reference an existing site                                                                    |
+| Account Code      | Required. Auto-suggested via `nextCode`; user may override                                                   |
+| Account Name      | Required                                                                                                     |
+| Abbreviation      | Optional, max 255 characters                                                                                 |
+| Account Type      | **REVENUE or EXPENSE only**                                                                                  |
+| Short Description | Optional                                                                                                     |
+| Parent Account    | Optional. Dropdown includes both existing DB accounts and **in-batch siblings** (displayed as `NEW: <name>`) |
+| Budget Control    | Toggle, defaults off                                                                                         |
 
 **In-batch parent references:** When account B selects account A (from the same submission) as its parent, the frontend stores `parent_temp_id` referencing A's `_temp_id`. The backend's `sortAccountsByDependency` creates parents first, then resolves `parent_temp_id` → actual `parent_account_id` via a temp-ID map. No backend change was needed for this — it is handled entirely within `bulkStore`.
 
@@ -161,16 +161,16 @@ The **Import CSV** dialog on the index page accepts a JSON payload of parsed row
 
 **Expected columns per row:**
 
-| Column | Required | Notes |
-|---|---|---|
-| `site_code` | Yes | Must match an existing site's `site_code` |
-| `account_code` | Yes | Must not already exist for that site |
-| `account_name` | Yes | |
-| `account_type` | Yes | **REVENUE or EXPENSE only** |
-| `short_description` | No | |
-| `abbreviation` | No | Max 10 characters |
-| `parent_account_code` | No | Must exist in DB or elsewhere in the same import batch |
-| `is_active` | Yes | Boolean |
+| Column                | Required | Notes                                                  |
+| --------------------- | -------- | ------------------------------------------------------ |
+| `site_code`           | Yes      | Must match an existing site's `site_code`              |
+| `account_code`        | Yes      | Must not already exist for that site                   |
+| `account_name`        | Yes      |                                                        |
+| `account_type`        | Yes      | **REVENUE or EXPENSE only**                            |
+| `short_description`   | No       |                                                        |
+| `abbreviation`        | No       | Max 10 characters                                      |
+| `parent_account_code` | No       | Must exist in DB or elsewhere in the same import batch |
+| `is_active`           | Yes      | Boolean                                                |
 
 **Limits:** Maximum 200 rows per import.
 
@@ -198,10 +198,10 @@ The Edit page (`config/coa/Edit`) is split into two sections: **Account Details*
 
 Once `first_transaction_at` is set on an account (i.e. any `PaymentRequestSplit`, `RevenueHarvest`, or `RevenueTestingService` row references it), the following fields become read-only both in the UI and in `UpdateCoaAccountRequest` validation:
 
-| Field | Lock behaviour |
-|---|---|
+| Field        | Lock behaviour                                                     |
+| ------------ | ------------------------------------------------------------------ |
 | Account Code | `in:<current_value>` rule — submission must echo the existing code |
-| Account Type | `in:<current_type>` rule — submission must echo the existing type |
+| Account Type | `in:<current_type>` rule — submission must echo the existing type  |
 
 The Edit page shows a **Locked** badge next to each frozen label and a helper text explaining why. The `isLocked()` method on the model is the single source of truth: it returns `true` when `first_transaction_at` is not null.
 
@@ -221,11 +221,11 @@ The Site selector is always disabled on the Edit page. An account's site cannot 
 
 The Index page shows three numeric columns per account:
 
-| Column | Meaning |
-|---|---|
-| **Budget** | The value of `initial_budget` |
-| **Actual** | Computed at query time via subqueries: for EXPENSE accounts it is the sum of `payment_request_splits.split_amount`; for REVENUE accounts it is the sum of `revenue_harvest.total_revenue` + `revenue_testing_services.contract_value` |
-| **Balance** | `actual_amount − initial_budget` (accessor on the model) |
+| Column      | Meaning                                                                                                                                                                                                                               |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Budget**  | The value of `initial_budget`                                                                                                                                                                                                         |
+| **Actual**  | Computed at query time via subqueries: for EXPENSE accounts it is the sum of `payment_request_splits.split_amount`; for REVENUE accounts it is the sum of `revenue_harvest.total_revenue` + `revenue_testing_services.contract_value` |
+| **Balance** | `actual_amount − initial_budget` (accessor on the model)                                                                                                                                                                              |
 
 Both Actual and Balance are computed fresh on every page load — they are not stored columns.
 
@@ -258,20 +258,20 @@ permission:coa.view.all|coa.view.site
 
 All routes live under the `/app/config/` prefix and are grouped inside the application's authenticated route group.
 
-| Method | Path | Name | Handler |
-|---|---|---|---|
-| GET | `coa` | `config.coa.index` | `CoaAccountController@index` |
-| GET | `coa/create` | `config.coa.create` | `CoaAccountController@create` |
-| POST | `coa` | `config.coa.store` | `CoaAccountController@store` |
-| POST | `coa/bulk` | `config.coa.bulk-store` | `CoaAccountController@bulkStore` |
-| GET | `coa/{coa}/edit` | `config.coa.edit` | `CoaAccountController@edit` |
-| PUT/PATCH | `coa/{coa}` | `config.coa.update` | `CoaAccountController@update` |
-| DELETE | `coa/{coa}` | `config.coa.destroy` | `CoaAccountController@destroy` |
-| GET | `coa/next-code` | `config.coa.next-code` | `CoaAccountController@nextCode` |
-| POST | `coa/import/validate` | `config.coa.import.validate` | `CoaAccountImportController@validate` |
-| POST | `coa/import` | `config.coa.import` | `CoaAccountImportController@import` |
-| GET | `coa/templates` | `config.coa.templates.index` | `CoaAccountTemplateController@index` |
-| POST | `coa/templates/apply` | `config.coa.templates.apply` | `CoaAccountTemplateController@apply` |
+| Method    | Path                  | Name                         | Handler                               |
+| --------- | --------------------- | ---------------------------- | ------------------------------------- |
+| GET       | `coa`                 | `config.coa.index`           | `CoaAccountController@index`          |
+| GET       | `coa/create`          | `config.coa.create`          | `CoaAccountController@create`         |
+| POST      | `coa`                 | `config.coa.store`           | `CoaAccountController@store`          |
+| POST      | `coa/bulk`            | `config.coa.bulk-store`      | `CoaAccountController@bulkStore`      |
+| GET       | `coa/{coa}/edit`      | `config.coa.edit`            | `CoaAccountController@edit`           |
+| PUT/PATCH | `coa/{coa}`           | `config.coa.update`          | `CoaAccountController@update`         |
+| DELETE    | `coa/{coa}`           | `config.coa.destroy`         | `CoaAccountController@destroy`        |
+| GET       | `coa/next-code`       | `config.coa.next-code`       | `CoaAccountController@nextCode`       |
+| POST      | `coa/import/validate` | `config.coa.import.validate` | `CoaAccountImportController@validate` |
+| POST      | `coa/import`          | `config.coa.import`          | `CoaAccountImportController@import`   |
+| GET       | `coa/templates`       | `config.coa.templates.index` | `CoaAccountTemplateController@index`  |
+| POST      | `coa/templates/apply` | `config.coa.templates.apply` | `CoaAccountTemplateController@apply`  |
 
 ---
 
@@ -303,4 +303,4 @@ A: When `skipExisting = true` (the default in the UI and in `SiteCoaSeeder`), an
 
 ---
 
-*Last updated: 2026-02-04 — reflects the state of the codebase at that date.*
+_Last updated: 2026-02-04 — reflects the state of the codebase at that date._

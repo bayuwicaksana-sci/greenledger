@@ -147,6 +147,10 @@ class CoaAccountTemplateService
                     'hierarchy_level' => $hierarchyLevel,
                     'is_active' => true,
                     'budget_control' => in_array($account['type'], ['EXPENSE']),
+                    'category' => $account['category'] ?? 'NON_PROGRAM',
+                    'sub_category' => $account['sub_category'] ?? null,
+                    'typical_usage' => $account['typical_usage'] ?? null,
+                    'tax_applicable' => $account['tax_applicable'] ?? false,
                     'created_by' => $createdBy,
                 ]);
 

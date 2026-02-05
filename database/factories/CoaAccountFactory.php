@@ -30,6 +30,17 @@ class CoaAccountFactory extends Factory
             'abbreviation' => $this->faker->lexify('???'),
             'is_active' => true,
             'initial_budget' => $this->faker->randomFloat(2, 0, 500000),
+            'category' => $this->faker->randomElement([
+                'PROGRAM',
+                'NON_PROGRAM',
+            ]),
+            'sub_category' => $this->faker->randomElement([
+                'Research',
+                'Administrative',
+                'Financial',
+                'Operational',
+            ]),
+            'tax_applicable' => false,
         ];
     }
 }

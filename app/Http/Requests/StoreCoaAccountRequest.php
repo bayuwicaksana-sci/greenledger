@@ -37,18 +37,6 @@ class StoreCoaAccountRequest extends FormRequest
                     return $query->where('site_id', $siteId);
                 }),
             ],
-            'sequence_number' => [
-                'required',
-                'string',
-                'max:5',
-                'regex:/^[0-9]+$/',
-            ],
-            // Check uniqueness of the combination
-            // Ideally we want unique(site_id, account_code, category, subcategory, sequence_number)
-            // But simple unique rule on account_code alone won't work anymore if 5211 is reused for different categories
-            // We'll rely on app logic or manual check for compound unique.
-            // Let's keep unique check on account_code for now to prevent duplicates of the BASE code if they represent unique concepts.
-            // For now, we rely on the primary key enforcement or custom logic elsewhere.
             'account_name' => ['required', 'string', 'max:255'],
             'account_type' => [
                 'required',
@@ -60,6 +48,10 @@ class StoreCoaAccountRequest extends FormRequest
             'is_active' => ['boolean'],
             'budget_control' => ['boolean'],
             'initial_budget' => ['nullable', 'numeric', 'min:0'],
+            'category' => ['required', 'string', 'in:PROGRAM,NON_PROGRAM'],
+            'sub_category' => ['nullable', 'string', 'max:50'],
+            'typical_usage' => ['nullable', 'string'],
+            'tax_applicable' => ['boolean'],
         ];
     }
 }

@@ -27,100 +27,6 @@ Route::post('invitation/{token}', [
 ])->name('invitation.accept');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    // Approval System API Routes
-    Route::prefix('api/approvals')->group(function () {
-        // Workflow Management (Admin)
-        Route::middleware('permission:view-approval-workflows')->group(
-            function () {
-                Route::get('workflows', [
-                    \App\Http\Controllers\Api\ApprovalWorkflowController::class,
-                    'index',
-                ]);
-                Route::get('workflows/{approvalWorkflow}', [
-                    \App\Http\Controllers\Api\ApprovalWorkflowController::class,
-                    'show',
-                ]);
-            },
-        );
-
-        Route::middleware('permission:create-approval-workflows')->post(
-            'workflows',
-            [
-                \App\Http\Controllers\Api\ApprovalWorkflowController::class,
-                'store',
-            ],
-        );
-
-        Route::middleware('permission:edit-approval-workflows')->group(
-            function () {
-                Route::put('workflows/{approvalWorkflow}', [
-                    \App\Http\Controllers\Api\ApprovalWorkflowController::class,
-                    'update',
-                ]);
-                Route::post('workflows/{approvalWorkflow}/versions', [
-                    \App\Http\Controllers\Api\ApprovalWorkflowController::class,
-                    'createVersion',
-                ]);
-            },
-        );
-
-        Route::middleware('permission:manage-approval-workflows')->group(
-            function () {
-                Route::post(
-                    'workflows/{approvalWorkflow}/versions/{versionId}/activate',
-                    [
-                        \App\Http\Controllers\Api\ApprovalWorkflowController::class,
-                        'activateVersion',
-                    ],
-                );
-                Route::post('workflows/{approvalWorkflow}/deactivate', [
-                    \App\Http\Controllers\Api\ApprovalWorkflowController::class,
-                    'deactivate',
-                ]);
-            },
-        );
-
-        Route::middleware('permission:delete-approval-workflows')->delete(
-            'workflows/{approvalWorkflow}',
-            [
-                \App\Http\Controllers\Api\ApprovalWorkflowController::class,
-                'destroy',
-            ],
-        );
-
-        // Approval Instances
-        Route::get('instances', [
-            \App\Http\Controllers\Api\ApprovalInstanceController::class,
-            'index',
-        ]);
-        Route::get('instances/pending', [
-            \App\Http\Controllers\Api\ApprovalInstanceController::class,
-            'pendingForUser',
-        ]);
-        Route::get('instances/{approvalInstance}', [
-            \App\Http\Controllers\Api\ApprovalInstanceController::class,
-            'show',
-        ]);
-        Route::post('instances/{approvalInstance}/submit', [
-            \App\Http\Controllers\Api\ApprovalInstanceController::class,
-            'submit',
-        ]);
-        Route::post('instances/{approvalInstance}/cancel', [
-            \App\Http\Controllers\Api\ApprovalInstanceController::class,
-            'cancel',
-        ]);
-
-        // Approval Actions
-        Route::post('instances/{approvalInstance}/actions', [
-            \App\Http\Controllers\Api\ApprovalActionController::class,
-            'process',
-        ]);
-        Route::get('instances/{approvalInstance}/history', [
-            \App\Http\Controllers\Api\ApprovalActionController::class,
-            'history',
-        ]);
-    });
-
     // Site API (JSON endpoints)
     Route::middleware('permission:users.view.site|users.view.all')->get(
         'api/sites',
@@ -799,13 +705,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     });
 
                 // Notifications
-                Route::get('notifications', function (Site $site) {
-                    Inertia::share('site_code', $site->site_code);
+                Route::prefix('notifications')
+                    ->name('notifications.')
+                    ->group(function () {
+                        Route::get('/', [
+                            \App\Http\Controllers\NotificationController::class,
+                            'index',
+                        ])
+                            ->name('index')
+                            ->middleware('permission:notifications.view.own');
 
-                    return Inertia::render('notifications/index');
-                })
-                    ->name('notifications.index')
-                    ->middleware('permission:notifications.view.own');
+                        Route::post('mark-all-read', [
+                            \App\Http\Controllers\NotificationController::class,
+                            'markAllAsRead',
+                        ])->name('mark-all-read');
+
+                        Route::post('{notificationId}/mark-read', [
+                            \App\Http\Controllers\NotificationController::class,
+                            'markAsRead',
+                        ])->name('mark-read');
+                    });
 
                 // Approvals
                 Route::prefix('approvals')
@@ -825,6 +744,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
                             \App\Http\Controllers\ApprovalInstanceController::class,
                             'action',
                         ])->name('action');
+
+                        Route::post('/{approvalInstance}/resubmit', [
+                            \App\Http\Controllers\ApprovalInstanceController::class,
+                            'resubmit',
+                        ])->name('resubmit');
                     });
             });
         require __DIR__.'/settings.php';
