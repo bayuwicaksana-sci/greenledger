@@ -36,6 +36,10 @@ class ProgramController extends Controller
             $query->where('status', $request->status);
         }
 
+        if ($request->filled('classification')) {
+            $query->where('classification', $request->classification);
+        }
+
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -81,8 +85,9 @@ class ProgramController extends Controller
         // Extract nested / file data
         $treatments = $data['treatments'] ?? [];
         $budgetItems = $data['budget_items'] ?? [];
+        $activities = $data['activities'] ?? [];
         $supportTeamIds = $data['support_team_member_ids'] ?? [];
-        unset($data['treatments'], $data['budget_items'], $data['support_team_member_ids'],
+        unset($data['treatments'], $data['budget_items'], $data['activities'], $data['support_team_member_ids'],
             $data['plot_map'], $data['reference_files'], $data['existing_reference_file_ids'], $data['remove_plot_map']);
 
         $data['status'] = Program::STATUS_DRAFT;
@@ -102,6 +107,21 @@ class ProgramController extends Controller
             foreach ($request->file('reference_files') as $file) {
                 $program->addMedia($file)->toMediaCollection('reference_files');
             }
+        }
+
+        // Create activities
+        foreach ($activities as $index => $activity) {
+            $program->activities()->create([
+                'activity_name' => $activity['activity_name'],
+                'description' => $activity['description'] ?? null,
+                'budget_allocation' => $activity['budget_allocation'],
+                'planned_start_date' => $activity['planned_start_date'] ?? null,
+                'planned_end_date' => $activity['planned_end_date'] ?? null,
+                'status' => 'PLANNED',
+                'sort_order' => $index,
+                'created_by' => Auth::id(),
+                'updated_by' => Auth::id(),
+            ]);
         }
 
         // Create treatments
@@ -157,7 +177,7 @@ class ProgramController extends Controller
         }
 
         return Inertia::render('programs/show', [
-            'program' => $program->load(['activities', 'createdBy']),
+            'program' => $program->load(['activities', 'createdBy', 'budgetItems.category', 'budgetItems.phase', 'treatments']),
             'site_code' => $site->site_code,
         ]);
     }
@@ -171,7 +191,7 @@ class ProgramController extends Controller
             abort(404);
         }
 
-        $program->load(['treatments', 'budgetItems']);
+        $program->load(['treatments', 'budgetItems', 'activities']);
 
         // Serialize media for frontend
         $referenceFiles = $program->getMedia('reference_files')->map(fn ($media) => [
@@ -247,14 +267,31 @@ class ProgramController extends Controller
         // Extract nested / file data
         $treatments = $data['treatments'] ?? [];
         $budgetItems = $data['budget_items'] ?? [];
+        $activities = $data['activities'] ?? [];
         $supportTeamIds = $data['support_team_member_ids'] ?? [];
         $existingReferenceFileIds = $data['existing_reference_file_ids'] ?? [];
         $removePlotMap = $data['remove_plot_map'] ?? false;
-        unset($data['treatments'], $data['budget_items'], $data['support_team_member_ids'],
+        unset($data['treatments'], $data['budget_items'], $data['activities'], $data['support_team_member_ids'],
             $data['plot_map'], $data['reference_files'], $data['existing_reference_file_ids'], $data['remove_plot_map']);
 
         $data['updated_by'] = Auth::id();
         $program->update($data);
+
+        // Sync activities: delete all, re-create
+        $program->activities()->delete();
+        foreach ($activities as $index => $activity) {
+            $program->activities()->create([
+                'activity_name' => $activity['activity_name'],
+                'description' => $activity['description'] ?? null,
+                'budget_allocation' => $activity['budget_allocation'],
+                'planned_start_date' => $activity['planned_start_date'] ?? null,
+                'planned_end_date' => $activity['planned_end_date'] ?? null,
+                'status' => 'PLANNED',
+                'sort_order' => $index,
+                'created_by' => Auth::id(),
+                'updated_by' => Auth::id(),
+            ]);
+        }
 
         // Sync treatments: delete all, re-create
         $program->treatments()->delete();

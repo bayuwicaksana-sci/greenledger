@@ -52,7 +52,7 @@ class RolePermissionSeeder extends Seeder
             'dashboard.view.site',
             'dashboard.view.all',
 
-            // Programs (18 permissions)
+            // Programs (19 permissions)
             'programs.view.own',
             'programs.view.assigned',
             'programs.view.site',
@@ -71,6 +71,7 @@ class RolePermissionSeeder extends Seeder
             'programs.complete.all',
             'programs.archive.view',
             'programs.archive.manage',
+            'program.override-closed-fy',
 
             // Payment Requests (17 permissions)
             'payment-requests.view.own',
@@ -214,6 +215,9 @@ class RolePermissionSeeder extends Seeder
             'reports.critical-actions.view.all',
             'reports.data-change-history.view.all',
 
+            // Historical Reports (1 permission)
+            'reports.historical',
+
             // Export Capabilities (7 permissions)
             'reports.export.excel.assigned',
             'reports.export.excel.all',
@@ -239,6 +243,12 @@ class RolePermissionSeeder extends Seeder
             'subsidi.types.deactivate',
             'subsidi.manage-eligibility',
             'subsidi.export',
+
+            // Fiscal Year Management (4 permissions)
+            'fiscal-year.view',
+            'fiscal-year.manage',
+            'fiscal-year.close',
+            'fiscal-year.reopen',
 
             // Data Management (6 permissions)
             'data.trigger-backup',
@@ -530,6 +540,7 @@ class RolePermissionSeeder extends Seeder
                 'programs.complete.all',
                 'programs.archive.view',
                 'programs.archive.manage',
+                'program.override-closed-fy',
 
                 // Payment Requests (full access)
                 'payment-requests.view.all',
@@ -625,6 +636,13 @@ class RolePermissionSeeder extends Seeder
                 'reports.export.pdf.all',
                 'reports.export.csv.all',
                 'reports.schedule-delivery.manage',
+                'reports.historical',
+
+                // Fiscal Year Management
+                'fiscal-year.view',
+                'fiscal-year.manage',
+                'fiscal-year.close',
+                'fiscal-year.reopen',
 
                 // Subsidi (full management)
                 'subsidi.view-eligibility.own',
@@ -734,6 +752,7 @@ class RolePermissionSeeder extends Seeder
                 'programs.complete.all',
                 'programs.archive.view',
                 'programs.archive.manage',
+                'program.override-closed-fy',
 
                 // Payment Requests (full access)
                 'payment-requests.view.all',
@@ -829,6 +848,13 @@ class RolePermissionSeeder extends Seeder
                 'reports.export.pdf.all',
                 'reports.export.csv.all',
                 'reports.schedule-delivery.manage',
+                'reports.historical',
+
+                // Fiscal Year Management
+                'fiscal-year.view',
+                'fiscal-year.manage',
+                'fiscal-year.close',
+                'fiscal-year.reopen',
 
                 // Subsidi (full management)
                 'subsidi.view-eligibility.own',

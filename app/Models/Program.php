@@ -26,7 +26,13 @@ class Program extends Model implements HasMedia
 
     public const STATUS_ARCHIVED = 'ARCHIVED';
 
+    // Classification constants
+    public const CLASSIFICATION_PROGRAM = 'PROGRAM';
+
+    public const CLASSIFICATION_NON_PROGRAM = 'NON_PROGRAM';
+
     protected $fillable = [
+        'classification',
         'site_id',
         'program_code',
         'program_name',
@@ -53,6 +59,7 @@ class Program extends Model implements HasMedia
         // PRD fields
         'program_type',
         'program_category',
+        'non_program_category',
         'commodity_id',
         'research_associate_id',
         'research_officer_id',

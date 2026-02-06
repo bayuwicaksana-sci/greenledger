@@ -2,19 +2,27 @@
     "mcpServers": {
         "laravel-boost": {
             "command": "php",
-            "args": [
-                "artisan",
-                "boost:mcp"
-            ]
+            "args": ["artisan", "boost:mcp"]
         },
         "herd": {
             "command": "php",
-            "args": [
-                "/Applications/Herd.app/Contents/Resources/herd-mcp.phar"
-            ],
+            "args": ["/Applications/Herd.app/Contents/Resources/herd-mcp.phar"],
             "env": {
                 "SITE_PATH": "/Users/bayuaji-sci/webdev/laravel/greenledger"
             }
+        },
+        "context7": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@upstash/context7-mcp",
+                "--api-key",
+                "ctx7sk-56011705-60a2-48c3-a055-b5e4b9936010"
+            ]
+        },
+        "shadcn": {
+            "command": "npx",
+            "args": ["shadcn@latest", "mcp"]
         }
     }
 }

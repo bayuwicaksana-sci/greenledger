@@ -332,6 +332,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
                                 'permission:approval-workflows.activate',
                             );
                     });
+
+                // Fiscal Years
+                Route::resource('fiscal-years', \App\Http\Controllers\FiscalYearController::class)
+                    ->middleware('permission:fiscal-year.view|fiscal-year.manage');
+
+                Route::post('fiscal-years/{fiscalYear}/close', [
+                    \App\Http\Controllers\FiscalYearController::class,
+                    'close',
+                ])
+                    ->name('fiscal-years.close')
+                    ->middleware('permission:fiscal-year.close');
+
+                Route::post('fiscal-years/{fiscalYear}/reopen', [
+                    \App\Http\Controllers\FiscalYearController::class,
+                    'reopen',
+                ])
+                    ->name('fiscal-years.reopen')
+                    ->middleware('permission:fiscal-year.reopen');
             });
 
         Route::prefix('notifications')
@@ -548,17 +566,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
                         Route::prefix('harvest')
                             ->name('harvest.')
                             ->group(function () {
-                                Route::get('create', function (Site $site) {
-                                    Inertia::share(
-                                        'site_code',
-                                        $site->site_code,
+                                Route::get('create', [
+                                    \App\Http\Controllers\RevenueController::class,
+                                    'createHarvest',
+                                ])
+                                    ->name('create')
+                                    ->middleware(
+                                        'permission:programs.view.assigned|programs.view.all',
                                     );
 
-                                    return Inertia::render(
-                                        'revenue/harvest/create',
-                                    );
-                                })
-                                    ->name('create')
+                                Route::post('/', [
+                                    \App\Http\Controllers\RevenueController::class,
+                                    'storeHarvest',
+                                ])
+                                    ->name('store')
                                     ->middleware(
                                         'permission:programs.view.assigned|programs.view.all',
                                     );
@@ -583,17 +604,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
                         Route::prefix('testing')
                             ->name('testing.')
                             ->group(function () {
-                                Route::get('create', function (Site $site) {
-                                    Inertia::share(
-                                        'site_code',
-                                        $site->site_code,
+                                Route::get('create', [
+                                    \App\Http\Controllers\RevenueController::class,
+                                    'createTesting',
+                                ])
+                                    ->name('create')
+                                    ->middleware(
+                                        'permission:programs.view.assigned|programs.view.all',
                                     );
 
-                                    return Inertia::render(
-                                        'revenue/testing/create',
-                                    );
-                                })
-                                    ->name('create')
+                                Route::post('/', [
+                                    \App\Http\Controllers\RevenueController::class,
+                                    'storeTesting',
+                                ])
+                                    ->name('store')
                                     ->middleware(
                                         'permission:programs.view.assigned|programs.view.all',
                                     );
@@ -773,6 +797,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
                         ])->name('resubmit');
                     });
             });
-        require __DIR__ . '/settings.php';
+        require __DIR__.'/settings.php';
     });
 });

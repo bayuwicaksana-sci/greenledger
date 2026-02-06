@@ -41,16 +41,14 @@ class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'auth' => [
                 'user' => $request->user(),
-                'primarySite' =>
-                    $request->user()?->primarySite->site_code ?? null,
+                'primarySite' => $request->user()?->primarySite->site_code ?? null,
                 'roles' => $request->user()?->roles->pluck('name') ?? [],
-                'allPermissions' =>
-                    $request->user()?->getAllPermissions()->pluck('name') ?? [],
+                'allPermissions' => $request->user()?->getAllPermissions()->pluck('name') ?? [],
                 'notifications' => $request
                     ->user()
                     ?->notifications()
                     ->paginate(20),
-                'unreadCount' => $request
+                'unreadCount' => fn () => $request
                     ->user()
                     ?->unreadNotifications()
                     ->count(),
@@ -62,8 +60,7 @@ class HandleInertiaRequests extends Middleware
                 ? NavigationHelper::getFilteredNavigation()
                 : [],
             'sites' => $request->user()?->sites->toArray() ?? null,
-            'sidebarOpen' =>
-                !$request->hasCookie('sidebar_state') ||
+            'sidebarOpen' => ! $request->hasCookie('sidebar_state') ||
                 $request->cookie('sidebar_state') === 'true',
         ];
     }
@@ -74,7 +71,7 @@ class HandleInertiaRequests extends Middleware
      */
     protected function getPermissionTranslations(Request $request): array
     {
-        if (!$request->user()) {
+        if (! $request->user()) {
             return [];
         }
 
@@ -91,7 +88,7 @@ class HandleInertiaRequests extends Middleware
         // Filter to only user's permissions
         return array_filter(
             $allTranslations,
-            fn($key) => in_array($key, $userPermissions),
+            fn ($key) => in_array($key, $userPermissions),
             ARRAY_FILTER_USE_KEY,
         );
     }

@@ -18,30 +18,25 @@ return [
         // Dashboard
         'dashboard.view.own' => [
             'label' => 'View Own Dashboard',
-            'description' =>
-                'View dashboard with personal metrics and assigned items',
+            'description' => 'View dashboard with personal metrics and assigned items',
         ],
         'dashboard.view.assigned' => [
             'label' => 'View Assigned Dashboards',
-            'description' =>
-                'View dashboard for all assigned programs and activities',
+            'description' => 'View dashboard for all assigned programs and activities',
         ],
         'dashboard.view.site' => [
             'label' => 'View Site Dashboard',
-            'description' =>
-                'View dashboard metrics for all activities within assigned sites',
+            'description' => 'View dashboard metrics for all activities within assigned sites',
         ],
         'dashboard.view.all' => [
             'label' => 'View All Dashboards',
-            'description' =>
-                'View comprehensive dashboard across all sites and programs',
+            'description' => 'View comprehensive dashboard across all sites and programs',
         ],
 
         // Programs
         'programs.view.own' => [
             'label' => 'View Own Programs',
-            'description' =>
-                'View programs you created or are directly involved in',
+            'description' => 'View programs you created or are directly involved in',
         ],
         'programs.view.assigned' => [
             'label' => 'View Assigned Programs',
@@ -53,8 +48,7 @@ return [
         ],
         'programs.view.all' => [
             'label' => 'View All Programs',
-            'description' =>
-                'View programs across all sites without restrictions',
+            'description' => 'View programs across all sites without restrictions',
         ],
         'programs.archive.view' => [
             'label' => 'View Archived Programs',
@@ -76,8 +70,7 @@ return [
         ],
         'payment-requests.view.all' => [
             'label' => 'View All Payment Requests',
-            'description' =>
-                'View payment requests across all sites and programs',
+            'description' => 'View payment requests across all sites and programs',
         ],
 
         // Settlements
@@ -161,13 +154,11 @@ return [
         // Program Assignments
         'program-assignments.view.assigned' => [
             'label' => 'View Assigned Program Assignments',
-            'description' =>
-                'View assignment details for programs assigned to you',
+            'description' => 'View assignment details for programs assigned to you',
         ],
         'program-assignments.view.all' => [
             'label' => 'View All Program Assignments',
-            'description' =>
-                'View all program assignment details across the system',
+            'description' => 'View all program assignment details across the system',
         ],
 
         // Notifications
@@ -211,8 +202,7 @@ return [
         ],
         'buyers.view-transaction-history.assigned' => [
             'label' => 'View Assigned Buyer Transactions',
-            'description' =>
-                'View transaction history for buyers in assigned programs',
+            'description' => 'View transaction history for buyers in assigned programs',
         ],
         'buyers.view-transaction-history.all' => [
             'label' => 'View All Buyer Transactions',
@@ -224,13 +214,11 @@ return [
         ],
         'clients.view-transaction-history.assigned' => [
             'label' => 'View Assigned Client Transactions',
-            'description' =>
-                'View transaction history for clients in assigned programs',
+            'description' => 'View transaction history for clients in assigned programs',
         ],
         'clients.view-transaction-history.all' => [
             'label' => 'View All Client Transactions',
-            'description' =>
-                'View complete transaction history for all clients',
+            'description' => 'View complete transaction history for all clients',
         ],
     ],
 
@@ -244,6 +232,10 @@ return [
         'programs.create.all' => [
             'label' => 'Create Any Program',
             'description' => 'Create programs in any site without restrictions',
+        ],
+        'program.override-closed-fy' => [
+            'label' => 'Override Closed Fiscal Year',
+            'description' => 'Create or modify programs in closed fiscal years (requires justification)',
         ],
 
         // Payment Requests
@@ -263,13 +255,11 @@ return [
         // Settlements
         'settlements.submit.own' => [
             'label' => 'Submit Own Settlements',
-            'description' =>
-                'Submit settlement documents for your own advances',
+            'description' => 'Submit settlement documents for your own advances',
         ],
         'settlements.submit.assigned' => [
             'label' => 'Submit Assigned Settlements',
-            'description' =>
-                'Submit settlement documents for assigned programs',
+            'description' => 'Submit settlement documents for assigned programs',
         ],
         'settlements.submit.all' => [
             'label' => 'Submit Any Settlement',
@@ -283,8 +273,7 @@ return [
         ],
         'activities.create.all' => [
             'label' => 'Create Any Activity',
-            'description' =>
-                'Create activities for any program across all sites',
+            'description' => 'Create activities for any program across all sites',
         ],
 
         // Users
@@ -363,13 +352,11 @@ return [
         // Settlements
         'settlements.update.own' => [
             'label' => 'Update Own Settlements',
-            'description' =>
-                'Modify settlements you submitted (before approval)',
+            'description' => 'Modify settlements you submitted (before approval)',
         ],
         'settlements.update.assigned' => [
             'label' => 'Update Assigned Settlements',
-            'description' =>
-                'Modify settlements for assigned programs (before approval)',
+            'description' => 'Modify settlements for assigned programs (before approval)',
         ],
 
         // Activities
@@ -419,8 +406,7 @@ return [
         // Notifications
         'notifications.manage.own' => [
             'label' => 'Manage Own Notifications',
-            'description' =>
-                'Mark notifications as read/unread and delete them',
+            'description' => 'Mark notifications as read/unread and delete them',
         ],
         'notifications.manage.all' => [
             'label' => 'Manage All Notifications',
@@ -440,8 +426,7 @@ return [
         // Subsidi
         'subsidi.claim.update.own' => [
             'label' => 'Update Own Subsidi Claims',
-            'description' =>
-                'Modify subsidy claims you submitted (draft status)',
+            'description' => 'Modify subsidy claims you submitted (draft status)',
         ],
         'subsidi.types.update' => [
             'label' => 'Update Subsidi Types',
@@ -486,13 +471,11 @@ return [
         // Payment Requests
         'payment-requests.delete.own' => [
             'label' => 'Delete Own Payment Requests',
-            'description' =>
-                'Remove payment requests you submitted (draft only)',
+            'description' => 'Remove payment requests you submitted (draft only)',
         ],
         'payment-requests.delete.assigned' => [
             'label' => 'Delete Assigned Payment Requests',
-            'description' =>
-                'Remove payment requests for assigned programs (draft only)',
+            'description' => 'Remove payment requests for assigned programs (draft only)',
         ],
         'payment-requests.delete.all' => [
             'label' => 'Delete Any Payment Request',
@@ -506,8 +489,7 @@ return [
         ],
         'settlements.delete.assigned' => [
             'label' => 'Delete Assigned Settlements',
-            'description' =>
-                'Remove settlements for assigned programs (pending only)',
+            'description' => 'Remove settlements for assigned programs (pending only)',
         ],
         'settlements.delete.all' => [
             'label' => 'Delete Any Settlement',
@@ -517,8 +499,7 @@ return [
         // Activities
         'activities.delete.assigned' => [
             'label' => 'Delete Assigned Activities',
-            'description' =>
-                'Remove activities for assigned programs (no transactions)',
+            'description' => 'Remove activities for assigned programs (no transactions)',
         ],
         'activities.delete.all' => [
             'label' => 'Delete Any Activity',
@@ -537,8 +518,7 @@ return [
         // Programs
         'programs.submit-for-approval.assigned' => [
             'label' => 'Submit Assigned Programs for Approval',
-            'description' =>
-                'Submit assigned program budgets to approval workflow',
+            'description' => 'Submit assigned program budgets to approval workflow',
         ],
         'programs.submit-for-approval.all' => [
             'label' => 'Submit Any Program for Approval',
@@ -554,15 +534,13 @@ return [
         ],
         'programs.complete.all' => [
             'label' => 'Mark Programs Complete',
-            'description' =>
-                'Mark programs as completed pending final approval',
+            'description' => 'Mark programs as completed pending final approval',
         ],
 
         // Payment Requests
         'payment-requests.approve.all' => [
             'label' => 'Approve Payment Requests',
-            'description' =>
-                'Review and approve payment requests for processing',
+            'description' => 'Review and approve payment requests for processing',
         ],
         'payment-requests.reject.all' => [
             'label' => 'Reject Payment Requests',
@@ -607,8 +585,7 @@ return [
         // Settlements
         'settlements.review.site' => [
             'label' => 'Review Site Settlements',
-            'description' =>
-                'Perform preliminary review of settlements within assigned sites',
+            'description' => 'Perform preliminary review of settlements within assigned sites',
         ],
         'settlements.review.all' => [
             'label' => 'Review All Settlements',
@@ -653,8 +630,7 @@ return [
         // Sites
         'sites.compare-performance' => [
             'label' => 'Compare Site Performance',
-            'description' =>
-                'View and compare performance metrics across sites',
+            'description' => 'View and compare performance metrics across sites',
         ],
 
         // Program Assignments
@@ -703,8 +679,7 @@ return [
         // Reports - Excel
         'reports.export.excel.assigned' => [
             'label' => 'Export Assigned Reports to Excel',
-            'description' =>
-                'Download reports for assigned programs in Excel format',
+            'description' => 'Download reports for assigned programs in Excel format',
         ],
         'reports.export.excel.all' => [
             'label' => 'Export All Reports to Excel',
@@ -714,8 +689,7 @@ return [
         // Reports - PDF
         'reports.export.pdf.assigned' => [
             'label' => 'Export Assigned Reports to PDF',
-            'description' =>
-                'Download reports for assigned programs in PDF format',
+            'description' => 'Download reports for assigned programs in PDF format',
         ],
         'reports.export.pdf.all' => [
             'label' => 'Export All Reports to PDF',
@@ -725,8 +699,7 @@ return [
         // Reports - CSV
         'reports.export.csv.assigned' => [
             'label' => 'Export Assigned Reports to CSV',
-            'description' =>
-                'Download reports for assigned programs in CSV format',
+            'description' => 'Download reports for assigned programs in CSV format',
         ],
         'reports.export.csv.all' => [
             'label' => 'Export All Reports to CSV',
@@ -739,8 +712,7 @@ return [
         // Financial Reports - Program P&L
         'reports.program-pl.view.assigned' => [
             'label' => 'View Assigned Program P&L',
-            'description' =>
-                'Access profit & loss reports for assigned programs',
+            'description' => 'Access profit & loss reports for assigned programs',
         ],
         'reports.program-pl.view.all' => [
             'label' => 'View All Program P&L',
@@ -750,13 +722,11 @@ return [
         // Financial Reports - Budget vs Actual
         'reports.budget-vs-actual.view.assigned' => [
             'label' => 'View Assigned Budget vs Actual',
-            'description' =>
-                'Compare budget to actual expenses for assigned programs',
+            'description' => 'Compare budget to actual expenses for assigned programs',
         ],
         'reports.budget-vs-actual.view.all' => [
             'label' => 'View All Budget vs Actual',
-            'description' =>
-                'Compare budget to actual expenses across all programs',
+            'description' => 'Compare budget to actual expenses across all programs',
         ],
 
         // Financial Reports - Budget Utilization
@@ -782,44 +752,37 @@ return [
         // Financial Reports - Revenue (Harvest)
         'reports.revenue-harvest.view.assigned' => [
             'label' => 'View Assigned Harvest Revenue',
-            'description' =>
-                'Access harvest revenue reports for assigned programs',
+            'description' => 'Access harvest revenue reports for assigned programs',
         ],
         'reports.revenue-harvest.view.all' => [
             'label' => 'View All Harvest Revenue',
-            'description' =>
-                'Access harvest revenue reports across all programs',
+            'description' => 'Access harvest revenue reports across all programs',
         ],
 
         // Financial Reports - Revenue (Testing)
         'reports.revenue-testing.view.assigned' => [
             'label' => 'View Assigned Testing Revenue',
-            'description' =>
-                'Access testing service revenue reports for assigned programs',
+            'description' => 'Access testing service revenue reports for assigned programs',
         ],
         'reports.revenue-testing.view.all' => [
             'label' => 'View All Testing Revenue',
-            'description' =>
-                'Access testing service revenue reports across all programs',
+            'description' => 'Access testing service revenue reports across all programs',
         ],
 
         // Financial Reports - Expenses by COA
         'reports.expense-by-coa.view.assigned' => [
             'label' => 'View Assigned Expense by Account',
-            'description' =>
-                'View expense breakdown by chart of accounts for assigned programs',
+            'description' => 'View expense breakdown by chart of accounts for assigned programs',
         ],
         'reports.expense-by-coa.view.all' => [
             'label' => 'View All Expense by Account',
-            'description' =>
-                'View expense breakdown by chart of accounts across all programs',
+            'description' => 'View expense breakdown by chart of accounts across all programs',
         ],
 
         // Financial Reports - Expenses by Program
         'reports.expense-by-program.view.assigned' => [
             'label' => 'View Assigned Expense by Program',
-            'description' =>
-                'View expense breakdown by program for assigned programs',
+            'description' => 'View expense breakdown by program for assigned programs',
         ],
         'reports.expense-by-program.view.all' => [
             'label' => 'View All Expense by Program',
@@ -829,25 +792,21 @@ return [
         // Financial Reports - Expenses by Activity
         'reports.expense-by-activity.view.assigned' => [
             'label' => 'View Assigned Expense by Activity',
-            'description' =>
-                'View expense breakdown by activity for assigned programs',
+            'description' => 'View expense breakdown by activity for assigned programs',
         ],
         'reports.expense-by-activity.view.all' => [
             'label' => 'View All Expense by Activity',
-            'description' =>
-                'View expense breakdown by activity across all programs',
+            'description' => 'View expense breakdown by activity across all programs',
         ],
 
         // Financial Reports - Site Performance & Consolidated
         'reports.site-performance.view.all' => [
             'label' => 'View Site Performance Comparison',
-            'description' =>
-                'Compare financial performance across different sites',
+            'description' => 'Compare financial performance across different sites',
         ],
         'reports.consolidated-financial.view.all' => [
             'label' => 'View Consolidated Financial Report',
-            'description' =>
-                'Access organization-wide consolidated financial statements',
+            'description' => 'Access organization-wide consolidated financial statements',
         ],
 
         // Operational Reports - Payment Request Register
@@ -857,8 +816,7 @@ return [
         ],
         'reports.payment-request-register.view.assigned' => [
             'label' => 'View Assigned Payment Request Register',
-            'description' =>
-                'View payment request register for assigned programs',
+            'description' => 'View payment request register for assigned programs',
         ],
         'reports.payment-request-register.view.site' => [
             'label' => 'View Site Payment Request Register',
@@ -866,8 +824,7 @@ return [
         ],
         'reports.payment-request-register.view.all' => [
             'label' => 'View All Payment Request Register',
-            'description' =>
-                'View complete payment request register across all programs',
+            'description' => 'View complete payment request register across all programs',
         ],
 
         // Operational Reports - Settlement Status
@@ -891,13 +848,11 @@ return [
         // Operational Reports - Settlement Compliance
         'reports.settlement-compliance.view.site' => [
             'label' => 'View Site Settlement Compliance',
-            'description' =>
-                'Monitor settlement deadline compliance for assigned sites',
+            'description' => 'Monitor settlement deadline compliance for assigned sites',
         ],
         'reports.settlement-compliance.view.all' => [
             'label' => 'View All Settlement Compliance',
-            'description' =>
-                'Monitor settlement deadline compliance across all sites',
+            'description' => 'Monitor settlement deadline compliance across all sites',
         ],
 
         // Operational Reports - System Metrics
@@ -929,8 +884,7 @@ return [
         ],
         'reports.critical-actions.view.all' => [
             'label' => 'View Critical Actions Report',
-            'description' =>
-                'Review high-risk operations and emergency actions',
+            'description' => 'Review high-risk operations and emergency actions',
         ],
         'reports.data-change-history.view.all' => [
             'label' => 'View Data Change History',
@@ -940,8 +894,13 @@ return [
         // Report Scheduling
         'reports.schedule-delivery.manage' => [
             'label' => 'Manage Scheduled Reports',
-            'description' =>
-                'Create and manage automated report delivery schedules',
+            'description' => 'Create and manage automated report delivery schedules',
+        ],
+
+        // Historical Reports
+        'reports.historical' => [
+            'label' => 'View Historical Reports',
+            'description' => 'Access year-over-year comparison and historical financial data',
         ],
     ],
 
@@ -977,8 +936,7 @@ return [
         ],
         'harvest.update.own' => [
             'label' => 'Update Own Harvest (Within 48hrs)',
-            'description' =>
-                'Modify harvest records you entered within 48 hours',
+            'description' => 'Modify harvest records you entered within 48 hours',
         ],
         'harvest.update.assigned' => [
             'label' => 'Update Assigned Harvest',
@@ -990,8 +948,7 @@ return [
         ],
         'harvest.update.after-48hrs' => [
             'label' => 'Update Harvest After 48 Hours',
-            'description' =>
-                'Modify locked harvest records older than 48 hours',
+            'description' => 'Modify locked harvest records older than 48 hours',
         ],
 
         // Harvest - Delete
@@ -1001,8 +958,7 @@ return [
         ],
         'harvest.delete.draft.assigned' => [
             'label' => 'Delete Assigned Draft Harvest',
-            'description' =>
-                'Remove draft harvest records for assigned programs',
+            'description' => 'Remove draft harvest records for assigned programs',
         ],
         'harvest.delete.draft.all' => [
             'label' => 'Delete Any Draft Harvest',
@@ -1012,28 +968,23 @@ return [
         // Harvest - Reporting
         'harvest.view-by-program.assigned' => [
             'label' => 'View Assigned Harvest by Program',
-            'description' =>
-                'View harvest data grouped by program for assigned programs',
+            'description' => 'View harvest data grouped by program for assigned programs',
         ],
         'harvest.view-by-program.all' => [
             'label' => 'View All Harvest by Program',
-            'description' =>
-                'View harvest data grouped by program across all sites',
+            'description' => 'View harvest data grouped by program across all sites',
         ],
         'harvest.view-by-buyer.assigned' => [
             'label' => 'View Assigned Harvest by Buyer',
-            'description' =>
-                'View harvest data grouped by buyer for assigned programs',
+            'description' => 'View harvest data grouped by buyer for assigned programs',
         ],
         'harvest.view-by-buyer.all' => [
             'label' => 'View All Harvest by Buyer',
-            'description' =>
-                'View harvest data grouped by buyer across all sites',
+            'description' => 'View harvest data grouped by buyer across all sites',
         ],
         'harvest.view-cycle-report.assigned' => [
             'label' => 'View Assigned Harvest Cycle Report',
-            'description' =>
-                'View harvest cycle analysis for assigned programs',
+            'description' => 'View harvest cycle analysis for assigned programs',
         ],
         'harvest.view-cycle-report.all' => [
             'label' => 'View All Harvest Cycle Report',
@@ -1051,8 +1002,7 @@ return [
         // Testing Services - View
         'testing-services.view.assigned' => [
             'label' => 'View Assigned Testing Services',
-            'description' =>
-                'View testing service records for assigned programs',
+            'description' => 'View testing service records for assigned programs',
         ],
         'testing-services.view.site' => [
             'label' => 'View Site Testing Services',
@@ -1074,8 +1024,7 @@ return [
         ],
         'testing-services.update.draft.assigned' => [
             'label' => 'Update Assigned Draft Testing Services',
-            'description' =>
-                'Modify draft testing service records for assigned programs',
+            'description' => 'Modify draft testing service records for assigned programs',
         ],
         'testing-services.update.draft.all' => [
             'label' => 'Update Any Draft Testing Service',
@@ -1085,8 +1034,7 @@ return [
         // Testing Services - Delete
         'testing-services.delete.draft.assigned' => [
             'label' => 'Delete Assigned Draft Testing Services',
-            'description' =>
-                'Remove draft testing service records for assigned programs',
+            'description' => 'Remove draft testing service records for assigned programs',
         ],
         'testing-services.delete.draft.all' => [
             'label' => 'Delete Any Draft Testing Service',
@@ -1108,8 +1056,7 @@ return [
         ],
         'testing-services.update-payment-status.assigned' => [
             'label' => 'Update Assigned Testing Payment Status',
-            'description' =>
-                'Update payment status for testing services in assigned programs',
+            'description' => 'Update payment status for testing services in assigned programs',
         ],
         'testing-services.update-payment-status.all' => [
             'label' => 'Update Any Testing Payment Status',
@@ -1119,28 +1066,23 @@ return [
         // Testing Services - Documents & Reporting
         'testing-services.upload-contract.assigned' => [
             'label' => 'Upload Assigned Testing Contracts',
-            'description' =>
-                'Upload contract documents for testing services in assigned programs',
+            'description' => 'Upload contract documents for testing services in assigned programs',
         ],
         'testing-services.upload-contract.all' => [
             'label' => 'Upload Any Testing Contract',
-            'description' =>
-                'Upload contract documents for any testing service',
+            'description' => 'Upload contract documents for any testing service',
         ],
         'testing-services.view-by-client.assigned' => [
             'label' => 'View Assigned Testing by Client',
-            'description' =>
-                'View testing services grouped by client for assigned programs',
+            'description' => 'View testing services grouped by client for assigned programs',
         ],
         'testing-services.view-by-client.all' => [
             'label' => 'View All Testing by Client',
-            'description' =>
-                'View testing services grouped by client across all programs',
+            'description' => 'View testing services grouped by client across all programs',
         ],
         'testing-services.export.assigned' => [
             'label' => 'Export Assigned Testing Data',
-            'description' =>
-                'Download testing service data for assigned programs',
+            'description' => 'Download testing service data for assigned programs',
         ],
         'testing-services.export.all' => [
             'label' => 'Export All Testing Data',
@@ -1152,13 +1094,11 @@ return [
     'audit' => [
         'audit.view-logs.all' => [
             'label' => 'View All Audit Logs',
-            'description' =>
-                'Access complete system audit trail and activity logs',
+            'description' => 'Access complete system audit trail and activity logs',
         ],
         'audit.view-admin-activity.all' => [
             'label' => 'View Admin Activity',
-            'description' =>
-                'Monitor administrative actions and system changes',
+            'description' => 'Monitor administrative actions and system changes',
         ],
         'audit.view-user-access-logs.all' => [
             'label' => 'View User Access Logs',
@@ -1214,8 +1154,7 @@ return [
         ],
         'settings.configure.approval-hierarchies' => [
             'label' => 'Configure Approval Hierarchies',
-            'description' =>
-                'Define multi-level approval chains and thresholds',
+            'description' => 'Define multi-level approval chains and thresholds',
         ],
     ],
 
@@ -1223,43 +1162,55 @@ return [
     'emergency' => [
         'emergency.unlock-budget' => [
             'label' => 'Emergency: Unlock Budget',
-            'description' =>
-                'Override budget locks in critical situations (requires justification)',
+            'description' => 'Override budget locks in critical situations (requires justification)',
         ],
         'emergency.delete-transaction' => [
             'label' => 'Emergency: Delete Transaction',
-            'description' =>
-                'Remove financial transactions (fully logged and audited)',
+            'description' => 'Remove financial transactions (fully logged and audited)',
         ],
         'emergency.bypass-approval' => [
             'label' => 'Emergency: Bypass Approval',
-            'description' =>
-                'Skip normal approval workflow when urgent (requires justification)',
+            'description' => 'Skip normal approval workflow when urgent (requires justification)',
         ],
         'emergency.modify-locked-data' => [
             'label' => 'Emergency: Modify Locked Data',
-            'description' =>
-                'Edit locked or finalized records (requires justification)',
+            'description' => 'Edit locked or finalized records (requires justification)',
         ],
         'emergency.manual-journal-entry' => [
             'label' => 'Emergency: Manual Journal Entry',
-            'description' =>
-                'Create manual accounting adjustments (requires justification)',
+            'description' => 'Create manual accounting adjustments (requires justification)',
         ],
         'emergency.force-archive' => [
             'label' => 'Emergency: Force Archive',
-            'description' =>
-                'Force archive or restore records bypassing normal rules',
+            'description' => 'Force archive or restore records bypassing normal rules',
         ],
         'emergency.reset-any-password' => [
             'label' => 'Emergency: Reset Any Password',
-            'description' =>
-                'Reset passwords for any user including administrators',
+            'description' => 'Reset passwords for any user including administrators',
         ],
         'emergency.override-settlement' => [
             'label' => 'Emergency: Override Settlement',
-            'description' =>
-                'Override settlement approval requirements (requires justification)',
+            'description' => 'Override settlement approval requirements (requires justification)',
+        ],
+    ],
+
+    // FISCAL YEAR PERMISSIONS - Fiscal year management operations
+    'fiscal-year' => [
+        'fiscal-year.view' => [
+            'label' => 'View Fiscal Years',
+            'description' => 'View fiscal year details and status',
+        ],
+        'fiscal-year.manage' => [
+            'label' => 'Manage Fiscal Years',
+            'description' => 'Create, edit, and delete fiscal years with date ranges',
+        ],
+        'fiscal-year.close' => [
+            'label' => 'Close Fiscal Years',
+            'description' => 'Execute fiscal year closure with configurable options',
+        ],
+        'fiscal-year.reopen' => [
+            'label' => 'Reopen Fiscal Years',
+            'description' => 'Reopen closed fiscal years when necessary',
         ],
     ],
 
@@ -1296,8 +1247,7 @@ return [
         // Workflow Management (Admin)
         'approval-workflows.view.all' => [
             'label' => 'View All Approval Workflows',
-            'description' =>
-                'View all configured approval workflows and their versions',
+            'description' => 'View all configured approval workflows and their versions',
         ],
         'approval-workflows.create' => [
             'label' => 'Create Approval Workflows',
@@ -1309,8 +1259,7 @@ return [
         ],
         'approval-workflows.delete' => [
             'label' => 'Delete Approval Workflows',
-            'description' =>
-                'Remove approval workflow templates (inactive only)',
+            'description' => 'Remove approval workflow templates (inactive only)',
         ],
         'approval-workflows.activate' => [
             'label' => 'Activate/Deactivate Workflows',
@@ -1324,8 +1273,7 @@ return [
         // Instance Management (Runtime)
         'approval-instances.view.own' => [
             'label' => 'View Own Approval Instances',
-            'description' =>
-                'View approval instances you submitted or are assigned to',
+            'description' => 'View approval instances you submitted or are assigned to',
         ],
         'approval-instances.view.assigned' => [
             'label' => 'View Assigned Approval Instances',
@@ -1351,8 +1299,7 @@ return [
         // Approval Actions (Runtime)
         'approval-actions.approve' => [
             'label' => 'Approve Requests',
-            'description' =>
-                'Approve items in approval workflows when assigned as approver',
+            'description' => 'Approve items in approval workflows when assigned as approver',
         ],
         'approval-actions.reject' => [
             'label' => 'Reject Requests',
@@ -1360,13 +1307,11 @@ return [
         ],
         'approval-actions.request-changes' => [
             'label' => 'Request Changes',
-            'description' =>
-                'Request modifications to submitted approval items',
+            'description' => 'Request modifications to submitted approval items',
         ],
         'approval-actions.view-history' => [
             'label' => 'View Approval History',
-            'description' =>
-                'View complete approval action history and audit trail',
+            'description' => 'View complete approval action history and audit trail',
         ],
     ],
 

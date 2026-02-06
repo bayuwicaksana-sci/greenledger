@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Listeners\LogUserActivity;
+use App\Models\FiscalYear;
 use App\Models\User;
+use App\Policies\FiscalYearPolicy;
 use App\Policies\UserPolicy;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Events\Failed;
@@ -35,6 +37,7 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
 
         Gate::policy(User::class, UserPolicy::class);
+        Gate::policy(FiscalYear::class, FiscalYearPolicy::class);
 
         $this->registerEventListeners();
     }

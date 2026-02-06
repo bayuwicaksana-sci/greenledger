@@ -57,6 +57,15 @@ export function ProgramsTable({ programs, site_code }: ProgramsTableProps) {
 
     const columns: ColumnDef<Program>[] = [
         {
+            accessorKey: 'classification',
+            header: 'Type',
+            cell: ({ row }) => (
+                <div className="px-4">
+                    {row.getValue('classification') === 'PROGRAM' ? 'Research' : 'Activity'}
+                </div>
+            ),
+        },
+        {
             accessorKey: 'program_code',
             header: ({ column }) => (
                 <Button

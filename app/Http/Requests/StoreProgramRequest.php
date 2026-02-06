@@ -52,9 +52,29 @@ class StoreProgramRequest extends FormRequest
             ],
 
             // Classification
+            'classification' => ['required', 'string', Rule::in([Program::CLASSIFICATION_PROGRAM, Program::CLASSIFICATION_NON_PROGRAM])],
             'program_type' => ['nullable', 'string', Rule::in(['SINGLE_YEAR', 'MULTI_YEAR'])],
-            'program_category' => ['nullable', 'string', Rule::in(['RESEARCH', 'TRIAL', 'PRODUCTION'])],
-            'commodity_id' => ['nullable', 'integer', 'exists:commodities,id'],
+
+            // Research Program specific
+            'program_category' => [
+                'nullable',
+                'string',
+                Rule::in(['RESEARCH', 'TRIAL', 'PRODUCTION']),
+                'required_if:classification,'.Program::CLASSIFICATION_PROGRAM,
+            ],
+            'commodity_id' => [
+                'nullable',
+                'integer',
+                'exists:commodities,id',
+                'required_if:classification,'.Program::CLASSIFICATION_PROGRAM,
+            ],
+
+            // Non-Program specific
+            'non_program_category' => [
+                'nullable',
+                'string',
+                'required_if:classification,'.Program::CLASSIFICATION_NON_PROGRAM,
+            ],
 
             // Identity
             'research_associate_id' => ['nullable', 'integer', 'exists:users,id'],
@@ -103,6 +123,14 @@ class StoreProgramRequest extends FormRequest
             'treatments.*.treatment_description' => ['nullable', 'string'],
             'treatments.*.specification' => ['nullable', 'string'],
 
+            // Activities (nested)
+            'activities' => ['nullable', 'array'],
+            'activities.*.activity_name' => ['required', 'string', 'max:200'],
+            'activities.*.description' => ['nullable', 'string'],
+            'activities.*.budget_allocation' => ['required', 'numeric', 'min:0'],
+            'activities.*.planned_start_date' => ['nullable', 'date'],
+            'activities.*.planned_end_date' => ['nullable', 'date', 'after_or_equal:activities.*.planned_start_date'],
+
             // Budget items (nested)
             'budget_items' => ['nullable', 'array'],
             'budget_items.*.category_id' => ['required', 'integer', 'exists:program_budget_categories,id'],
@@ -121,6 +149,10 @@ class StoreProgramRequest extends FormRequest
             'existing_reference_file_ids' => ['nullable', 'array'],
             'existing_reference_file_ids.*' => ['integer', 'exists:media,id'],
             'remove_plot_map' => ['nullable', 'boolean'],
+
+            // Lifecycle reasons
+            'completion_reason' => ['nullable', 'string', 'required_if:status,'.Program::STATUS_COMPLETED],
+            'archive_reason' => ['nullable', 'string', 'required_if:status,'.Program::STATUS_ARCHIVED],
         ];
     }
 
@@ -149,5 +181,16 @@ class StoreProgramRequest extends FormRequest
         if (! $this->has('status')) {
             $this->merge(['status' => Program::STATUS_DRAFT]);
         }
+    }
+
+    /**
+     * Get the error messages for the defined validation rules.
+     */
+    public function messages(): array
+    {
+        return [
+            'completion_reason.required_if' => 'Completion reason is required when marking a program as completed.',
+            'archive_reason.required_if' => 'Archive reason is required when archiving a program.',
+        ];
     }
 }

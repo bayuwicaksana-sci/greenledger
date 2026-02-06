@@ -51,10 +51,36 @@ class ApprovalInstanceController extends Controller
             'approvable',
             'workflow',
             'currentStep',
-            'actions.actor',
-            'actions.step',
+            'actions' => function ($query) {
+                $query->with(['actor', 'step'])->orderBy('created_at', 'desc');
+            },
             'submittedBy',
         ]);
+
+        // Append edit_url to approvable
+        if ($approvalInstance->approvable) {
+            $approvable = $approvalInstance->approvable;
+            $editUrl = null;
+
+            // Determine edit URL based on model type
+            // In a larger system, this could be a trait method (e.g. getEditUrl()) or a service
+            // For now, we map it here
+            $user = request()->user();
+
+            if ($approvable instanceof \App\Models\Program) {
+                // Check permission if needed, though route middleware handles it usually
+                // Assuming standard resourceful routes
+                $editUrl = route('programs.edit', ['site' => $site->site_code, 'program' => $approvable->id]);
+            } elseif ($approvable instanceof \App\Models\CoaAccount) {
+                // COA is global config but edit route might need checking
+                // Config routes are not site-prefixed in the same way for 'site' param usage in some cases
+                // But CoaAccountController::edit takes a CoaAccount
+                $editUrl = route('config.coa.edit', ['coa' => $approvable->id]);
+            }
+
+            // Append to the object as a temporary attribute
+            $approvable->setAttribute('edit_url', $editUrl);
+        }
 
         Inertia::share('site_code', $site->site_code);
 
