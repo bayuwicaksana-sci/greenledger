@@ -1,20 +1,43 @@
-<x-mail::message>
-    # New Approval Request
+@extends('emails.layout')
 
-    Hello,
+@section('subtitle', 'New Approval Request')
 
-    **{{ $submitterName }}** has submitted a new request that requires your approval.
+@section('body')
+<p style="margin:0 0 4px;color:#1e293b;font-size:15px;font-weight:600;">Hello,</p>
+<p style="margin:0 0 24px;color:#475569;font-size:15px;line-height:1.7;">
+    <strong style="color:#1e293b;">{{ $submitterName }}</strong> has submitted a new request that requires your approval.
+</p>
 
-    **Details:**
-    - Item: {{ $itemName }}
-    - Current Step: {{ $stepName }}
+<!-- Detail card -->
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;margin-bottom:28px;">
+<tr>
+<td style="padding:20px 24px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" class="detail-row">
+        <tr>
+            <td style="padding-bottom:14px;">
+                <p style="margin:0;color:#64748b;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Item</p>
+                <p style="margin:4px 0 0;color:#1e293b;font-size:15px;font-weight:600;">{{ $itemName }}</p>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding-top:14px;border-top:1px solid #e2e8f0;">
+                <p style="margin:0;color:#64748b;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Current Step</p>
+                <p style="margin:4px 0 0;color:#1e293b;font-size:15px;font-weight:600;">{{ $stepName }}</p>
+            </td>
+        </tr>
+    </table>
+</td>
+</tr>
+</table>
 
-    <x-mail::button :url="$reviewUrl">
-        Review Request
-    </x-mail::button>
+<!-- CTA button -->
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:24px;">
+<tr>
+<td align="center">
+    <a href="{{ $reviewUrl }}" style="display:inline-block;padding:12px 36px;background-color:#15803d;color:#ffffff;font-size:15px;font-weight:600;border-radius:8px;text-decoration:none;line-height:1.4;" target="_blank">Review Request</a>
+</td>
+</tr>
+</table>
 
-    Please review at your earliest convenience.
-
-    Thanks,<br>
-    {{ config('app.name') }}
-</x-mail::message>
+<p style="margin:0;color:#94a3b8;font-size:13px;text-align:center;">Please review at your earliest convenience.</p>
+@endsection

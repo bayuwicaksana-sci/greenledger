@@ -25,10 +25,15 @@ class ApprovalApprovedNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Request Approved — ' . config('app.name'))
-            ->markdown('emails.approval-approved', [
+            ->subject('Request Approved — '.config('app.name'))
+            ->view('emails.approval-approved', [
                 'itemName' => $this->getItemName(),
                 'reviewUrl' => $this->getReviewUrl(),
+                'statusLabel' => 'Approved',
+                'statusBg' => '#f0fdf4',
+                'statusBadgeBg' => '#dcfce7',
+                'statusBadgeText' => '#166534',
+                'statusBadgeBorder' => '#bbf7d0',
             ]);
     }
 

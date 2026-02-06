@@ -158,9 +158,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
 
     Route::prefix('app')->group(function () {
-        Route::get('dashboard', function () {
-            return Inertia::render('main-dashboard');
-        })->name('main-dashboard');
+        Route::get('dashboard', [
+            \App\Http\Controllers\MainDashboardController::class,
+            'index',
+        ])->name('main-dashboard');
 
         Route::get('research-stations', function () {
             return Inertia::render('research-stations/index');
@@ -331,6 +332,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
                                 'permission:approval-workflows.activate',
                             );
                     });
+            });
+
+        Route::prefix('notifications')
+            ->name('notifications.')
+            ->group(function () {
+                Route::get('/', [
+                    \App\Http\Controllers\NotificationController::class,
+                    'index',
+                ])
+                    ->name('index')
+                    ->middleware('permission:notifications.view.own');
+
+                Route::post('mark-all-read', [
+                    \App\Http\Controllers\NotificationController::class,
+                    'markAllAsRead',
+                ])->name('mark-all-read');
+
+                Route::post('{notificationId}/mark-read', [
+                    \App\Http\Controllers\NotificationController::class,
+                    'markAsRead',
+                ])->name('mark-read');
             });
 
         Route::prefix('/site/{site:site_code}')
@@ -705,26 +727,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     });
 
                 // Notifications
-                Route::prefix('notifications')
-                    ->name('notifications.')
-                    ->group(function () {
-                        Route::get('/', [
-                            \App\Http\Controllers\NotificationController::class,
-                            'index',
-                        ])
-                            ->name('index')
-                            ->middleware('permission:notifications.view.own');
+                // Route::prefix('notifications')
+                //     ->name('notifications.')
+                //     ->group(function () {
+                //         Route::get('/', [
+                //             \App\Http\Controllers\NotificationController::class,
+                //             'index',
+                //         ])
+                //             ->name('index')
+                //             ->middleware('permission:notifications.view.own');
 
-                        Route::post('mark-all-read', [
-                            \App\Http\Controllers\NotificationController::class,
-                            'markAllAsRead',
-                        ])->name('mark-all-read');
+                //         Route::post('mark-all-read', [
+                //             \App\Http\Controllers\NotificationController::class,
+                //             'markAllAsRead',
+                //         ])->name('mark-all-read');
 
-                        Route::post('{notificationId}/mark-read', [
-                            \App\Http\Controllers\NotificationController::class,
-                            'markAsRead',
-                        ])->name('mark-read');
-                    });
+                //         Route::post('{notificationId}/mark-read', [
+                //             \App\Http\Controllers\NotificationController::class,
+                //             'markAsRead',
+                //         ])->name('mark-read');
+                //     });
 
                 // Approvals
                 Route::prefix('approvals')
@@ -751,6 +773,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
                         ])->name('resubmit');
                     });
             });
-        require __DIR__.'/settings.php';
+        require __DIR__ . '/settings.php';
     });
 });

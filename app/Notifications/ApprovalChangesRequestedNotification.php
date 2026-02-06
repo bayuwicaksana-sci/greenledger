@@ -30,11 +30,16 @@ class ApprovalChangesRequestedNotification extends Notification implements Shoul
             ->value('comments') ?? 'No specific feedback provided.';
 
         return (new MailMessage)
-            ->subject('Changes Requested — ' . config('app.name'))
-            ->markdown('emails.approval-changes-requested', [
+            ->subject('Changes Requested — '.config('app.name'))
+            ->view('emails.approval-changes-requested', [
                 'itemName' => $this->getItemName(),
                 'feedback' => $feedback,
                 'reviewUrl' => $this->getReviewUrl(),
+                'statusLabel' => 'Changes Requested',
+                'statusBg' => '#fffbeb',
+                'statusBadgeBg' => '#fef3c7',
+                'statusBadgeText' => '#92400e',
+                'statusBadgeBorder' => '#fde68a',
             ]);
     }
 

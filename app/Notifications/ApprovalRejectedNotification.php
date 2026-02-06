@@ -30,11 +30,16 @@ class ApprovalRejectedNotification extends Notification implements ShouldQueue
             ->value('comments') ?? 'No reason provided.';
 
         return (new MailMessage)
-            ->subject('Request Rejected — ' . config('app.name'))
-            ->markdown('emails.approval-rejected', [
+            ->subject('Request Rejected — '.config('app.name'))
+            ->view('emails.approval-rejected', [
                 'itemName' => $this->getItemName(),
                 'reason' => $reason,
                 'reviewUrl' => $this->getReviewUrl(),
+                'statusLabel' => 'Rejected',
+                'statusBg' => '#fef2f2',
+                'statusBadgeBg' => '#fee2e2',
+                'statusBadgeText' => '#991b1b',
+                'statusBadgeBorder' => '#fecaca',
             ]);
     }
 

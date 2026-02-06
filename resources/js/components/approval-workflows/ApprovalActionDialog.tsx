@@ -10,38 +10,78 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useForm } from '@inertiajs/react';
-import { Check, X } from 'lucide-react';
+import type { SharedData } from '@/types';
+import { useForm, usePage } from '@inertiajs/react';
+import { AlertCircle, Check, X } from 'lucide-react';
 import { useState } from 'react';
+import { action } from '@/routes/approvals';
+
+type ActionType = 'approve' | 'reject' | 'request_changes';
+
+interface ActionConfig {
+    title: string;
+    description: string;
+    icon: React.ComponentType<{ className?: string }>;
+    variant: 'default' | 'destructive' | 'outline';
+    buttonLabel: string;
+    commentRequired: boolean;
+    placeholder: string;
+}
+
+const actionConfigs: Record<ActionType, ActionConfig> = {
+    approve: {
+        title: 'Approve Request',
+        description: 'Are you sure you want to approve this request? It will move to the next step or be fully approved.',
+        icon: Check,
+        variant: 'default',
+        buttonLabel: 'Confirm Approval',
+        commentRequired: false,
+        placeholder: 'Looks good to me...',
+    },
+    reject: {
+        title: 'Reject Request',
+        description: 'Are you sure you want to reject this request? It will be returned to the submitter.',
+        icon: X,
+        variant: 'destructive',
+        buttonLabel: 'Reject Request',
+        commentRequired: true,
+        placeholder: 'Please fix the amount...',
+    },
+    request_changes: {
+        title: 'Request Changes',
+        description: 'Are you sure you want to request changes? The submitter will be notified to make revisions.',
+        icon: AlertCircle,
+        variant: 'outline',
+        buttonLabel: 'Request Changes',
+        commentRequired: true,
+        placeholder: 'Please update the following...',
+    },
+};
 
 interface ApprovalActionDialogProps {
-    instanceId: string;
-    action: 'approve' | 'reject';
+    instanceId: string | number;
+    action: ActionType;
     trigger?: React.ReactNode;
 }
 
 export function ApprovalActionDialog({
     instanceId,
-    action,
+    action: actionType,
     trigger,
 }: ApprovalActionDialogProps) {
     const [open, setOpen] = useState(false);
+    const { site_code } = usePage<SharedData>().props;
+    const config = actionConfigs[actionType];
+    const Icon = config.icon;
 
-    // We can use Inertia's useForm for easy submission
     const { data, setData, post, processing, errors, reset } = useForm({
-        action: action,
+        action: actionType,
         comment: '',
     });
 
-    const isApprove = action === 'approve';
-    const title = isApprove ? 'Approve Request' : 'Reject Request';
-    const description = isApprove
-        ? 'Are you sure you want to approve this request? It will move to the next step.'
-        : 'Are you sure you want to reject this request? It will be returned to the submitter.';
-
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(route('approvals.action', [instanceId]), {
+        post(action.url({ site: site_code ?? '', approvalInstance: instanceId }), {
             onSuccess: () => {
                 setOpen(false);
                 reset();
@@ -53,32 +93,29 @@ export function ApprovalActionDialog({
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 {trigger || (
-                    <Button variant={isApprove ? 'default' : 'destructive'}>
-                        {isApprove ? 'Approve' : 'Reject'}
+                    <Button variant={config.variant}>
+                        <Icon className="mr-2 h-4 w-4" />
+                        {actionType === 'approve' ? 'Approve' : actionType === 'reject' ? 'Reject' : 'Request Changes'}
                     </Button>
                 )}
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    <DialogTitle>{title}</DialogTitle>
-                    <DialogDescription>{description}</DialogDescription>
+                    <DialogTitle>{config.title}</DialogTitle>
+                    <DialogDescription>{config.description}</DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4 py-4">
                     <div className="space-y-2">
                         <Label htmlFor="comment">
                             Reason / Comments{' '}
-                            {isApprove ? '(Optional)' : '(Required)'}
+                            {config.commentRequired ? '(Required)' : '(Optional)'}
                         </Label>
                         <Textarea
                             id="comment"
-                            placeholder={
-                                isApprove
-                                    ? 'Looks good to me...'
-                                    : 'Please fix the amount...'
-                            }
+                            placeholder={config.placeholder}
                             value={data.comment}
                             onChange={(e) => setData('comment', e.target.value)}
-                            required={!isApprove}
+                            required={config.commentRequired}
                         />
                         {errors.comment && (
                             <p className="text-sm text-destructive">
@@ -97,20 +134,11 @@ export function ApprovalActionDialog({
                         </Button>
                         <Button
                             type="submit"
-                            variant={isApprove ? 'default' : 'destructive'}
+                            variant={config.variant}
                             disabled={processing}
                         >
-                            {isApprove ? (
-                                <>
-                                    <Check className="mr-2 h-4 w-4" />
-                                    Confirm Approval
-                                </>
-                            ) : (
-                                <>
-                                    <X className="mr-2 h-4 w-4" />
-                                    Reject Request
-                                </>
-                            )}
+                            <Icon className="mr-2 h-4 w-4" />
+                            {config.buttonLabel}
                         </Button>
                     </DialogFooter>
                 </form>

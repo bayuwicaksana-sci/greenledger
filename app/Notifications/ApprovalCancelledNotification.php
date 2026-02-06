@@ -25,10 +25,15 @@ class ApprovalCancelledNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Request Cancelled — ' . config('app.name'))
-            ->markdown('emails.approval-cancelled', [
+            ->subject('Request Cancelled — '.config('app.name'))
+            ->view('emails.approval-cancelled', [
                 'itemName' => $this->getItemName(),
                 'reviewUrl' => $this->getReviewUrl(),
+                'statusLabel' => 'Cancelled',
+                'statusBg' => '#f8fafc',
+                'statusBadgeBg' => '#f1f5f9',
+                'statusBadgeText' => '#475569',
+                'statusBadgeBorder' => '#e2e8f0',
             ]);
     }
 

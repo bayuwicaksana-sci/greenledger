@@ -1,6 +1,4 @@
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Table,
     TableBody,
@@ -9,47 +7,68 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import MainLayout from '@/layouts/main-layout';
-import { BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import AppLayout from '@/layouts/app-layout';
+import type { BreadcrumbItem, PaginatedResponse, SharedData } from '@/types';
+import { Head, Link, usePage } from '@inertiajs/react';
+import type { ColumnDef } from '@tanstack/react-table';
+import {
+    flexRender,
+    getCoreRowModel,
+    useReactTable,
+} from '@tanstack/react-table';
 import { format } from 'date-fns';
+import { FileCheck } from 'lucide-react';
+import { useMemo } from 'react';
+import { index as approvalsIndex, show } from '@/routes/approvals';
 
 interface ApprovalInstance {
     id: number;
     approvable_type: string;
-    approvable_id: string;
-    status: string;
+    approvable_id: number;
+    status_value: string;
+    status_label: string;
+    status_color: string;
     submitted_at: string;
     submitted_by: {
         id: number;
         name: string;
     };
     current_step: {
-        id: string;
+        id: number;
         name: string;
-    };
+    } | null;
     approvable: {
-        id: string;
-        // Add common fields that might exist on approvables
+        id: number;
         name?: string;
         title?: string;
         reference_number?: string;
         amount?: number;
     } | null;
-}
-
-interface PageProps {
-    approvals: {
-        data: ApprovalInstance[];
-        links: any[];
+    workflow: {
+        name: string;
     };
 }
 
+interface PageProps {
+    approvals: PaginatedResponse<ApprovalInstance>;
+}
+
+const statusVariantMap: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+    pending: 'outline',
+    pending_approval: 'secondary',
+    approved: 'default',
+    rejected: 'destructive',
+    changes_requested: 'outline',
+    cancelled: 'secondary',
+};
+
 export default function PendingApprovals({ approvals }: PageProps) {
+    const { site_code } = usePage<SharedData>().props;
+
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Pending Approvals',
-            href: '/site/klaten/approvals', // TODO: dynamic site code
+            href: approvalsIndex.url({ site: site_code ?? '' }),
         },
     ];
 
@@ -65,87 +84,150 @@ export default function PendingApprovals({ approvals }: PageProps) {
 
     const getApprovableTypeLabel = (type: string) => {
         const parts = type.split('\\');
-        return parts[parts.length - 1]; // Simple class name
+        return parts[parts.length - 1];
     };
 
+    const columns = useMemo<ColumnDef<ApprovalInstance>[]>(
+        () => [
+            {
+                accessorKey: 'approvable_type',
+                header: 'Type',
+                cell: ({ row }) => (
+                    <Badge variant="outline">
+                        {getApprovableTypeLabel(row.original.approvable_type)}
+                    </Badge>
+                ),
+            },
+            {
+                accessorKey: 'approvable',
+                header: 'Item',
+                cell: ({ row }) => (
+                    <div className="font-medium">{getApprovableName(row.original)}</div>
+                ),
+            },
+            {
+                accessorKey: 'submitted_by',
+                header: 'Submitted By',
+                cell: ({ row }) => (
+                    <div>{row.original.submitted_by?.name || 'Unknown'}</div>
+                ),
+            },
+            {
+                accessorKey: 'current_step',
+                header: 'Step',
+                cell: ({ row }) => (
+                    <div>{row.original.current_step?.name || 'Processing'}</div>
+                ),
+            },
+            {
+                accessorKey: 'status_value',
+                header: 'Status',
+                cell: ({ row }) => (
+                    <Badge variant={statusVariantMap[row.original.status_value] || 'outline'}>
+                        {row.original.status_label}
+                    </Badge>
+                ),
+            },
+            {
+                accessorKey: 'submitted_at',
+                header: 'Submitted At',
+                cell: ({ row }) =>
+                    row.original.submitted_at
+                        ? format(new Date(row.original.submitted_at), 'MMM dd, yyyy')
+                        : '—',
+            },
+            {
+                id: 'actions',
+                header: () => <div className="text-right">Action</div>,
+                cell: ({ row }) => (
+                    <div className="flex justify-end">
+                        <Link
+                            href={show.url({
+                                site: site_code ?? '',
+                                approvalInstance: row.original.id,
+                            })}
+                            className="rounded-md border bg-background px-3 py-1 text-sm hover:bg-muted transition-colors"
+                        >
+                            Review
+                        </Link>
+                    </div>
+                ),
+            },
+        ],
+        [site_code],
+    );
+
+    const table = useReactTable({
+        data: approvals.data,
+        columns,
+        getCoreRowModel: getCoreRowModel(),
+    });
+
     return (
-        <MainLayout breadcrumbs={breadcrumbs}>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Pending Approvals" />
 
-            <div className="flex w-full flex-col gap-6 p-6">
+            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold tracking-tight">
-                        Pending Approvals
-                    </h1>
+                    <div>
+                        <h1 className="text-3xl font-bold">Pending Approvals</h1>
+                        <p className="text-muted-foreground">
+                            Items requiring your action
+                        </p>
+                    </div>
                 </div>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Items Requiring Your Action</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        {approvals.data.length === 0 ? (
-                            <div className="flex h-64 flex-col items-center justify-center text-center text-muted-foreground">
-                                <p>
-                                    You have no pending approvals at this time.
-                                </p>
-                            </div>
-                        ) : (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Type</TableHead>
-                                        <TableHead>Item</TableHead>
-                                        <TableHead>Submitted By</TableHead>
-                                        <TableHead>Step</TableHead>
-                                        <TableHead>Submitted At</TableHead>
-                                        <TableHead className="text-right">
-                                            Action
+                <div className="rounded-md border">
+                    <Table>
+                        <TableHeader>
+                            {table.getHeaderGroups().map((headerGroup) => (
+                                <TableRow key={headerGroup.id}>
+                                    {headerGroup.headers.map((header) => (
+                                        <TableHead key={header.id}>
+                                            {header.isPlaceholder
+                                                ? null
+                                                : flexRender(
+                                                      header.column.columnDef.header,
+                                                      header.getContext(),
+                                                  )}
                                         </TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {approvals.data.map((approval) => (
-                                        <TableRow key={approval.id}>
-                                            <TableCell>
-                                                <Badge variant="outline">
-                                                    {getApprovableTypeLabel(
-                                                        approval.approvable_type,
-                                                    )}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell className="font-medium">
-                                                {getApprovableName(approval)}
-                                            </TableCell>
-                                            <TableCell>
-                                                {approval.submitted_by?.name ||
-                                                    'Unknown'}
-                                            </TableCell>
-                                            <TableCell>
-                                                {approval.current_step?.name ||
-                                                    'Processing'}
-                                            </TableCell>
-                                            <TableCell>
-                                                {format(
-                                                    new Date(
-                                                        approval.submitted_at,
-                                                    ),
-                                                    'MMM dd, yyyy',
+                                    ))}
+                                </TableRow>
+                            ))}
+                        </TableHeader>
+                        <TableBody>
+                            {table.getRowModel().rows.length === 0 ? (
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={columns.length}
+                                        className="h-24 text-center"
+                                    >
+                                        <div className="flex flex-col items-center justify-center gap-2">
+                                            <FileCheck className="h-8 w-8 text-muted-foreground" />
+                                            <p className="text-sm text-muted-foreground">
+                                                You have no pending approvals at this time.
+                                            </p>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                table.getRowModel().rows.map((row) => (
+                                    <TableRow key={row.id}>
+                                        {row.getVisibleCells().map((cell) => (
+                                            <TableCell key={cell.id}>
+                                                {flexRender(
+                                                    cell.column.columnDef.cell,
+                                                    cell.getContext(),
                                                 )}
                                             </TableCell>
-                                            <TableCell className="text-right">
-                                                <Button asChild size="sm">
-                                                    Review
-                                                </Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        )}
-                    </CardContent>
-                </Card>
+                                        ))}
+                                    </TableRow>
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
             </div>
-        </MainLayout>
+        </AppLayout>
     );
 }

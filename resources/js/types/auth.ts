@@ -1,3 +1,5 @@
+import type { PaginatedResponse } from '@/types';
+
 export type User = {
     id: number;
     name: string;
@@ -15,6 +17,20 @@ export type Auth = {
     primarySite: string | null;
     roles: string[];
     allPermissions: string[];
+    notifications: PaginatedResponse<Notification>;
+    unreadCount: number;
+};
+
+export type Notification = {
+    id: string;
+    type: string;
+    data: {
+        message: string;
+        url?: string;
+        type?: string;
+    };
+    read_at: string | null;
+    created_at: string;
 };
 
 export type TwoFactorSetupData = {

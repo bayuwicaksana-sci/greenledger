@@ -28,12 +28,17 @@ class ApprovalSubmittedNotification extends Notification implements ShouldQueue
         $stepName = $this->instance->currentStep?->name ?? 'Unknown Step';
 
         return (new MailMessage)
-            ->subject('New Approval Request — ' . config('app.name'))
-            ->markdown('emails.approval-submitted', [
+            ->subject('New Approval Request — '.config('app.name'))
+            ->view('emails.approval-submitted', [
                 'itemName' => $itemName,
                 'stepName' => $stepName,
                 'submitterName' => $this->instance->submittedBy?->name ?? 'Unknown',
                 'reviewUrl' => $this->getReviewUrl(),
+                'statusLabel' => 'Action Required',
+                'statusBg' => '#eff6ff',
+                'statusBadgeBg' => '#dbeafe',
+                'statusBadgeText' => '#1e40af',
+                'statusBadgeBorder' => '#bfdbfe',
             ]);
     }
 

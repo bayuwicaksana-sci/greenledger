@@ -1,18 +1,29 @@
 import { ApprovalActionDialog } from '@/components/approval-workflows/ApprovalActionDialog';
 import { ApprovalHistory } from '@/components/approval-workflows/ApprovalHistory';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem } from '@/types';
-import { Head, Link } from '@inertiajs/react'; // Link missing in imports but likely needed
+import { index as approvalsIndex, resubmit } from '@/routes/approvals';
+import type { BreadcrumbItem, SharedData } from '@/types';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { ArrowLeft, Calendar, FileText, GitCommit, User } from 'lucide-react';
+import {
+    ArrowLeft,
+    Calendar,
+    FileText,
+    GitCommit,
+    RotateCcw,
+    User,
+} from 'lucide-react';
 
 interface ApprovalInstance {
-    id: string;
+    id: number;
     approvable_type: string;
-    approvable_id: string;
-    status: string;
+    approvable_id: number;
+    status_value: string;
+    status_label: string;
+    status_color: string;
     submitted_at: string;
     submitted_by: {
         id: number;
@@ -20,11 +31,11 @@ interface ApprovalInstance {
         email: string;
     };
     current_step: {
-        id: string;
+        id: number;
         name: string;
         description?: string;
     } | null;
-    approvable: any; // Dynamic based on model
+    approvable: any;
     actions: any[];
     workflow: {
         name: string;
@@ -35,11 +46,30 @@ interface PageProps {
     approval: ApprovalInstance;
 }
 
+const statusVariantMap: Record<
+    string,
+    'default' | 'secondary' | 'destructive' | 'outline'
+> = {
+    pending: 'outline',
+    pending_approval: 'secondary',
+    approved: 'default',
+    rejected: 'destructive',
+    changes_requested: 'outline',
+    cancelled: 'secondary',
+};
+
 export default function ApprovalShow({ approval }: PageProps) {
+    const { site_code, auth } = usePage<SharedData>().props;
+    const isPending = approval.status_value === 'pending_approval';
+    const isChangesRequested = approval.status_value === 'changes_requested';
+    const isSubmitter = auth.user.id === approval.submitted_by.id;
+
+    const { post, processing } = useForm({});
+
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Pending Approvals',
-            href: route('approvals.index'),
+            href: approvalsIndex.url({ site: site_code ?? '' }),
         },
         {
             title: 'Review Request',
@@ -47,27 +77,10 @@ export default function ApprovalShow({ approval }: PageProps) {
         },
     ];
 
-    const getStatusVariant = (status: string) => {
-        switch (status) {
-            case 'approved':
-                return 'success';
-            case 'rejected':
-                return 'destructive';
-            case 'pending_approval':
-                return 'secondary'; // or warning
-            default:
-                return 'outline';
-        }
-    };
-
-    const isPending = approval.status === 'pending_approval';
-
-    // Helper to display key details from the approvable item (generic for now)
     const renderApprovableDetails = () => {
         if (!approval.approvable) return <p>Item details not available.</p>;
 
         const item = approval.approvable;
-        // Try to identify common fields
         const fields = [
             { label: 'Amount', value: item.amount || item.total_amount },
             { label: 'Title/Name', value: item.title || item.name },
@@ -99,6 +112,15 @@ export default function ApprovalShow({ approval }: PageProps) {
         );
     };
 
+    const handleResubmit = () => {
+        post(
+            resubmit.url({
+                site: site_code ?? '',
+                approvalInstance: approval.id,
+            }),
+        );
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Review Approval #${approval.id}`} />
@@ -108,7 +130,7 @@ export default function ApprovalShow({ approval }: PageProps) {
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div>
                         <Link
-                            href={route('approvals.index')}
+                            href={approvalsIndex.url({ site: site_code ?? '' })}
                             className="mb-2 flex items-center text-sm text-muted-foreground hover:text-foreground"
                         >
                             <ArrowLeft className="mr-1 h-3 w-3" /> Back to List
@@ -124,8 +146,12 @@ export default function ApprovalShow({ approval }: PageProps) {
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
-                        {isPending && approval.current_step && (
+                        {isPending && approval.current_step && !isSubmitter && (
                             <>
+                                <ApprovalActionDialog
+                                    instanceId={approval.id}
+                                    action="request_changes"
+                                />
                                 <ApprovalActionDialog
                                     instanceId={approval.id}
                                     action="reject"
@@ -135,6 +161,16 @@ export default function ApprovalShow({ approval }: PageProps) {
                                     action="approve"
                                 />
                             </>
+                        )}
+                        {isChangesRequested && isSubmitter && (
+                            <Button
+                                variant="default"
+                                onClick={handleResubmit}
+                                disabled={processing}
+                            >
+                                <RotateCcw className="mr-2 h-4 w-4" />
+                                Resubmit
+                            </Button>
                         )}
                     </div>
                 </div>
@@ -177,14 +213,12 @@ export default function ApprovalShow({ approval }: PageProps) {
                                     </span>
                                     <Badge
                                         variant={
-                                            getStatusVariant(
-                                                approval.status,
-                                            ) as any
+                                            statusVariantMap[
+                                                approval.status_value
+                                            ] || 'outline'
                                         }
                                     >
-                                        {approval.status
-                                            .replace('_', ' ')
-                                            .toUpperCase()}
+                                        {approval.status_label}
                                     </Badge>
                                 </div>
 

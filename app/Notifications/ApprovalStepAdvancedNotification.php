@@ -28,11 +28,16 @@ class ApprovalStepAdvancedNotification extends Notification implements ShouldQue
         $stepName = $this->instance->currentStep?->name ?? 'Unknown Step';
 
         return (new MailMessage)
-            ->subject('Approval Moved to Next Step — ' . config('app.name'))
-            ->markdown('emails.approval-step-advanced', [
+            ->subject('Approval Moved to Next Step — '.config('app.name'))
+            ->view('emails.approval-step-advanced', [
                 'itemName' => $itemName,
                 'stepName' => $stepName,
                 'reviewUrl' => $this->getReviewUrl(),
+                'statusLabel' => 'Moved to Your Step',
+                'statusBg' => '#eff6ff',
+                'statusBadgeBg' => '#dbeafe',
+                'statusBadgeText' => '#1e40af',
+                'statusBadgeBorder' => '#bfdbfe',
             ]);
     }
 

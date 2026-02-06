@@ -120,12 +120,6 @@ it('after approval action, account becomes active via onApproved', function () {
 
     expect($success)->toBeTrue();
 
-    // Trigger the onApproved hook (normally done by controller)
-    $instance->refresh();
-    if ($instance->status instanceof \App\States\ApprovalInstance\Approved) {
-        $instance->approvable->onApproved();
-    }
-
     $account->refresh();
     expect($account->is_active)->toBeTrue();
 });

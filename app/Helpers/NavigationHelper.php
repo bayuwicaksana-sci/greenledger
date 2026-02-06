@@ -434,18 +434,18 @@ class NavigationHelper
             // ],
 
             // Notifications
-            [
-                'title' => null,
-                'items' => [
-                    [
-                        'title' => 'Notifications',
-                        'route' => 'notifications.index',
-                        'icon' => 'Bell',
-                        'permission' => ['notifications.view.own'],
-                        'badge' => 'pending_notifications',
-                    ],
-                ],
-            ],
+            // [
+            //     'title' => null,
+            //     'items' => [
+            //         [
+            //             'title' => 'Notifications',
+            //             'route' => 'notifications.index',
+            //             'icon' => 'Bell',
+            //             'permission' => ['notifications.view.own'],
+            //             'badge' => 'pending_notifications',
+            //         ],
+            //     ],
+            // ],
         ];
     }
 }

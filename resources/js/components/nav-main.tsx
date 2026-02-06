@@ -1,3 +1,4 @@
+import { Badge } from '@/components/ui/badge';
 import {
     SidebarGroup,
     SidebarGroupLabel,
@@ -30,6 +31,11 @@ export function NavMain({ items = [] }: { items: NavGroup[] }) {
                             <Link href={navItem.href} prefetch>
                                 {navItem.icon && <navItem.icon />}
                                 <span>{navItem.title}</span>
+                                {navItem.badge && Number(navItem.badge) > 0 && (
+                                    <Badge variant="destructive" className="ml-auto text-xs">
+                                        {Number(navItem.badge) > 99 ? '99+' : navItem.badge}
+                                    </Badge>
+                                )}
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>

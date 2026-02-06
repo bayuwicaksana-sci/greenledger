@@ -12,11 +12,9 @@ class NotificationController extends Controller
     /**
      * Display a listing of the user's notifications.
      */
-    public function index(Request $request, Site $site): Response
+    public function index(Request $request): Response
     {
         $user = $request->user();
-
-        Inertia::share('site_code', $site->site_code);
 
         return Inertia::render('notifications/index', [
             'notifications' => $user->notifications()->paginate(20),
@@ -27,24 +25,27 @@ class NotificationController extends Controller
     /**
      * Mark a single notification as read.
      */
-    public function markAsRead(Request $request, Site $site, string $notificationId)
+    public function markAsRead(Request $request, string $notificationId)
     {
-        $notification = $request->user()->notifications()->find($notificationId);
+        $notification = $request
+            ->user()
+            ->notifications()
+            ->find($notificationId);
 
         if ($notification) {
             $notification->markAsRead();
         }
 
-        return back();
+        // return back();
     }
 
     /**
      * Mark all notifications as read.
      */
-    public function markAllAsRead(Request $request, Site $site)
+    public function markAllAsRead(Request $request)
     {
         $request->user()->unreadNotifications()->markAsRead();
 
-        return back();
+        // return back();
     }
 }
