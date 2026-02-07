@@ -1,7 +1,3 @@
-import { Head, Link, useForm } from '@inertiajs/react';
-import { format } from 'date-fns';
-import { AlertTriangle, ArrowLeft, Lock, LockOpen, Pencil } from 'lucide-react';
-import { useState } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,7 +21,12 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import MainLayout from '@/layouts/main-layout';
+import { close, edit, index, reopen } from '@/routes/admin/fiscal-years';
 import type { BreadcrumbItem, FiscalYear } from '@/types';
+import { Head, Link, router, useForm } from '@inertiajs/react';
+import { format } from 'date-fns';
+import { AlertTriangle, ArrowLeft, Lock, LockOpen, Pencil } from 'lucide-react';
+import { useState } from 'react';
 
 export default function ShowFiscalYear({
     fiscalYear,
@@ -59,7 +60,7 @@ export default function ShowFiscalYear({
         },
         {
             title: 'Fiscal Years',
-            href: '/admin/fiscal-years',
+            href: index().url,
         },
         {
             title: `FY${fiscalYear.year}`,
@@ -69,14 +70,14 @@ export default function ShowFiscalYear({
 
     const handleClose = (e: React.FormEvent) => {
         e.preventDefault();
-        closeForm.post(`/admin/fiscal-years/${fiscalYear.id}/close`, {
+        closeForm.post(close({ fiscalYear: fiscalYear.id }).url, {
             onSuccess: () => setCloseDialogOpen(false),
         });
     };
 
     const handleReopen = (e: React.FormEvent) => {
         e.preventDefault();
-        reopenForm.post(`/admin/fiscal-years/${fiscalYear.id}/reopen`, {
+        reopenForm.post(reopen({ fiscalYear: fiscalYear.id }).url, {
             onSuccess: () => setReopenDialogOpen(false),
         });
     };
@@ -92,7 +93,7 @@ export default function ShowFiscalYear({
                         <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => window.history.back()}
+                            onClick={() => router.visit(index().url)}
                         >
                             <ArrowLeft className="h-4 w-4" />
                         </Button>
@@ -121,9 +122,7 @@ export default function ShowFiscalYear({
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        <Link
-                            href={`/admin/fiscal-years/${fiscalYear.id}/edit`}
-                        >
+                        <Link href={edit({ fiscal_year: fiscalYear.id }).url}>
                             <Button variant="outline">
                                 <Pencil className="mr-2 h-4 w-4" />
                                 Edit

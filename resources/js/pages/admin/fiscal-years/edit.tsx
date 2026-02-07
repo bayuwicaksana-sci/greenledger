@@ -1,5 +1,3 @@
-import { Head, useForm } from '@inertiajs/react';
-import { AlertTriangle, ArrowLeft } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,7 +10,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import MainLayout from '@/layouts/main-layout';
+import { index, update } from '@/routes/admin/fiscal-years';
 import type { BreadcrumbItem, FiscalYear } from '@/types';
+import { Head, router, useForm } from '@inertiajs/react';
+import { format } from 'date-fns';
+import { AlertTriangle, ArrowLeft } from 'lucide-react';
 
 export default function EditFiscalYear({
     fiscalYear,
@@ -22,8 +24,8 @@ export default function EditFiscalYear({
     programCount: number;
 }) {
     const { data, setData, put, processing, errors } = useForm({
-        start_date: fiscalYear.start_date,
-        end_date: fiscalYear.end_date,
+        start_date: format(fiscalYear.start_date, 'yyyy-MM-dd'),
+        end_date: format(fiscalYear.end_date, 'yyyy-MM-dd'),
         year: fiscalYear.year.toString(),
     });
 
@@ -34,7 +36,7 @@ export default function EditFiscalYear({
         },
         {
             title: 'Fiscal Years',
-            href: '/admin/fiscal-years',
+            href: index().url,
         },
         {
             title: `Edit FY${fiscalYear.year}`,
@@ -44,7 +46,7 @@ export default function EditFiscalYear({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        put(`/admin/fiscal-years/${fiscalYear.id}`);
+        put(update(fiscalYear.id).url);
     };
 
     return (
@@ -57,7 +59,7 @@ export default function EditFiscalYear({
                     <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => window.history.back()}
+                        onClick={() => router.visit(index().url)}
                     >
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
@@ -161,7 +163,7 @@ export default function EditFiscalYear({
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    onClick={() => window.history.back()}
+                                    onClick={() => router.visit(index().url)}
                                 >
                                     Cancel
                                 </Button>
