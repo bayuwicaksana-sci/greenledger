@@ -1,3 +1,4 @@
+import { Link } from '@inertiajs/react';
 import { Badge } from '@/components/ui/badge';
 import {
     SidebarGroup,
@@ -8,7 +9,6 @@ import {
 } from '@/components/ui/sidebar';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import type { NavGroup } from '@/types';
-import { Link } from '@inertiajs/react';
 
 export function NavMain({ items = [] }: { items: NavGroup[] }) {
     const { isCurrentUrl } = useCurrentUrl();

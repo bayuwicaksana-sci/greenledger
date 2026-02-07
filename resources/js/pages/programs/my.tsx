@@ -1,10 +1,10 @@
-import { ProgramsTable } from '@/components/programs/ProgramsTable';
-import AppLayout from '@/layouts/app-layout';
+import { Head } from '@inertiajs/react';
 import PageHeader from '@/components/page/page-header';
 import PageLayout from '@/components/page/page-layout';
+import { ProgramsTable } from '@/components/programs/ProgramsTable';
+import AppLayout from '@/layouts/app-layout';
 import programRoutes from '@/routes/programs';
-import { BreadcrumbItem, Program } from '@/types';
-import { Head } from '@inertiajs/react';
+import type { BreadcrumbItem, Program } from '@/types';
 
 export default function MyPrograms({
     programs,

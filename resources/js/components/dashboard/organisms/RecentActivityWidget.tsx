@@ -1,7 +1,7 @@
-import type { RecentActivityData } from '@/types/dashboard';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { Clock } from 'lucide-react';
+import type { RecentActivityData } from '@/types/dashboard';
 import { MetricValue } from '../atoms/MetricValue';
 import { StatusBadge } from '../atoms/StatusBadge';
 import { Widget } from './Widget';

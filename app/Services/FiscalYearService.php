@@ -11,6 +11,10 @@ use Illuminate\Support\Facades\Log;
 
 class FiscalYearService
 {
+    public function __construct(
+        protected FiscalYearReportGenerator $reportGenerator,
+    ) {}
+
     /**
      * Close a fiscal year with selected actions.
      */
@@ -29,11 +33,25 @@ class FiscalYearService
                 $this->archiveCompletedPrograms($fiscalYear);
             }
 
+            // Generate year-end report if requested
+            $reportPath = null;
+            if ($options['generate_report'] ?? false) {
+                $reportPath = $this->reportGenerator->generateYearEndReport(
+                    $fiscalYear,
+                );
+            }
+
             // Mark fiscal year as closed
             $fiscalYear->update(['is_closed' => true]);
 
             // Log the closure
-            $this->logClosure($fiscalYear, $options, $notes, $validationData);
+            $this->logClosure(
+                $fiscalYear,
+                $options,
+                $notes,
+                $validationData,
+                $reportPath,
+            );
 
             // Send notifications if requested
             if ($options['send_notifications'] ?? false) {
@@ -66,14 +84,22 @@ class FiscalYearService
     public function getPreCloseValidation(FiscalYear $fiscalYear): array
     {
         return [
-            'active_programs' => Program::where('fiscal_year', $fiscalYear->year)
+            'active_programs' => Program::where(
+                'fiscal_year',
+                $fiscalYear->year,
+            )
                 ->where('status', Program::STATUS_ACTIVE)
                 ->count(),
-            'pending_payment_requests' => PaymentRequest::whereHas('splits', function ($query) use ($fiscalYear) {
-                $query->whereHas('program', function ($q) use ($fiscalYear) {
-                    $q->where('fiscal_year', $fiscalYear->year);
-                });
-            })
+            'pending_payment_requests' => PaymentRequest::whereHas(
+                'splits',
+                function ($query) use ($fiscalYear) {
+                    $query->whereHas('program', function ($q) use (
+                        $fiscalYear,
+                    ) {
+                        $q->where('fiscal_year', $fiscalYear->year);
+                    });
+                },
+            )
                 ->where('status', 'PENDING')
                 ->count(),
             'unsettled_transactions' => 0, // TODO: Implement when settlement tracking is available
@@ -91,25 +117,22 @@ class FiscalYearService
     }
 
     /**
-     * Generate year-end report (placeholder for future implementation).
-     */
-    public function generateYearEndReport(FiscalYear $fiscalYear): ?string
-    {
-        // TODO: Implement PDF generation in Phase 4
-        return null;
-    }
-
-    /**
      * Log the closure action with audit trail.
      */
-    protected function logClosure(FiscalYear $fiscalYear, array $options, ?string $notes, array $validationData): void
-    {
+    protected function logClosure(
+        FiscalYear $fiscalYear,
+        array $options,
+        ?string $notes,
+        array $validationData,
+        ?string $reportPath = null,
+    ): void {
         Log::info('Fiscal year closed', [
             'fiscal_year' => $fiscalYear->year,
             'user_id' => auth()->id(),
             'options' => $options,
             'notes' => $notes,
             'validation_data' => $validationData,
+            'report_path' => $reportPath,
             'timestamp' => now(),
         ]);
     }

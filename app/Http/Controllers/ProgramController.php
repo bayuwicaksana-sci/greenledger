@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreProgramRequest;
 use App\Models\Commodity;
+use App\Models\FiscalYear;
 use App\Models\Program;
 use App\Models\ProgramAssignment;
 use App\Models\ProgramBudgetCategory;
@@ -54,6 +55,7 @@ class ProgramController extends Controller
         return Inertia::render('programs/index', [
             'programs' => $query->latest()->get(),
             'site_code' => $site->site_code,
+            'fiscal_years' => FiscalYear::orderBy('year', 'desc')->get(),
         ]);
     }
 
@@ -68,9 +70,15 @@ class ProgramController extends Controller
             'users' => User::select('id', 'name', 'email')->get(),
             'commodities' => Commodity::where('is_active', true)->get(),
             'active_programs' => Program::where('site_id', $site->id)
-                ->whereIn('status', [Program::STATUS_DRAFT, Program::STATUS_ACTIVE])
-                ->select('id', 'program_code', 'program_name')->get(),
-            'budget_categories' => ProgramBudgetCategory::orderBy('sort_order')->get(),
+                ->whereIn('status', [
+                    Program::STATUS_DRAFT,
+                    Program::STATUS_ACTIVE,
+                ])
+                ->select('id', 'program_code', 'program_name')
+                ->get(),
+            'budget_categories' => ProgramBudgetCategory::orderBy(
+                'sort_order',
+            )->get(),
             'budget_phases' => ProgramBudgetPhase::orderBy('sort_order')->get(),
         ]);
     }
@@ -87,8 +95,16 @@ class ProgramController extends Controller
         $budgetItems = $data['budget_items'] ?? [];
         $activities = $data['activities'] ?? [];
         $supportTeamIds = $data['support_team_member_ids'] ?? [];
-        unset($data['treatments'], $data['budget_items'], $data['activities'], $data['support_team_member_ids'],
-            $data['plot_map'], $data['reference_files'], $data['existing_reference_file_ids'], $data['remove_plot_map']);
+        unset(
+            $data['treatments'],
+            $data['budget_items'],
+            $data['activities'],
+            $data['support_team_member_ids'],
+            $data['plot_map'],
+            $data['reference_files'],
+            $data['existing_reference_file_ids'],
+            $data['remove_plot_map'],
+        );
 
         $data['status'] = Program::STATUS_DRAFT;
         $data['site_id'] = $site->id;
@@ -99,7 +115,9 @@ class ProgramController extends Controller
 
         // Plot map upload
         if ($request->hasFile('plot_map')) {
-            $program->addMedia($request->file('plot_map'))->toMediaCollection('plot_map');
+            $program
+                ->addMedia($request->file('plot_map'))
+                ->toMediaCollection('plot_map');
         }
 
         // Reference files upload
@@ -177,7 +195,13 @@ class ProgramController extends Controller
         }
 
         return Inertia::render('programs/show', [
-            'program' => $program->load(['activities', 'createdBy', 'budgetItems.category', 'budgetItems.phase', 'treatments']),
+            'program' => $program->load([
+                'activities',
+                'createdBy',
+                'budgetItems.category',
+                'budgetItems.phase',
+                'treatments',
+            ]),
             'site_code' => $site->site_code,
         ]);
     }
@@ -194,21 +218,29 @@ class ProgramController extends Controller
         $program->load(['treatments', 'budgetItems', 'activities']);
 
         // Serialize media for frontend
-        $referenceFiles = $program->getMedia('reference_files')->map(fn ($media) => [
-            'id' => $media->id,
-            'original_name' => $media->file_name,
-            'url' => $media->getUrl(),
-        ])->toArray();
+        $referenceFiles = $program
+            ->getMedia('reference_files')
+            ->map(
+                fn ($media) => [
+                    'id' => $media->id,
+                    'original_name' => $media->file_name,
+                    'url' => $media->getUrl(),
+                ],
+            )
+            ->toArray();
 
         $plotMap = $program->getFirstMedia('plot_map');
-        $plotMapData = $plotMap ? [
-            'id' => $plotMap->id,
-            'original_name' => $plotMap->file_name,
-            'url' => $plotMap->getUrl(),
-        ] : null;
+        $plotMapData = $plotMap
+            ? [
+                'id' => $plotMap->id,
+                'original_name' => $plotMap->file_name,
+                'url' => $plotMap->getUrl(),
+            ]
+            : null;
 
         // Extract active support team member IDs
-        $supportTeamMemberIds = $program->assignments()
+        $supportTeamMemberIds = $program
+            ->assignments()
             ->where('role_in_program', ProgramAssignment::ROLE_MEMBER)
             ->whereNull('removed_at')
             ->pluck('user_id')
@@ -218,18 +250,33 @@ class ProgramController extends Controller
             'program' => $program,
             'site_code' => $site->site_code,
             'statuses' => match ($program->status) {
-                Program::STATUS_DRAFT => [Program::STATUS_DRAFT, Program::STATUS_ACTIVE],
-                Program::STATUS_ACTIVE => [Program::STATUS_ACTIVE, Program::STATUS_COMPLETED],
-                Program::STATUS_COMPLETED => [Program::STATUS_COMPLETED, Program::STATUS_ARCHIVED],
+                Program::STATUS_DRAFT => [
+                    Program::STATUS_DRAFT,
+                    Program::STATUS_ACTIVE,
+                ],
+                Program::STATUS_ACTIVE => [
+                    Program::STATUS_ACTIVE,
+                    Program::STATUS_COMPLETED,
+                ],
+                Program::STATUS_COMPLETED => [
+                    Program::STATUS_COMPLETED,
+                    Program::STATUS_ARCHIVED,
+                ],
                 default => [$program->status],
             },
             'users' => User::select('id', 'name', 'email')->get(),
             'commodities' => Commodity::where('is_active', true)->get(),
             'active_programs' => Program::where('site_id', $site->id)
                 ->where('id', '!=', $program->id)
-                ->whereIn('status', [Program::STATUS_DRAFT, Program::STATUS_ACTIVE])
-                ->select('id', 'program_code', 'program_name')->get(),
-            'budget_categories' => ProgramBudgetCategory::orderBy('sort_order')->get(),
+                ->whereIn('status', [
+                    Program::STATUS_DRAFT,
+                    Program::STATUS_ACTIVE,
+                ])
+                ->select('id', 'program_code', 'program_name')
+                ->get(),
+            'budget_categories' => ProgramBudgetCategory::orderBy(
+                'sort_order',
+            )->get(),
             'budget_phases' => ProgramBudgetPhase::orderBy('sort_order')->get(),
             'reference_files' => $referenceFiles,
             'plot_map' => $plotMapData,
@@ -252,16 +299,27 @@ class ProgramController extends Controller
         $data = $request->validated();
 
         $allowedTransitions = match ($program->status) {
-            Program::STATUS_DRAFT => [Program::STATUS_DRAFT, Program::STATUS_ACTIVE],
-            Program::STATUS_ACTIVE => [Program::STATUS_ACTIVE, Program::STATUS_COMPLETED],
-            Program::STATUS_COMPLETED => [Program::STATUS_COMPLETED, Program::STATUS_ARCHIVED],
+            Program::STATUS_DRAFT => [
+                Program::STATUS_DRAFT,
+                Program::STATUS_ACTIVE,
+            ],
+            Program::STATUS_ACTIVE => [
+                Program::STATUS_ACTIVE,
+                Program::STATUS_COMPLETED,
+            ],
+            Program::STATUS_COMPLETED => [
+                Program::STATUS_COMPLETED,
+                Program::STATUS_ARCHIVED,
+            ],
             default => [$program->status],
         };
 
         if (! in_array($data['status'], $allowedTransitions)) {
-            return redirect()->back()->withErrors([
-                'status' => 'Invalid status transition.',
-            ]);
+            return redirect()
+                ->back()
+                ->withErrors([
+                    'status' => 'Invalid status transition.',
+                ]);
         }
 
         // Extract nested / file data
@@ -271,8 +329,16 @@ class ProgramController extends Controller
         $supportTeamIds = $data['support_team_member_ids'] ?? [];
         $existingReferenceFileIds = $data['existing_reference_file_ids'] ?? [];
         $removePlotMap = $data['remove_plot_map'] ?? false;
-        unset($data['treatments'], $data['budget_items'], $data['activities'], $data['support_team_member_ids'],
-            $data['plot_map'], $data['reference_files'], $data['existing_reference_file_ids'], $data['remove_plot_map']);
+        unset(
+            $data['treatments'],
+            $data['budget_items'],
+            $data['activities'],
+            $data['support_team_member_ids'],
+            $data['plot_map'],
+            $data['reference_files'],
+            $data['existing_reference_file_ids'],
+            $data['remove_plot_map'],
+        );
 
         $data['updated_by'] = Auth::id();
         $program->update($data);
@@ -341,11 +407,14 @@ class ProgramController extends Controller
             $program->clearMediaCollection('plot_map');
         } elseif ($request->hasFile('plot_map')) {
             $program->clearMediaCollection('plot_map');
-            $program->addMedia($request->file('plot_map'))->toMediaCollection('plot_map');
+            $program
+                ->addMedia($request->file('plot_map'))
+                ->toMediaCollection('plot_map');
         }
 
         // Sync support team members
-        $currentMembers = $program->assignments()
+        $currentMembers = $program
+            ->assignments()
             ->where('role_in_program', ProgramAssignment::ROLE_MEMBER)
             ->whereNull('removed_at')
             ->get();
@@ -355,7 +424,8 @@ class ProgramController extends Controller
         // Soft-remove users no longer in the list
         $toRemove = array_diff($currentMemberIds, $supportTeamIds);
         if (! empty($toRemove)) {
-            $program->assignments()
+            $program
+                ->assignments()
                 ->where('role_in_program', ProgramAssignment::ROLE_MEMBER)
                 ->whereNull('removed_at')
                 ->whereIn('user_id', $toRemove)
@@ -442,8 +512,11 @@ class ProgramController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('program_code', 'like', "%{$search}%")
-                    ->orWhere('program_name', 'like', "%{$search}%");
+                $q->where('program_code', 'like', "%{$search}%")->orWhere(
+                    'program_name',
+                    'like',
+                    "%{$search}%",
+                );
             });
         }
 

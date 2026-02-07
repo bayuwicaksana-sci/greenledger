@@ -1,3 +1,6 @@
+import { router, useForm, usePage } from '@inertiajs/react';
+import { formatDistance } from 'date-fns';
+import { Bell } from 'lucide-react';
 import {
     Sheet,
     SheetContent,
@@ -7,10 +10,7 @@ import {
     SheetTrigger,
 } from '@/components/ui/sheet';
 import { markAllRead, markRead } from '@/routes/notifications';
-import { SharedData } from '@/types';
-import { router, useForm, usePage } from '@inertiajs/react';
-import { formatDistance } from 'date-fns';
-import { Bell } from 'lucide-react';
+import type { SharedData } from '@/types';
 import { Button } from '../ui/button';
 
 export function Notification() {

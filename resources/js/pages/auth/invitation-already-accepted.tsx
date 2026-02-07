@@ -1,9 +1,9 @@
+import { Head } from '@inertiajs/react';
+import { CheckCircle2, LogIn } from 'lucide-react';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import AuthLayout from '@/layouts/auth-layout';
 import { login } from '@/routes';
-import { Head } from '@inertiajs/react';
-import { CheckCircle2, LogIn } from 'lucide-react';
 
 export default function InvitationAlreadyAccepted() {
     return (

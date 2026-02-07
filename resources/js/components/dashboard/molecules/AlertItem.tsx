@@ -1,7 +1,7 @@
+import { AlertCircle, AlertTriangle, CheckCircle, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { AlertAction, AlertItemData } from '@/types/dashboard';
-import { AlertCircle, AlertTriangle, CheckCircle, Info } from 'lucide-react';
 
 interface AlertItemProps {
     alert: AlertItemData;

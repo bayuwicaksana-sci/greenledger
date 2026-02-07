@@ -1,9 +1,9 @@
+import { AlertCircle } from 'lucide-react';
+import { useState } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { AlertCircle } from 'lucide-react';
-import { useState } from 'react';
 import { WidgetHeader } from '../molecules/WidgetHeader';
 
 interface WidgetProps {

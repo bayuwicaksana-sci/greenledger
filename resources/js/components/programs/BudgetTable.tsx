@@ -1,3 +1,5 @@
+import { Plus, Trash2 } from 'lucide-react';
+import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -8,8 +10,6 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Trash2 } from 'lucide-react';
-import { useMemo } from 'react';
 import type { BudgetItemFormData, ProgramBudgetCategory, ProgramBudgetPhase } from '@/types/programs';
 
 interface BudgetTableProps {

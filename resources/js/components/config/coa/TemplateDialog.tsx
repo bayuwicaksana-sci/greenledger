@@ -2,6 +2,7 @@ import axios from 'axios';
 import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { index as templateIndex, apply as templateApply } from '@/actions/App/Http/Controllers/CoaAccountTemplateController';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -27,7 +28,6 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { index as templateIndex, apply as templateApply } from '@/actions/App/Http/Controllers/CoaAccountTemplateController';
 import type { Site } from '@/types';
 
 interface TemplateAccount {

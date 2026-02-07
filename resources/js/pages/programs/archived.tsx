@@ -1,13 +1,13 @@
-import { ProgramsTable } from '@/components/programs/ProgramsTable';
-import { Button } from '@/components/ui/button';
-import AppLayout from '@/layouts/app-layout';
+import { Head, Link } from '@inertiajs/react';
+import { ArrowLeft } from 'lucide-react';
 import PageAction from '@/components/page/page-action';
 import PageHeader from '@/components/page/page-header';
 import PageLayout from '@/components/page/page-layout';
+import { ProgramsTable } from '@/components/programs/ProgramsTable';
+import { Button } from '@/components/ui/button';
+import AppLayout from '@/layouts/app-layout';
 import programRoutes from '@/routes/programs';
-import { BreadcrumbItem, Program } from '@/types';
-import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft } from 'lucide-react';
+import type { BreadcrumbItem, Program } from '@/types';
 
 export default function ArchivedPrograms({
     programs,

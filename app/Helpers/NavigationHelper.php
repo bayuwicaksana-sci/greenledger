@@ -16,7 +16,7 @@ class NavigationHelper
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             return [];
         }
 
@@ -41,7 +41,7 @@ class NavigationHelper
             }
 
             // Only include group if it has visible items
-            if (!empty($visibleItems)) {
+            if (! empty($visibleItems)) {
                 $filtered[] = [
                     'title' => $group['title'],
                     'items' => $visibleItems,
@@ -82,10 +82,10 @@ class NavigationHelper
             'pending_approvals' => PaymentRequest::query()
                 ->where('status', 'pending')
                 ->when(
-                    !$user->can('payment-requests.approve.all'),
-                    fn($q) => $q->whereHas(
+                    ! $user->can('payment-requests.approve.all'),
+                    fn ($q) => $q->whereHas(
                         'program',
-                        fn($q2) => $q2->where(
+                        fn ($q2) => $q2->where(
                             'site_id',
                             $user->primary_site_id,
                         ),
@@ -97,8 +97,8 @@ class NavigationHelper
                 ->where('status', 'pending')
                 // ->where('deadline', '<', now())
                 ->when(
-                    !$user->can('settlements.view.all'),
-                    fn($q) => $q->where('submitted_by', $user->id),
+                    ! $user->can('settlements.view.all'),
+                    fn ($q) => $q->where('submitted_by', $user->id),
                 )
                 ->count(),
 
@@ -361,6 +361,12 @@ class NavigationHelper
                         'route' => 'reports.transactions',
                         'icon' => 'FileText',
                         'permission' => ['reports.operational.view'],
+                    ],
+                    [
+                        'title' => 'Historical Reports',
+                        'route' => 'reports.historical.index',
+                        'icon' => 'FileText',
+                        'permission' => ['reports.historical'],
                     ],
                 ],
             ],

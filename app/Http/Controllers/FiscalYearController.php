@@ -6,21 +6,25 @@ use App\Http\Requests\CloseFiscalYearRequest;
 use App\Http\Requests\StoreFiscalYearRequest;
 use App\Http\Requests\UpdateFiscalYearRequest;
 use App\Models\FiscalYear;
+use App\Services\FiscalYearReportGenerator;
 use App\Services\FiscalYearService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class FiscalYearController extends Controller
 {
-    public function __construct(protected FiscalYearService $fiscalYearService) {}
+    public function __construct(
+        protected FiscalYearService $fiscalYearService,
+        protected FiscalYearReportGenerator $reportGenerator,
+    ) {}
 
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $query = FiscalYear::query()
-            ->withCount('programs');
+        $query = FiscalYear::query()->withCount('programs');
 
         if ($request->filled('search')) {
             $query->where('year', 'like', "%{$request->search}%");
@@ -54,7 +58,8 @@ class FiscalYearController extends Controller
     {
         $fiscalYear = FiscalYear::create($request->validated());
 
-        return redirect()->route('admin.fiscal-years.show', $fiscalYear)
+        return redirect()
+            ->route('admin.fiscal-years.show', $fiscalYear)
             ->with('success', 'Fiscal year created successfully.');
     }
 
@@ -63,13 +68,24 @@ class FiscalYearController extends Controller
      */
     public function show(FiscalYear $fiscalYear)
     {
-        $fiscalYear->load(['programs' => function ($query) {
-            $query->select('id', 'fiscal_year', 'program_code', 'program_name', 'status');
-        }]);
+        $fiscalYear->load([
+            'programs' => function ($query) {
+                $query->select(
+                    'id',
+                    'fiscal_year',
+                    'program_code',
+                    'program_name',
+                    'status',
+                );
+            },
+        ]);
+
+        $reports = $this->reportGenerator->getReportsForFiscalYear($fiscalYear);
 
         return Inertia::render('admin/fiscal-years/show', [
             'fiscalYear' => $fiscalYear,
             'programCount' => $fiscalYear->programs_count ?? $fiscalYear->programs->count(),
+            'reports' => $reports,
         ]);
     }
 
@@ -87,11 +103,14 @@ class FiscalYearController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateFiscalYearRequest $request, FiscalYear $fiscalYear)
-    {
+    public function update(
+        UpdateFiscalYearRequest $request,
+        FiscalYear $fiscalYear,
+    ) {
         $fiscalYear->update($request->validated());
 
-        return redirect()->route('admin.fiscal-years.show', $fiscalYear)
+        return redirect()
+            ->route('admin.fiscal-years.show', $fiscalYear)
             ->with('success', 'Fiscal year updated successfully.');
     }
 
@@ -103,25 +122,36 @@ class FiscalYearController extends Controller
         $programCount = $fiscalYear->programs()->count();
 
         if ($programCount > 0) {
-            return redirect()->back()
-                ->with('error', "Cannot delete fiscal year {$fiscalYear->year}. It has {$programCount} associated programs.");
+            return redirect()
+                ->back()
+                ->with(
+                    'error',
+                    "Cannot delete fiscal year {$fiscalYear->year}. It has {$programCount} associated programs.",
+                );
         }
 
         $fiscalYear->delete();
 
-        return redirect()->route('admin.fiscal-years.index')
+        return redirect()
+            ->route('admin.fiscal-years.index')
             ->with('success', 'Fiscal year deleted successfully.');
     }
 
     /**
      * Close the fiscal year.
      */
-    public function close(CloseFiscalYearRequest $request, FiscalYear $fiscalYear)
-    {
+    public function close(
+        CloseFiscalYearRequest $request,
+        FiscalYear $fiscalYear,
+    ) {
         $this->fiscalYearService->close($fiscalYear, $request->validated());
 
-        return redirect()->route('admin.fiscal-years.show', $fiscalYear)
-            ->with('success', "Fiscal year {$fiscalYear->year} has been closed successfully.");
+        return redirect()
+            ->route('admin.fiscal-years.show', $fiscalYear)
+            ->with(
+                'success',
+                "Fiscal year {$fiscalYear->year} has been closed successfully.",
+            );
     }
 
     /**
@@ -135,7 +165,23 @@ class FiscalYearController extends Controller
 
         $this->fiscalYearService->reopen($fiscalYear, $request->reason);
 
-        return redirect()->route('admin.fiscal-years.show', $fiscalYear)
-            ->with('success', "Fiscal year {$fiscalYear->year} has been reopened.");
+        return redirect()
+            ->route('admin.fiscal-years.show', $fiscalYear)
+            ->with(
+                'success',
+                "Fiscal year {$fiscalYear->year} has been reopened.",
+            );
+    }
+
+    /**
+     * Download a year-end report for the fiscal year.
+     */
+    public function downloadReport(FiscalYear $fiscalYear)
+    {
+        $reportPath = $this->reportGenerator->generateYearEndReport(
+            $fiscalYear,
+        );
+
+        return Storage::download($reportPath, basename($reportPath));
     }
 }

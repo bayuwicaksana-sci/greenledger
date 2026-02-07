@@ -1,3 +1,6 @@
+import { Head, router } from '@inertiajs/react';
+import { Building2, Check, Mail, Shield, X } from 'lucide-react';
+import { useState } from 'react';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -5,9 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/layouts/auth-layout';
-import { Head, router } from '@inertiajs/react';
-import { Building2, Check, Mail, Shield, X } from 'lucide-react';
-import { useState } from 'react';
 
 interface InvitationData {
     id: number;

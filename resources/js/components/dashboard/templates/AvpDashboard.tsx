@@ -1,5 +1,5 @@
-import type { AvpDashboardData } from '@/types/dashboard';
 import { AlertCircle, TrendingUp } from 'lucide-react';
+import type { AvpDashboardData } from '@/types/dashboard';
 import { MetricValue } from '../atoms/MetricValue';
 import { QuickStatsRow } from '../organisms/QuickStatsRow';
 import { Widget } from '../organisms/Widget';

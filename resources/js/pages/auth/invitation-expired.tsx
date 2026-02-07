@@ -1,6 +1,6 @@
-import AuthLayout from '@/layouts/auth-layout';
 import { Head } from '@inertiajs/react';
 import { AlertCircle, Mail } from 'lucide-react';
+import AuthLayout from '@/layouts/auth-layout';
 
 interface Props {
     email: string;

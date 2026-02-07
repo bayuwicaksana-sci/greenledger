@@ -1,7 +1,7 @@
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { Upload, X } from 'lucide-react';
 import { useRef } from 'react';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import type { MediaItem } from '@/types/programs';
 
 interface FileUploadFieldProps {

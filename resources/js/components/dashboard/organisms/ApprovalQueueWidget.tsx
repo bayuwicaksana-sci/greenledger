@@ -1,7 +1,7 @@
+import { AlertCircle, FileCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { ApprovalItemData } from '@/types/dashboard';
-import { AlertCircle, FileCheck } from 'lucide-react';
 import { MetricValue } from '../atoms/MetricValue';
 import { DataTable } from '../molecules/DataTable';
 import { Widget } from './Widget';

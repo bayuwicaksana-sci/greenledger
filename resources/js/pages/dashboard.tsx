@@ -4,11 +4,12 @@ import { FinanceOpsDashboard } from '@/components/dashboard/templates/FinanceOps
 import { ManagerDashboard } from '@/components/dashboard/templates/ManagerDashboard';
 import { RaDashboard } from '@/components/dashboard/templates/RaDashboard';
 import { RoDashboard } from '@/components/dashboard/templates/RoDashboard';
+import { FiscalYearSelector } from '@/components/FiscalYearSelector';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
-import type { BreadcrumbItem, SharedData } from '@/types';
+import type { BreadcrumbItem, FiscalYear, SharedData } from '@/types';
 import type { DashboardPageProps } from '@/types/dashboard';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Building2, Filter } from 'lucide-react';
@@ -19,7 +20,12 @@ export default function Dashboard({
     canViewAllSites = false,
     currentViewScope = 'current',
     currentSite,
-}: DashboardPageProps) {
+    fiscal_years,
+    selected_fiscal_year,
+}: DashboardPageProps & {
+    fiscal_years: FiscalYear[];
+    selected_fiscal_year?: number;
+}) {
     const { site_code } = usePage<SharedData>().props;
 
     const breadcrumbs: BreadcrumbItem[] = [
@@ -35,7 +41,19 @@ export default function Dashboard({
 
         router.get(
             dashboard({ site_code: site_code! }).url,
-            { scope: newScope },
+            { scope: newScope, fiscal_year: selected_fiscal_year },
+            {
+                preserveState: true,
+                preserveScroll: true,
+            },
+        );
+    };
+
+    // Handle fiscal year change
+    const handleFiscalYearChange = (year: number) => {
+        router.get(
+            dashboard({ site_code: site_code! }).url,
+            { scope: currentViewScope, fiscal_year: year },
             {
                 preserveState: true,
                 preserveScroll: true,
@@ -68,9 +86,30 @@ export default function Dashboard({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
 
+            {/* Fiscal Year Selector */}
+            <div className="px-6 pt-6">
+                <Card>
+                    <CardContent>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Filter className="h-4 w-4 text-muted-foreground" />
+                                <span className="font-medium">
+                                    Fiscal Year:
+                                </span>
+                            </div>
+                            <FiscalYearSelector
+                                fiscalYears={fiscal_years}
+                                selectedYear={selected_fiscal_year}
+                                onChange={handleFiscalYearChange}
+                            />
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
             {/* Site Filter Toggle - Only show for privileged users (Manager, AVP) */}
             {canViewAllSites && (
-                <div className="px-6 pt-6">
+                <div className="px-6 pt-4">
                     <Card>
                         <CardContent>
                             <div className="flex items-center justify-between">

@@ -1,3 +1,5 @@
+import type { UseFormReturn } from '@inertiajs/react';
+import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,8 +18,6 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { UseFormReturn } from '@inertiajs/react';
-import { Plus, Trash2 } from 'lucide-react';
 
 interface Props {
     form: UseFormReturn<any>;

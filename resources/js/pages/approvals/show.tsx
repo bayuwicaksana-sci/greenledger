@@ -1,11 +1,3 @@
-import { ApprovalActionDialog } from '@/components/approval-workflows/ApprovalActionDialog';
-import { ApprovalHistory } from '@/components/approval-workflows/ApprovalHistory';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import AppLayout from '@/layouts/app-layout';
-import { index as approvalsIndex, resubmit } from '@/routes/approvals';
-import type { BreadcrumbItem, SharedData } from '@/types';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { format } from 'date-fns';
 import {
@@ -16,6 +8,14 @@ import {
     RotateCcw,
     User,
 } from 'lucide-react';
+import { ApprovalActionDialog } from '@/components/approval-workflows/ApprovalActionDialog';
+import { ApprovalHistory } from '@/components/approval-workflows/ApprovalHistory';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import AppLayout from '@/layouts/app-layout';
+import { index as approvalsIndex, resubmit } from '@/routes/approvals';
+import type { BreadcrumbItem, SharedData } from '@/types';
 
 import { ContentResolver } from './partials/ContentResolver';
 import { RevisionContextAlert } from './partials/RevisionContextAlert';

@@ -1,3 +1,5 @@
+import { TrendingDown } from 'lucide-react';
+import { Bar, BarChart, XAxis, YAxis } from 'recharts';
 import {
     ChartContainer,
     ChartTooltip,
@@ -5,8 +7,6 @@ import {
     type ChartConfig,
 } from '@/components/ui/chart';
 import type { ChartDataPoint } from '@/types/dashboard';
-import { TrendingDown } from 'lucide-react';
-import { Bar, BarChart, XAxis, YAxis } from 'recharts';
 import { Widget } from './Widget';
 
 interface BudgetChartWidgetProps {

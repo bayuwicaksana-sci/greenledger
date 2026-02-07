@@ -1,3 +1,13 @@
+import { Head, Link, usePage } from '@inertiajs/react';
+import type { ColumnDef } from '@tanstack/react-table';
+import {
+    flexRender,
+    getCoreRowModel,
+    useReactTable,
+} from '@tanstack/react-table';
+import { format } from 'date-fns';
+import { ClipboardCheck } from 'lucide-react';
+import { useMemo } from 'react';
 import PageHeader from '@/components/page/page-header';
 import PageLayout from '@/components/page/page-layout';
 import { Badge } from '@/components/ui/badge';
@@ -14,16 +24,6 @@ import MainLayout from '@/layouts/main-layout';
 import { mainDashboard } from '@/routes';
 import { show } from '@/routes/approvals';
 import type { BreadcrumbItem, SharedData } from '@/types';
-import { Head, Link, usePage } from '@inertiajs/react';
-import type { ColumnDef } from '@tanstack/react-table';
-import {
-    flexRender,
-    getCoreRowModel,
-    useReactTable,
-} from '@tanstack/react-table';
-import { format } from 'date-fns';
-import { ClipboardCheck } from 'lucide-react';
-import { useMemo } from 'react';
 
 interface ApprovalInstance {
     id: number;

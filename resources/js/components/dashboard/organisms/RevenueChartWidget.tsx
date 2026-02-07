@@ -1,3 +1,5 @@
+import { TrendingUp } from 'lucide-react';
+import { CartesianGrid, Line, LineChart, XAxis } from 'recharts';
 import {
     ChartContainer,
     ChartTooltip,
@@ -5,8 +7,6 @@ import {
     type ChartConfig,
 } from '@/components/ui/chart';
 import type { TimeSeriesData } from '@/types/dashboard';
-import { TrendingUp } from 'lucide-react';
-import { CartesianGrid, Line, LineChart, XAxis } from 'recharts';
 import { Widget } from './Widget';
 
 interface RevenueChartWidgetProps {

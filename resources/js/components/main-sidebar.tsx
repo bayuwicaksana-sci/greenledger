@@ -11,8 +11,9 @@ import {
 } from '@/components/ui/sidebar';
 import { mainDashboard, researchStations } from '@/routes';
 import admin from '@/routes/admin';
+import fiscalYears from '@/routes/admin/fiscal-years';
 import config from '@/routes/config';
-import { NavGroup } from '@/types';
+import type { NavGroup } from '@/types';
 import { Link } from '@inertiajs/react';
 import {
     BookOpen,
@@ -41,7 +42,7 @@ const mainNavItems: NavGroup[] = [
             },
             {
                 title: 'Fiscal Year',
-                href: mainDashboard().url,
+                href: fiscalYears.index().url,
                 icon: Calendar,
             },
         ],

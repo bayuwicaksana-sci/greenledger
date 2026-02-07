@@ -1,6 +1,6 @@
+import { ArrowDown, ArrowUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { TrendData } from '@/types/dashboard';
-import { ArrowDown, ArrowUp } from 'lucide-react';
 
 interface TrendIndicatorProps {
     trend: TrendData;

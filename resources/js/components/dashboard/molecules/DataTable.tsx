@@ -1,3 +1,5 @@
+import { ArrowDown, ArrowUp } from 'lucide-react';
+import { useState } from 'react';
 import {
     Table,
     TableBody,
@@ -7,8 +9,6 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
-import { ArrowDown, ArrowUp } from 'lucide-react';
-import { useState } from 'react';
 
 interface Column<T> {
     key: keyof T | string;

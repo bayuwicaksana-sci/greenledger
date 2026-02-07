@@ -1,5 +1,5 @@
-import type { FarmAdminDashboardData } from '@/types/dashboard';
 import { CheckSquare, FileText, MapPin } from 'lucide-react';
+import type { FarmAdminDashboardData } from '@/types/dashboard';
 import { QuickStatsRow } from '../organisms/QuickStatsRow';
 import { Widget } from '../organisms/Widget';
 

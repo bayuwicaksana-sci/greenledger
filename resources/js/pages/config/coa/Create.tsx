@@ -1,3 +1,6 @@
+import { Head, Link, router } from '@inertiajs/react';
+import { ArrowLeft, ChevronDown, Plus, Save, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import {
     bulkStore,
     index,
@@ -19,10 +22,7 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import MainLayout from '@/layouts/main-layout';
-import { BreadcrumbItem, Site } from '@/types';
-import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeft, ChevronDown, Plus, Save, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import type { BreadcrumbItem, Site } from '@/types';
 
 interface ParentAccount {
     id: number;
@@ -81,9 +81,9 @@ const SUB_CATEGORY_OPTIONS: Record<string, string[]> = {
 
 export default function Create({
     sites,
-    parents, // eslint-disable-line
+    parents,  
     existingCodes, // eslint-disable-line
-    standardAccounts, // eslint-disable-line
+    standardAccounts,  
 }: CreateProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Chart of Accounts', href: index.url() },
@@ -186,7 +186,7 @@ export default function Create({
         setAccounts((prev) => {
             const updated = [...prev];
             const oldRow = updated[index];
-            let newRow = { ...oldRow, [field]: value };
+            const newRow = { ...oldRow, [field]: value };
 
             if (field === 'parent_account_id') {
                 const raw = value as string;

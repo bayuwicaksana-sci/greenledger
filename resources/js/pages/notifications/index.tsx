@@ -1,11 +1,11 @@
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { formatDistance } from 'date-fns';
+import { Bell, CheckCircle2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { markAllRead, markRead } from '@/routes/notifications';
 import type { BreadcrumbItem, PaginatedResponse, SharedData } from '@/types';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { formatDistance } from 'date-fns';
-import { Bell, CheckCircle2, ExternalLink } from 'lucide-react';
 
 interface Notification {
     id: string;

@@ -1,5 +1,5 @@
-import type { DetailComponentProps } from '../ContentResolver';
 import { format } from 'date-fns';
+import type { DetailComponentProps } from '../ContentResolver';
 
 export function GenericDetails({ approvable }: DetailComponentProps) {
     if (!approvable) {

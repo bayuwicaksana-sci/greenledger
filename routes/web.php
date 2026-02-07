@@ -334,8 +334,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     });
 
                 // Fiscal Years
-                Route::resource('fiscal-years', \App\Http\Controllers\FiscalYearController::class)
-                    ->middleware('permission:fiscal-year.view|fiscal-year.manage');
+                Route::resource(
+                    'fiscal-years',
+                    \App\Http\Controllers\FiscalYearController::class,
+                )->middleware('permission:fiscal-year.view|fiscal-year.manage');
 
                 Route::post('fiscal-years/{fiscalYear}/close', [
                     \App\Http\Controllers\FiscalYearController::class,
@@ -350,6 +352,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ])
                     ->name('fiscal-years.reopen')
                     ->middleware('permission:fiscal-year.reopen');
+
+                Route::get('fiscal-years/{fiscalYear}/download-report', [
+                    \App\Http\Controllers\FiscalYearController::class,
+                    'downloadReport',
+                ])
+                    ->name('fiscal-years.download-report')
+                    ->middleware(
+                        'permission:fiscal-year.view|fiscal-year.manage',
+                    );
             });
 
         Route::prefix('notifications')
@@ -719,6 +730,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
                         })
                             ->name('transactions')
                             ->middleware('permission:reports.operational.view');
+
+                        Route::get('historical', [
+                            \App\Http\Controllers\HistoricalReportController::class,
+                            'index',
+                        ])
+                            ->name('historical')
+                            ->middleware('permission:reports.historical');
+
+                        Route::get('historical/export', [
+                            \App\Http\Controllers\HistoricalReportController::class,
+                            'export',
+                        ])
+                            ->name('historical.export')
+                            ->middleware('permission:reports.historical');
                     });
 
                 // Configuration

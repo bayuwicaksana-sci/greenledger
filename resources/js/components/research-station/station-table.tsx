@@ -1,3 +1,4 @@
+import { router } from '@inertiajs/react';
 import {
     flexRender,
     getCoreRowModel,
@@ -29,8 +30,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { dashboard } from '@/routes';
-import { Site } from '@/types';
-import { router } from '@inertiajs/react';
+import type { Site } from '@/types';
 // import { UserActionsMenu } from './UserActionsMenu';
 
 interface SiteTableProps {

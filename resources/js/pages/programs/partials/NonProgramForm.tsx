@@ -1,3 +1,4 @@
+import type { UseFormReturn } from '@inertiajs/react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -8,7 +9,6 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { UseFormReturn } from '@inertiajs/react';
 
 interface Props {
     form: UseFormReturn<any>;

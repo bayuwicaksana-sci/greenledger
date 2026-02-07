@@ -1,10 +1,10 @@
+import { router, usePage } from '@inertiajs/react';
 import { Alert } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import type { SharedData } from '@/types';
 import type { KpiCardData } from '@/types/dashboard';
-import { router, usePage } from '@inertiajs/react';
 import { MetricValue } from '../atoms/MetricValue';
 import { TrendIndicator } from '../atoms/TrendIndicator';
 

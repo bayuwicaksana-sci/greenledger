@@ -1,5 +1,5 @@
-import type { ManagerDashboardData } from '@/types/dashboard';
 import { Building2, PieChart } from 'lucide-react';
+import type { ManagerDashboardData } from '@/types/dashboard';
 import { MetricValue } from '../atoms/MetricValue';
 import { DataTable } from '../molecules/DataTable';
 import { ApprovalQueueWidget } from '../organisms/ApprovalQueueWidget';

@@ -1,3 +1,6 @@
+import { useForm, usePage } from '@inertiajs/react';
+import { AlertCircle, Check, X } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -10,11 +13,8 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import type { SharedData } from '@/types';
-import { useForm, usePage } from '@inertiajs/react';
-import { AlertCircle, Check, X } from 'lucide-react';
-import { useState } from 'react';
 import { action } from '@/routes/approvals';
+import type { SharedData } from '@/types';
 
 type ActionType = 'approve' | 'reject' | 'request_changes';
 

@@ -111,6 +111,7 @@ function generateRouteUrl(routeName: string, siteCode: string): string {
         'reports.revenue': `${baseUrl}/reports/revenue`,
         'reports.expense': `${baseUrl}/reports/expense`,
         'reports.transactions': `${baseUrl}/reports/transactions`,
+        'reports.historical.index': `${baseUrl}/reports/historical`,
 
         // Configuration
         'config.coa': `${baseUrl}/config/coa`,

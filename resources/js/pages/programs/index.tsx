@@ -1,20 +1,22 @@
-import { ProgramsTable } from '@/components/programs/ProgramsTable';
-import { Button } from '@/components/ui/button';
-import AppLayout from '@/layouts/app-layout';
 import PageAction from '@/components/page/page-action';
 import PageHeader from '@/components/page/page-header';
 import PageLayout from '@/components/page/page-layout';
+import { ProgramsTable } from '@/components/programs/ProgramsTable';
+import { Button } from '@/components/ui/button';
+import AppLayout from '@/layouts/app-layout';
 import programRoutes from '@/routes/programs';
-import { BreadcrumbItem, Program } from '@/types';
+import type { BreadcrumbItem, FiscalYear, Program } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 
 export default function ProgramsIndex({
     programs,
     site_code,
+    fiscal_years,
 }: {
     programs: Program[];
     site_code: string;
+    fiscal_years: FiscalYear[];
 }) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
@@ -42,7 +44,11 @@ export default function ProgramsIndex({
                         </Link>
                     </PageAction>
                 </PageHeader>
-                <ProgramsTable programs={programs} site_code={site_code} />
+                <ProgramsTable
+                    programs={programs}
+                    site_code={site_code}
+                    fiscal_years={fiscal_years}
+                />
             </PageLayout>
         </AppLayout>
     );

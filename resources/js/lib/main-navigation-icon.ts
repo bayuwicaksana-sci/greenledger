@@ -1,4 +1,3 @@
-import type { NavGroup } from '@/types';
 import {
     Activity,
     Archive,
@@ -28,6 +27,7 @@ import {
     Wallet,
     Wheat,
 } from 'lucide-react';
+import type { NavGroup } from '@/types';
 
 const iconMap: Record<string, any> = {
     Activity,

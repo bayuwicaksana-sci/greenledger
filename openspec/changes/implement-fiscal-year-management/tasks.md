@@ -15,7 +15,7 @@
 - [x] 2.1 Add fiscal year permissions to `lang/en/permissions.php`: fiscal-year.manage, fiscal-year.view, fiscal-year.close, fiscal-year.reopen
 - [x] 2.2 Add `reports.historical` permission to permissions file
 - [x] 2.3 Add `program.override-closed-fy` permission for creating programs in closed FYs
-- [x] 2.4 Update `RolePermissionSeeder` to assign fiscal-year.* permissions to Manager and AVP roles
+- [x] 2.4 Update `RolePermissionSeeder` to assign fiscal-year.\* permissions to Manager and AVP roles
 - [x] 2.5 Assign reports.historical permission to Finance Operation, Manager, and AVP roles
 - [x] 2.6 Create or update `FiscalYearPolicy` with methods: viewAny, create, update, delete, close, reopen
 - [x] 2.7 Register FiscalYearPolicy in `AuthServiceProvider`
@@ -25,9 +25,9 @@
 - [x] 3.1 Implement FiscalYearService@close() method with transaction wrapper
 - [x] 3.2 Add pre-close validation: count active programs, pending payment requests, unsettled transactions
 - [x] 3.3 Implement "Archive completed programs" action (query Program::completed(), update status to archived)
-- [ ] 3.4 Implement "Block new programs" action (add validation in StoreProgramRequest)
+- [x] 3.4 Implement "Block new programs" action (add validation in StoreProgramRequest)
 - [ ] 3.5 Implement "Block new transactions" action (add validation in PaymentRequestController and RevenueControllers)
-- [ ] 3.6 Implement "Generate year-end report" action (call generateYearEndReport() method)
+- [x] 3.6 Implement "Generate year-end report" action (call generateYearEndReport() method)
 - [x] 3.7 Implement "Send notifications" action (notify PIs, Managers, AVPs via Laravel notifications)
 - [x] 3.8 Add audit logging for close action (user_id, timestamp, options, notes, execution results)
 - [x] 3.9 Implement FiscalYearService@reopen() method with audit logging
@@ -35,114 +35,115 @@
 
 ## 4. Year-End Report Generation
 
-- [ ] 4.1 Install Laravel Dompdf package (`composer require barryvdh/laravel-dompdf`)
-- [ ] 4.2 Create `FiscalYearReportGenerator` service class
-- [ ] 4.3 Implement PDF report template view: resources/views/reports/fiscal-year-end.blade.php
-- [ ] 4.4 Query and format report data: FY period, total programs, revenue/expense breakdown, budget utilization
-- [ ] 4.5 Add program list to PDF with status indicators
-- [ ] 4.6 Generate PDF and store in storage/app/fiscal-year-reports/ directory
-- [ ] 4.7 Return PDF file path from generateYearEndReport() method
-- [ ] 4.8 Add download link in fiscal year show page for generated reports
+- [x] 4.1 Install Laravel Dompdf package (`composer require barryvdh/laravel-dompdf`)
+- [x] 4.2 Create `FiscalYearReportGenerator` service class
+- [x] 4.3 Implement PDF report template view: resources/views/reports/fiscal-year-end.blade.php
+- [x] 4.4 Query and format report data: FY period, total programs, revenue/expense breakdown, budget utilization
+- [x] 4.5 Add program list to PDF with status indicators
+- [x] 4.6 Generate PDF and store in storage/app/fiscal-year-reports/ directory
+- [x] 4.7 Return PDF file path from generateYearEndReport() method
+- [x] 4.8 Add download link in fiscal year show page for generated reports
 
 ## 5. Admin UI - Fiscal Year CRUD
 
-- [ ] 5.1 Create Inertia page: resources/js/pages/admin/fiscal-years/index.tsx (list view)
-- [ ] 5.2 Create Inertia page: resources/js/pages/admin/fiscal-years/create.tsx (create form)
-- [ ] 5.3 Create Inertia page: resources/js/pages/admin/fiscal-years/edit.tsx (edit form)
-- [ ] 5.4 Create Inertia page: resources/js/pages/admin/fiscal-years/show.tsx (detail view with close button)
-- [ ] 5.5 Implement fiscal year list table with columns: Year, Date Range, Status Badge, Program Count, Actions
-- [ ] 5.6 Add search and filter controls: search by year, filter by status (open/closed)
-- [ ] 5.7 Implement create form with start_date, end_date inputs; display auto-calculated year read-only
-- [ ] 5.8 Add date range validation: end_date > start_date, display error messages
-- [ ] 5.9 Implement edit form with warning when fiscal year has programs
-- [ ] 5.10 Add delete confirmation with program count check (disable delete if programs exist)
+- [x] 5.1 Create Inertia page: resources/js/pages/admin/fiscal-years/index.tsx (list view)
+- [x] 5.2 Create Inertia page: resources/js/pages/admin/fiscal-years/create.tsx (create form)
+- [x] 5.3 Create Inertia page: resources/js/pages/admin/fiscal-years/edit.tsx (edit form)
+- [x] 5.4 Create Inertia page: resources/js/pages/admin/fiscal-years/show.tsx (detail view with close button)
+- [x] 5.5 Implement fiscal year list table with columns: Year, Date Range, Status Badge, Program Count, Actions
+- [x] 5.6 Add search and filter controls: search by year, filter by status (open/closed)
+- [x] 5.7 Implement create form with start_date, end_date inputs; display auto-calculated year read-only
+- [x] 5.8 Add date range validation: end_date > start_date, display error messages
+- [x] 5.9 Implement edit form with warning when fiscal year has programs
+- [x] 5.10 Add delete confirmation with program count check (disable delete if programs exist)
 
 ## 6. Admin UI - Year-End Closing Dialog
 
-- [ ] 6.1 Create CloseDialogComponent with checkbox options (archive, block_programs, block_transactions, generate_report, send_notifications)
-- [ ] 6.2 Add pre-close validation display: active programs count, pending PRs count, unsettled transactions count
-- [ ] 6.3 Display warning messages if validation checks fail
-- [ ] 6.4 Add notes textarea (optional) for administrator comments
-- [ ] 6.5 Implement confirmation dialog: "Are you sure you want to close FY2026?"
-- [ ] 6.6 Submit close action via Inertia form to FiscalYearController@close
-- [ ] 6.7 Display success message after closure: "Fiscal year 2026 has been closed successfully"
-- [ ] 6.8 Show loading indicator during close action execution
-- [ ] 6.9 Add reopen button (visible only to users with fiscal-year.reopen permission)
-- [ ] 6.10 Implement reopen dialog requiring reason input (mandatory)
+- [x] 6.1 Create CloseDialogComponent with checkbox options (archive, block_programs, block_transactions, generate_report, send_notifications)
+- [x] 6.2 Add pre-close validation display: active programs count, pending PRs count, unsettled transactions count
+- [x] 6.3 Display warning messages if validation checks fail
+- [x] 6.4 Add notes textarea (optional) for administrator comments
+- [x] 6.5 Implement confirmation dialog: "Are you sure you want to close FY2026?"
+- [x] 6.6 Submit close action via Inertia form to FiscalYearController@close
+- [x] 6.7 Display success message after closure: "Fiscal year 2026 has been closed successfully"
+- [x] 6.8 Show loading indicator during close action execution
+- [x] 6.9 Add reopen button (visible only to users with fiscal-year.reopen permission)
+- [x] 6.10 Implement reopen dialog requiring reason input (mandatory)
 
 ## 7. Fiscal Year Selector Component
 
-- [ ] 7.1 Create reusable component: resources/js/components/FiscalYearSelector.tsx
-- [ ] 7.2 Implement dropdown showing all fiscal years in descending order
-- [ ] 7.3 Display status badges: "Open" (blue) and "Closed" (gray) next to year codes
-- [ ] 7.4 Add tooltip on hover showing full date range (e.g., "FY2026: Jun 1, 2026 - Jun 30, 2027")
-- [ ] 7.5 Emit onChange event when user selects different fiscal year
-- [ ] 7.6 Persist selected fiscal year in session storage
-- [ ] 7.7 Style component with Tailwind CSS consistent with app design
+- [x] 7.1 Create reusable component: resources/js/components/FiscalYearSelector.tsx
+- [x] 7.2 Implement dropdown showing all fiscal years in descending order
+- [x] 7.3 Display status badges: "Open" (blue) and "Closed" (gray) next to year codes
+- [x] 7.4 Add tooltip on hover showing full date range (e.g., "FY2026: Jun 1, 2026 - Jun 30, 2027")
+- [x] 7.5 Emit onChange event when user selects different fiscal year
+- [x] 7.6 Persist selected fiscal year in session storage
+- [x] 7.7 Style component with Tailwind CSS consistent with app design
 
 ## 8. Program Validation Enhancements
 
-- [ ] 8.1 Update `StoreProgramRequest` validation rules to check if selected fiscal year is closed
-- [ ] 8.2 Add custom validation rule: prevent creation for closed FY unless user has program.override-closed-fy permission
-- [ ] 8.3 Display validation error message: "Fiscal year 2025 is closed. Cannot create programs for closed fiscal years."
-- [ ] 8.4 Add warning message in program create form when closed FY is selected (but allow if user has override)
-- [ ] 8.5 Mark closed fiscal years in fiscal year dropdown with "(Closed)" indicator
-- [ ] 8.6 Update ProgramController@store to log override action when user creates program for closed FY
-- [ ] 8.7 Add validation to prevent program activation if fiscal year is closed
+- [x] 8.1 Add validation rule in StoreProgramRequest: fiscal year must not be closed (unless override permission)
+- [x] 8.2 Display error message: "Fiscal year {year} is closed. Cannot create programs for closed fiscal years."
+- [x] 8.3 Add "Closed FY" indicator in program create/edit forms (badge or warning text)
+- [x] 8.4 Show override action in activity log when user with permission creates program in closed FY
+- [x] 8.5 Implement permission check: `$user->can('program.override-closed-fy')`
+- [x] 8.6 Add unit test: ProgramValidationTest@test_cannot_create_program_in_closed_fiscal_year
+- [x] 8.7 Add unit test: ProgramValidationTest@test_can_override_closed_fiscal_year_with_permission to prevent program activation if fiscal year is closed
 
 ## 9. Program Pages - Fiscal Year Display
 
 - [ ] 9.1 Add fiscal year period display to program detail page (show/edit pages)
 - [ ] 9.2 Display format: "FY2026: Jun 1, 2026 - Jun 30, 2027" with status badge
-- [ ] 9.3 Add fiscal year badge to program list table (ProgramsTable component)
+- [x] 9.3 Add fiscal year badge to program list table (ProgramsTable component)
 - [ ] 9.4 Implement tooltip on fiscal year badge hover showing date range
 - [ ] 9.5 Add fiscal year column to program list with sortable header
-- [ ] 9.6 Add fiscal year filter dropdown to program index page
+- [x] 9.6 Add fiscal year filter dropdown to program index page
 - [ ] 9.7 Implement filter by fiscal year status: "Open FYs Only", "Closed FYs Only", "All"
 - [ ] 9.8 Update ProgramController@index to handle fiscal_year and fy_status query parameters
 
 ## 10. Historical Reporting - Backend
 
-- [ ] 10.1 Create `HistoricalReportController` with index method
-- [ ] 10.2 Add route: GET /reports/historical (protected by reports.historical permission)
-- [ ] 10.3 Implement query to fetch year-over-year summary data (revenue, expenses, net income, budget utilization, program counts)
+- [x] 10.1 Create `HistoricalReportController` with index method
+- [x] 10.2 Add route: GET /reports/historical (protected by reports.historical permission)
+- [x] 10.3 Implement query to fetch year-over-year summary data (revenue, expenses, net income, budget utilization, program counts)
 - [ ] 10.4 Optimize query performance with eager loading and indexed fields
 - [ ] 10.5 Implement caching for year-over-year summary (cache key: "historical-summary-{site_id}", TTL: 1 day)
-- [ ] 10.6 Create method to fetch revenue breakdown by COA account for selected fiscal year
-- [ ] 10.7 Create method to fetch expense breakdown by COA account for selected fiscal year
+- [x] 10.6 Create method to fetch revenue breakdown by COA account for selected fiscal year
+- [x] 10.7 Create method to fetch expense breakdown by COA account for selected fiscal year
 - [ ] 10.8 Implement Excel export functionality using Laravel Excel package
 - [ ] 10.9 Generate Excel file with worksheets: Summary, Revenue Breakdown, Expense Breakdown, Program List
 
 ## 11. Historical Reporting - Frontend
 
-- [ ] 11.1 Create Inertia page: resources/js/pages/reports/historical/index.tsx
-- [ ] 11.2 Implement year-over-year comparison table with metrics: Total Revenue, Total Expenses, Net Income, Budget Utilization %, etc.
-- [ ] 11.3 Calculate and display YoY % change column with color coding (green for positive, red for negative)
+- [x] 11.1 Create Inertia page: resources/js/pages/reports/historical/index.tsx
+- [x] 11.2 Implement year-over-year comparison table with metrics: Total Revenue, Total Expenses, Net Income, Budget Utilization %, etc.
+- [x] 11.3 Calculate and display YoY % change column with color coding (green for positive, red for negative)
 - [ ] 11.4 Add site filter dropdown (All Sites, Klaten, Magelang)
 - [ ] 11.5 Add fiscal year range selector (default: last 3 years)
 - [ ] 11.6 Implement drill-down modal for revenue/expense account breakdown
 - [ ] 11.7 Create trend line charts using Chart.js or Recharts library
 - [ ] 11.8 Implement multi-metric comparison chart (Revenue, Expenses, Net Income on same chart)
-- [ ] 11.9 Add "Export to Excel" button triggering download of historical report
+- [x] 11.9 Add "Export to Excel" button triggering download of historical report
 - [ ] 11.10 Display loading indicator during data fetch and export operations
 
 ## 12. Dashboard Enhancements
 
-- [ ] 12.1 Add FiscalYearSelector component to main dashboard header
-- [ ] 12.2 Update dashboard data queries to filter by selected fiscal year
-- [ ] 12.3 Display current selected fiscal year prominently in dashboard
-- [ ] 12.4 Add trend sparklines to dashboard cards showing last 3 fiscal years data
-- [ ] 12.5 Update dashboard card tooltips to show fiscal year context
-- [ ] 12.6 Persist dashboard fiscal year selection in user session
+- [x] 12.1 Add FiscalYearSelector component to main dashboard header
+- [x] 12.2 Implement fiscal year change handler: reload dashboard data for selected year
+- [x] 12.3 Display current selected fiscal year in dashboard header
+- [x] 12.4 Filter dashboard metrics (revenue, expenses, programs) by selected fiscal year
+- [x] 12.5 Add multi-year trend sparklines to dashboard cards (e.g., last 3 years revenue trend)
+- [x] 12.6 Persist selected fiscal year in session storage for dashboard
 
-## 13. COA Index Enhancements
+## 13. COA Enhancements
 
-- [ ] 13.1 Add FiscalYearSelector to COA index page header
-- [ ] 13.2 Update CoaAccountController@index to filter budget allocations by selected fiscal year
-- [ ] 13.3 Display fiscal year period and status in page header
-- [ ] 13.4 Add sparkline charts to account rows showing budget/actual trend for last 3 fiscal years
-- [ ] 13.5 Update actual amount calculations to scope by selected fiscal year
-- [ ] 13.6 Add tooltip to sparklines showing year-specific values on hover
+- [x] 13.1 Add FiscalYearSelector to COA index page
+- [x] 13.2 Filter budget allocations by selected fiscal year
+- [x] 13.3 Filter actual amounts (transactions) by selected fiscal year
+- [x] 13.4 Update budget utilization percentage based on selected fiscal year
+- [x] 13.5 Add sparkline chart to each account row showing budget vs actual trend over last 3 years
+- [x] 13.6 Persist selected fiscal year in session storage for COA
+- [ ] 13.7 Add tooltip to sparklines showing year-specific values on hover
 
 ## 14. Testing - Backend
 
@@ -189,17 +190,17 @@
 
 ## 16. Database & Seeder Updates
 
-- [ ] 16.1 Update `FiscalYearSeeder` to create only current year if none exists (remove auto-creation of current+1)
-- [ ] 16.2 Add comment in seeder documenting that future years should be created via UI
-- [ ] 16.3 Create factory: `FiscalYearFactory` for testing purposes
+- [x] 16.1 Update `FiscalYearSeeder` to create only current year if none exists (remove auto-creation of current+1)
+- [x] 16.2 Add comment in seeder documenting that future years should be created via UI
+- [x] 16.3 Create factory: `FiscalYearFactory` for testing purposes
 - [ ] 16.4 Add fiscal year status (open/closed) to existing test seeders (DatabaseSeeder)
 
 ## 17. Code Formatting & Standards
 
-- [ ] 17.1 Run `vendor/bin/pint --dirty` to format all new PHP files
-- [ ] 17.2 Run `npm run lint` to check TypeScript/React files
-- [ ] 17.3 Fix any linting errors in new frontend files
-- [ ] 17.4 Verify all new files follow Laravel and React best practices
+- [x] 17.1 Run `vendor/bin/pint --dirty` to format all new PHP files
+- [x] 17.2 Run `npm run lint` to check TypeScript/React files
+- [x] 17.3 Fix any linting errors in new frontend files
+- [x] 17.4 Verify all new files follow Laravel and React best practices
 
 ## 18. Documentation
 

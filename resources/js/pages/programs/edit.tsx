@@ -1,3 +1,5 @@
+import { Head, router, useForm } from '@inertiajs/react';
+import type { FormEventHandler } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -19,9 +21,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import programRoutes from '@/routes/programs';
-import { BreadcrumbItem, Program } from '@/types';
-import { Head, router, useForm } from '@inertiajs/react';
-import { FormEventHandler } from 'react';
+import type { BreadcrumbItem, Program } from '@/types';
 
 export default function ProgramEdit({
     site_code,

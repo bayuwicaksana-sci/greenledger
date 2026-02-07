@@ -1,5 +1,5 @@
-import type { FinanceOpsDashboardData } from '@/types/dashboard';
 import { Banknote, FileCheck } from 'lucide-react';
+import type { FinanceOpsDashboardData } from '@/types/dashboard';
 import { MetricValue } from '../atoms/MetricValue';
 import { QuickStatsRow } from '../organisms/QuickStatsRow';
 import { SettlementAlertsWidget } from '../organisms/SettlementAlertsWidget';

@@ -1,4 +1,5 @@
 import { StatusBadge } from '@/components/dashboard/atoms/StatusBadge';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -9,6 +10,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import {
     Table,
     TableBody,
     TableCell,
@@ -17,13 +25,15 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import programRoutes from '@/routes/programs';
-import { Program } from '@/types';
+import type { FiscalYear, Program } from '@/types';
 import { Link, router } from '@inertiajs/react';
-import {
+import type {
     ColumnDef,
     ColumnFiltersState,
     SortingState,
     VisibilityState,
+} from '@tanstack/react-table';
+import {
     flexRender,
     getCoreRowModel,
     getFilteredRowModel,
@@ -45,15 +55,24 @@ import { useState } from 'react';
 interface ProgramsTableProps {
     programs: Program[];
     site_code: string;
+    fiscal_years: FiscalYear[];
 }
 
-export function ProgramsTable({ programs, site_code }: ProgramsTableProps) {
+export function ProgramsTable({
+    programs,
+    site_code,
+    fiscal_years,
+}: ProgramsTableProps) {
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
         {},
     );
     const [globalFilter, setGlobalFilter] = useState('');
+    const [selectedFiscalYear, setSelectedFiscalYear] = useState<string>('all');
+
+    // Create a map of fiscal years for quick lookup
+    const fiscalYearMap = new Map(fiscal_years.map((fy) => [fy.year, fy]));
 
     const columns: ColumnDef<Program>[] = [
         {
@@ -61,7 +80,9 @@ export function ProgramsTable({ programs, site_code }: ProgramsTableProps) {
             header: 'Type',
             cell: ({ row }) => (
                 <div className="px-4">
-                    {row.getValue('classification') === 'PROGRAM' ? 'Research' : 'Activity'}
+                    {row.getValue('classification') === 'PROGRAM'
+                        ? 'Research'
+                        : 'Activity'}
                 </div>
             ),
         },
@@ -104,9 +125,25 @@ export function ProgramsTable({ programs, site_code }: ProgramsTableProps) {
         {
             accessorKey: 'fiscal_year',
             header: 'Fiscal Year',
-            cell: ({ row }) => (
-                <div className="text-center">{row.getValue('fiscal_year')}</div>
-            ),
+            cell: ({ row }) => {
+                const year = row.getValue('fiscal_year') as number;
+                const fiscalYear = fiscalYearMap.get(year);
+                return (
+                    <div className="flex items-center justify-center gap-2">
+                        <span>FY{year}</span>
+                        {fiscalYear &&
+                            (fiscalYear.is_closed ? (
+                                <Badge variant="secondary" className="text-xs">
+                                    Closed
+                                </Badge>
+                            ) : (
+                                <Badge variant="default" className="text-xs">
+                                    Open
+                                </Badge>
+                            ))}
+                    </div>
+                );
+            },
         },
         {
             accessorKey: 'total_budget',
@@ -206,8 +243,16 @@ export function ProgramsTable({ programs, site_code }: ProgramsTableProps) {
         },
     ];
 
+    // Filter programs by fiscal year before passing to table
+    const filteredPrograms =
+        selectedFiscalYear === 'all'
+            ? programs
+            : programs.filter(
+                  (p) => p.fiscal_year.toString() === selectedFiscalYear,
+              );
+
     const table = useReactTable({
-        data: programs,
+        data: filteredPrograms,
         columns,
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
@@ -227,7 +272,7 @@ export function ProgramsTable({ programs, site_code }: ProgramsTableProps) {
 
     return (
         <div className="w-full">
-            <div className="flex items-center py-4">
+            <div className="flex items-center gap-4 py-4">
                 <div className="relative max-w-sm flex-1">
                     <Search className="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -239,6 +284,23 @@ export function ProgramsTable({ programs, site_code }: ProgramsTableProps) {
                         className="pl-8"
                     />
                 </div>
+                <Select
+                    value={selectedFiscalYear}
+                    onValueChange={setSelectedFiscalYear}
+                >
+                    <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Fiscal Year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Fiscal Years</SelectItem>
+                        {fiscal_years.map((fy) => (
+                            <SelectItem key={fy.id} value={fy.year.toString()}>
+                                FY{fy.year}{' '}
+                                {fy.is_closed ? '(Closed)' : '(Open)'}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="ml-auto">

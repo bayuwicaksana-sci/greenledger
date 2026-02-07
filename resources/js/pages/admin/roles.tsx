@@ -1,3 +1,4 @@
+import { Head } from '@inertiajs/react';
 import axios from 'axios';
 import { Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -10,7 +11,6 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import MainLayout from '@/layouts/main-layout';
 import type { BreadcrumbItem, Role } from '@/types';
-import { Head } from '@inertiajs/react';
 
 export default function RoleConfiguration() {
     const [roles, setRoles] = useState<Role[]>([]);

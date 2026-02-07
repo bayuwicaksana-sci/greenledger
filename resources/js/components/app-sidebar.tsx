@@ -1,3 +1,5 @@
+import { usePage } from '@inertiajs/react';
+import { ArrowLeftCircle } from 'lucide-react';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
@@ -8,9 +10,7 @@ import {
 } from '@/components/ui/sidebar';
 import { mapNavigationIcons } from '@/lib/navigation-icons';
 import { mainDashboard } from '@/routes';
-import { SharedData } from '@/types';
-import { usePage } from '@inertiajs/react';
-import { ArrowLeftCircle } from 'lucide-react';
+import type { SharedData } from '@/types';
 import { NavFooter } from './nav-footer';
 import { SiteSwitcher } from './site-switcher';
 

@@ -1,3 +1,5 @@
+import { Head, Link } from '@inertiajs/react';
+import { Edit } from 'lucide-react';
 import { StatusBadge } from '@/components/dashboard/atoms/StatusBadge';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,12 +11,6 @@ import {
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import {
-    Tabs,
-    TabsContent,
-    TabsList,
-    TabsTrigger,
-} from '@/components/ui/tabs';
-import {
     Table,
     TableBody,
     TableCell,
@@ -22,12 +18,16 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import {
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+} from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import programRoutes from '@/routes/programs';
-import { BreadcrumbItem } from '@/types';
+import type { BreadcrumbItem } from '@/types';
 import { ProgramWithRelations } from '@/types/programs';
-import { Head, Link } from '@inertiajs/react';
-import { Edit } from 'lucide-react';
 
 export default function ProgramShow({
     site_code,

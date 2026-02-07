@@ -1,7 +1,7 @@
+import { AlertTriangle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Empty } from '@/components/ui/empty';
 import type { SettlementData } from '@/types/dashboard';
-import { AlertTriangle, CheckCircle } from 'lucide-react';
 import { AlertItem } from '../molecules/AlertItem';
 import { Widget } from './Widget';
 

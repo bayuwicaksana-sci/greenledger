@@ -1,5 +1,5 @@
-import type { RaDashboardData } from '@/types/dashboard';
 import { Users } from 'lucide-react';
+import type { RaDashboardData } from '@/types/dashboard';
 import { MetricValue } from '../atoms/MetricValue';
 import { ProgramsWidget } from '../organisms/ProgramsWidget';
 import { QuickStatsRow } from '../organisms/QuickStatsRow';

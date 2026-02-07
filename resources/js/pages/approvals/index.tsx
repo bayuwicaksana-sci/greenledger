@@ -1,14 +1,3 @@
-import { Badge } from '@/components/ui/badge';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
-import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem, PaginatedResponse, SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
 import {
@@ -19,7 +8,18 @@ import {
 import { format } from 'date-fns';
 import { FileCheck } from 'lucide-react';
 import { useMemo } from 'react';
+import { Badge } from '@/components/ui/badge';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import AppLayout from '@/layouts/app-layout';
 import { index as approvalsIndex, show } from '@/routes/approvals';
+import type { BreadcrumbItem, PaginatedResponse, SharedData } from '@/types';
 
 interface ApprovalInstance {
     id: number;

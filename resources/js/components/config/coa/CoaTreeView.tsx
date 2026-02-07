@@ -1,3 +1,7 @@
+import { Link, router } from '@inertiajs/react';
+import { type VisibilityState } from '@tanstack/react-table';
+import { ChevronDown, ChevronRight, Edit, Trash2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Table,
@@ -8,11 +12,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import config from '@/routes/config';
-import { CoaAccount, Site } from '@/types';
-import { Link, router } from '@inertiajs/react';
-import { type VisibilityState } from '@tanstack/react-table';
-import { ChevronDown, ChevronRight, Edit, Trash2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import type { CoaAccount, Site } from '@/types';
 
 interface CoaTreeViewProps {
     accounts: CoaAccount[];

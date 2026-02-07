@@ -1,6 +1,6 @@
-import MainLayout from '@/layouts/main-layout';
-import { BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
+import MainLayout from '@/layouts/main-layout';
+import type { BreadcrumbItem } from '@/types';
 
 export default function AccessLogs() {
     const breadcrumbs: BreadcrumbItem[] = [

@@ -1,7 +1,7 @@
+import { ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CardDescription, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
 
 interface WidgetHeaderProps {
     title: string;

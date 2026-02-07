@@ -1,3 +1,4 @@
+import { usePage } from '@inertiajs/react';
 import {
     Building2,
     Eye,
@@ -20,7 +21,6 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { User } from '@/types/users';
-import { usePage } from '@inertiajs/react';
 
 interface UserActionsMenuProps {
     user: User;

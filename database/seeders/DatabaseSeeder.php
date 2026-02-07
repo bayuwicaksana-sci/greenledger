@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             ProgramSeeder::class,
             RolePermissionSeeder::class,
             ApprovalPermissionsSeeder::class,
+            SiteCoaSeeder::class,
         ]);
     }
 }

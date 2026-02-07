@@ -1,3 +1,5 @@
+import { Head, Link, usePage } from '@inertiajs/react';
+import { Warehouse } from 'lucide-react';
 import PageHeader from '@/components/page/page-header';
 import PageLayout from '@/components/page/page-layout';
 import { StationTable } from '@/components/research-station/station-table';
@@ -12,9 +14,7 @@ import {
 } from '@/components/ui/empty';
 import MainLayout from '@/layouts/main-layout';
 import { mainDashboard, researchStations } from '@/routes';
-import { BreadcrumbItem, SharedData } from '@/types';
-import { Head, Link, usePage } from '@inertiajs/react';
-import { Warehouse } from 'lucide-react';
+import type { BreadcrumbItem, SharedData } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {

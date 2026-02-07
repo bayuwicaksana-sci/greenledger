@@ -12,31 +12,19 @@ class FiscalYearSeeder extends Seeder
      */
     public function run(): void
     {
+        // Only seed if no fiscal years exist
+        // Future years should be created via the admin UI, not auto-seeded
+        if (FiscalYear::count() > 0) {
+            return;
+        }
+
         $currentYear = (int) date('Y');
 
-        FiscalYear::upsert(
-            [
-                [
-                    'year' => $currentYear - 1,
-                    'start_date' => ($currentYear - 1).'-01-01',
-                    'end_date' => ($currentYear - 1).'-12-31',
-                    'is_closed' => true,
-                ],
-                [
-                    'year' => $currentYear,
-                    'start_date' => $currentYear.'-01-01',
-                    'end_date' => $currentYear.'-12-31',
-                    'is_closed' => false,
-                ],
-                [
-                    'year' => $currentYear + 1,
-                    'start_date' => ($currentYear + 1).'-01-01',
-                    'end_date' => ($currentYear + 1).'-12-31',
-                    'is_closed' => false,
-                ],
-            ],
-            ['year'],
-            ['start_date', 'end_date', 'is_closed'],
-        );
+        FiscalYear::create([
+            'year' => $currentYear,
+            'start_date' => $currentYear.'-01-01',
+            'end_date' => $currentYear.'-12-31',
+            'is_closed' => false,
+        ]);
     }
 }

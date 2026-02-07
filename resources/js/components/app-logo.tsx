@@ -1,5 +1,5 @@
-import { SharedData } from '@/types';
 import { usePage } from '@inertiajs/react';
+import type { SharedData } from '@/types';
 
 export default function AppLogo() {
     const { name } = usePage<SharedData>().props;
