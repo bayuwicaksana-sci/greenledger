@@ -1,371 +1,575 @@
 ## Context
 
-The application has a foundational `FiscalYear` model with database schema (`fiscal_years` table with `id`, `year`, `start_date`, `end_date`, `is_closed`, timestamps, soft deletes) and relationships to `programs` and `coa_budget_allocations`. Basic fiscal year filtering exists in the COA controller and comprehensive tests validate year-scoped queries (`CoaFiscalYearScopingTest`). However, there is no UI for managing fiscal years, no year-end closing workflow, and limited multi-year reporting capabilities.
+The application needs fiscal year to function as a **container/partition model** (PRD-aligned) rather than just a timeline marker. Current architecture has COA accounts at site-level with weak fiscal year binding via integer column, preventing true year-over-year isolation, COA evolution per fiscal year, and proper budget commitment tracking (Allocated → Committed → Realized).
 
 **Current State:**
 
-- Database foundation complete with foreign key constraints
-- `FiscalYearSeeder` creates current-1, current, and current+1 years
-- Programs are bound to fiscal years at creation via `programs.fiscal_year` column
-- Budget allocations tracked per FY via `coa_budget_allocations.fiscal_year_id`
-- All ledger entries follow program's fiscal year (not transaction date)
+-Database foundation exists (`fiscal_years` table with basic schema)
+
+- COA accounts are site-level (`site_id` only, **NO fiscal_year_id**)
+- Programs weakly bound via `fiscal_year` integer column (not FK)
+- Budget allocations correctly use `fiscal_year_id` FK
+- Budget tracking is 2-state: Allocated → Realized (missing "Committed" state)
+- `FiscalYearSeeder` creates multiple years automatically
+
+**Required Changes:**
+
+- Add `fiscal_year_id` FK to `coa_accounts` - each FY gets own COA copy
+- Change `programs.fiscal_year` integer to `fiscal_year_id` FK
+- Add `budget_commitments` table for 3-state budget tracking
+- Implement COA templating to copy structure from previous FY
+- Clean slate migration: existing COA assigned to current FY
 
 **Constraints:**
 
-- Must support flexible fiscal year periods (not just calendar years)
-- Year code derived from `start_date` year (user clarification)
-- Closing actions must be user-selectable, not hardcoded
-- Cannot delete fiscal years with associated programs
-- All admin operations require permission checks
+- Breaking schema changes require careful migration
+- Must preserve existing program/budget data during migration
+- COA unique constraint must include fiscal_year_id (allows same code across years)
+- Cannot delete fiscal years with associated COA accounts or programs
+- All operations require fiscal year context
 
 **Stakeholders:**
 
-- System Administrators (Manager, AVP) who close fiscal years
-- Finance Operation who generate historical reports
-- Research Associates/Officers who need FY context when creating programs
+- System Administrators who manage fiscal year lifecycle
+- Finance Operations who need commitment tracking
+- Research Managers who need COA per fiscal year
+- Developers who implement PRD requirements
 
 ## Goals / Non-Goals
 
 **Goals:**
 
-- Enable admin UI for fiscal year lifecycle management (create, edit, close, reopen)
-- Implement flexible year-end closing with user-selected actions and validation
-- Provide multi-year financial analysis and historical reporting
-- Enforce fiscal year rules on program creation (block closed FYs unless override)
-- Maintain complete audit trail for all fiscal year operations
+- Fiscal year as primary container - nothing exists without FY context
+- COA per fiscal year with templating/copying mechanism
+- 3-state budget tracking: Allocated → Committed → Realized
+- Strong FK relationships for data integrity
+- Year-end closing workflow with validation
+- Historical reporting with cross-year COA comparison
+- Clean migration path for existing data
 
 **Non-Goals:**
 
-- Automatic fiscal year creation (manual via admin UI only)
-- Transaction reassignment to different fiscal years (deferred to Phase 5)
-- Multi-year budget allocation UI for programs (simplified: programs bound to one FY)
+- Full PR/PO procurement system (commitment tracking only, PRs deferred)
+- Automatic fiscal year creation (manual via admin UI)
+- Multi-year budget allocation for single program
+- Transaction reassignment between fiscal years
 - Integration with external accounting systems
-- Scheduled year-end closing (admin triggers manually)
 
 ## Decisions
 
-### Decision 1: Service Layer for Year-End Closing Logic
+### Decision 1: COA Per Fiscal Year (PRD Full Partition Model)
 
-**Choice:** Create `FiscalYearService` to encapsulate closing logic rather than putting it in the controller.
-
-**Rationale:**
-
-- Year-end closing involves complex orchestration (validation, conditional actions, report generation, audit logging)
-- Service layer keeps controller thin and makes logic testable in isolation
-- Allows reuse if closing is triggered from multiple entry points (UI, CLI command)
-- Follows existing pattern in the codebase (e.g., approval workflows use service layer)
-
-**Alternatives Considered:**
-
-- **Controller-based logic**: Rejected because it mixes HTTP concerns with business logic
-- **Event-driven**: Rejected as overkill for this use case; no need for async processing
-
-### Decision 2: Checkbox-Based Closing Actions (No Presets)
-
-**Choice:** Store closing options as checkbox selections in request, execute selected actions dynamically.
+**Choice:** Add `fiscal_year_id` FK to `coa_accounts` table. Each fiscal year gets its own complete COA structure.
 
 **Rationale:**
 
-- User requirements specify "user discretion" for what happens during close
-- Different organizations may have different year-end processes
-- Flexible approach allows admin to close "cleanly" (archive everything) or "soft close" (just mark as closed)
-- Avoids hardcoding assumptions about year-end procedures
+- Aligns with PRD requirement: "fiscal year as container, nothing exists without FY"
+- Allows COA evolution year-over-year (add/remove accounts per year)
+- True data isolation between fiscal years
+- Historical integrity preserved (can't modify closed year's COA)
+- Supports organizational changes in chart of accounts structure
 
 **Implementation:**
 
 ```php
-// CloseFiscalYearRequest
-public function rules(): array {
+// Migration
+Schema::table('coa_accounts', function (Blueprint $table) {
+    $table
+        ->foreignId('fiscal_year_id')
+        ->after('site_id')
+        ->constrained('fiscal_years')
+        ->restrictOnDelete();
+
+    // Update unique constraint
+    $table->dropUnique(['site_id', 'account_code']);
+    $table->unique(['site_id', 'fiscal_year_id', 'account_code']);
+});
+```
+
+**Data Migration Strategy:**
+
+```php
+// Assign all existing COA accounts to current active FY
+$currentFY = FiscalYear::where('is_closed', false)
+    ->orderBy('year', 'desc')
+    ->first();
+CoaAccount::whereNull('fiscal_year_id')->update([
+    'fiscal_year_id' => $currentFY->id,
+]);
+```
+
+**Alternatives Considered:**
+
+- **Template Model** (COA site-level, only budgets per FY): Rejected - doesn't meet PRD requirement for full isolation
+- **Shared COA with versioning**: Rejected - too complex, doesn't provide true isolation
+
+### Decision 2: COA Templating/Copying Mechanism
+
+**Choice:** Implement "Copy COA from Previous Year" workflow in `FiscalYearService`.
+
+**Rationale:**
+
+- Creating complete COA manually for each new FY is tedious
+- Most organizations use similar COA structure year-over-year
+- Copying provides baseline that can be edited before year activation
+- Maintains data isolation while reducing admin burden
+
+**Implementation:**
+
+```php
+// In FiscalYearService
+public function copyCoaStructure(FiscalYear $sourceFY, FiscalYear $targetFY): int
+{
+    $sourceAccounts = $sourceFY->coaAccounts()->get();
+    $copiedCount = 0;
+
+    foreach ($sourceAccounts as $account) {
+        CoaAccount::create([
+            'site_id' => $account->site_id,
+            'fiscal_year_id' => $targetFY->id,
+            'account_code' => $account->account_code,
+            'account_name' => $account->account_name,
+            'account_type' => $account->account_type,
+            // ... copy structure, budgets set separately
+            'is_active' => false, // New year accounts start inactive
+        ]);
+        $copiedCount++;
+    }
+
+    return $copiedCount;
+}
+```
+
+**UI Flow:**
+
+1. Admin creates new fiscal year (e.g., 2027)
+2. System detects no COA accounts for FY 2027
+3. Shows "Copy from Previous Year" button
+4. Admin selects source FY (e.g., 2026) and confirms
+5. System copies all COA structure to new FY
+6. Admin can edit/add/remove accounts before activating FY
+
+**Alternatives Considered:**
+
+- **Auto-copy on FY creation**: Rejected - admin should explicitly choose
+- **COA templates library**: Deferred to future, simple copy sufficient for now
+
+### Decision 3: Programs Use FK Relationship (Not Integer)
+
+**Choice:** Change `programs.fiscal_year` from integer to `fiscal_year_id` foreign key.
+
+**Rationale:**
+
+- Enforces referential integrity at database level
+- Prevents orphaned programs if FY deleted
+- Enables proper cascade rules (RESTRICT on delete)
+- Follows Laravel/database best practices
+- Simplifies relationship queries (no manual year matching)
+
+**Migration Strategy:**
+
+```php
+// Add new FK column
+Schema::table('programs', function (Blueprint $table) {
+    $table->foreignId('fiscal_year_id')->nullable()->constrained();
+});
+
+// Migrate data: match year integers to fiscal_years table
+DB::statement('
+    UPDATE programs p
+    SET fiscal_year_id = (SELECT id FROM fiscal_years WHERE year = p.fiscal_year)
+');
+
+// Drop old column, make new one required
+Schema::table('programs', function (Blueprint $table) {
+    $table->dropColumn('fiscal_year');
+    $table->foreignId('fiscal_year_id')->nullable(false)->change();
+});
+```
+
+**Model Update:**
+
+```php
+// BEFORE
+public function fiscalYear(): BelongsTo {
+    return $this->belongsTo(FiscalYear::class, 'fiscal_year', 'year');
+}
+
+// AFTER
+public function fiscalYear(): BelongsTo {
+    return $this->belongsTo(FiscalYear::class, 'fiscal_year_id');
+}
+```
+
+**Alternatives Considered:**
+
+- **Keep integer, add index**: Rejected - no integrity enforcement
+- **Keep both columns**: Rejected - data duplication, maintenance burden
+
+### Decision 4: 3-State Budget Tracking (Commitment Model)
+
+**Choice:** Add `budget_commitments` table to track Reserved/Committed funds separately from Realized amounts.
+
+**Rationale:**
+
+- **PRD Requirement**: Track Allocated → Committed → Realized flow
+- **Business Need**: Know "what's promised but not yet spent" (approved PRs, reserved funds)
+- **Available Balance**: Should be `Allocated - Committed` (not `Allocated - Realized`) to prevent over-committing
+- **Future-Proof**: Foundation for PR/PO system without building full procurement now
+
+**Schema:**
+
+```php
+Schema::create('budget_commitments', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('fiscal_year_id')->constrained()->restrictOnDelete();
+    $table->foreignId('program_id')->constrained()->restrictOnDelete();
+    $table->foreignId('coa_account_id')->constrained()->restrictOnDelete();
+    $table->decimal('amount', 15, 2);
+    $table->string('description');
+    $table->string('status'); // PENDING, COMMITTED, RELEASED
+    $table->date('commitment_date');
+    $table->foreignId('committed_by')->nullable()->constrained('users');
+    $table->timestamps();
+    $table->softDeletes();
+});
+```
+
+**Status Lifecycle:**
+
+- `PENDING`: Commitment created, awaiting approval
+- `COMMITTED`: Approved, funds reserved (counts toward Available calculation)
+- `RELEASED`: Cancelled or moved to realized (freed up for other use)
+
+**Budget Calculation:**
+
+```php
+// In FiscalYearService
+public function calculateBudgetMetrics(FiscalYear $fy): array {
+    $allocated = $fy->budgetAllocations()->sum('budget_amount');
+    $committed = $fy->budgetCommitments()->where('status', 'COMMITTED')->sum('amount');
+    $realized = // sum of actual transactions
+
     return [
-        'notes' => 'nullable|string|max:1000',
-        'options' => 'required|array',
-        'options.archive_completed_programs' => 'boolean',
-        'options.block_new_programs' => 'boolean',
-        'options.block_new_transactions' => 'boolean',
-        'options.generate_report' => 'boolean',
-        'options.send_notifications' => 'boolean',
+        'allocated' => $allocated,
+        'committed' => $committed,
+        'realized' => $realized,
+        'available' => $allocated - $committed, // KEY: Not Allocated - Realized
+        'utilization_rate' => ($committed / $allocated) * 100,
     ];
 }
 ```
 
 **Alternatives Considered:**
 
-- **Predefined close modes** (e.g., "soft", "hard"): Rejected as too rigid
-- **Post-close actions**: Rejected because admin should decide upfront
+- **Wait for full PR system**: Rejected - need commitment tracking now
+- **Use "pending" flag on allocations**: Rejected - doesn't track multiple commitments per account
+- **Spreadsheet tracking**: Rejected - not integrated, no validation
 
-### Decision 3: Validation Rules Enforced at Multiple Layers
+### Decision 5: Clean Slate Migration (Not Backward Compatible)
 
-**Choice:** Enforce fiscal year rules at request validation, policy, and database constraint levels.
+**Choice:** Implement breaking changes with clean migration. Existing data migrated to new structure, but old schema not preserved.
 
 **Rationale:**
 
-- Defense in depth: multiple layers prevent invalid state
-- Request validation provides user-friendly error messages
-- Policies enforce authorization logic (e.g., `fiscal-year.close` permission)
-- Database constraints (foreign keys, unique year) prevent data corruption
+- **User Decision**: "Clean slate" migration strategy chosen
+- Trying to maintain backward compatibility would double complexity
+- Current deployment likely doesn't have production data yet
+- Clear migration path easier to reason about and test
+- Future is container model, not transitional hybrid
 
-**Example:**
+**Migration Path:**
 
-```php
-// In StoreProgramRequest
-public function rules(): array {
-    return [
-        'fiscal_year' => [
-            'required',
-            'integer',
-            'exists:fiscal_years,year',
-            function ($attribute, $value, $fail) {
-                $fy = FiscalYear::where('year', $value)->first();
-                if ($fy && $fy->is_closed && !auth()->user()->can('program.override-closed-fy')) {
-                    $fail("Fiscal year {$value} is closed. Cannot create programs.");
-                }
-            },
-        ],
-    ];
-}
-```
+1. Identify current active fiscal year
+2. Assign all existing `coa_accounts` to that FY
+3. Migrate `programs.fiscal_year` integers to FK via year matching
+4. Create `budget_commitments` table (empty, ready for use)
+5. Update unique constraints and indexes
+6. Drop old columns after data migration
+
+**Rollback Plan:**
+
+- Migrations have `down()` methods to reverse changes
+- If issues found, can rollback database and fix before re-migrating
+- Keep backup of pre-migration state
 
 **Alternatives Considered:**
 
-- **Middleware-only validation**: Rejected because request classes provide better error messages
-- **Database-only constraints**: Rejected because they don't provide user-friendly feedback
+- **Dual-write period** (support both old and new): Rejected - too complex
+- **Gradual migration** (feature flags): Rejected - clean break simpler
 
-### Decision 4: Historical Reporting via Dedicated Page (Not Just Dashboard Enhancement)
+### Decision 6: Fiscal Year Seeder - Single Year Only
 
-**Choice:** Create `/reports/historical` page in addition to enhancing existing dashboards.
-
-**Rationale:**
-
-- User requirements specify "create separate historical reporting page"
-- Dedicated page allows deeper analysis without cluttering main dashboard
-- Dashboard enhancements (FY selector, trend charts) provide quick overview
-- Historical page provides detailed year-over-year tables and Excel export
-
-**Both Approaches:**
-
-1. **Dashboard enhancement**: Add `FiscalYearSelector` component, show current FY data, display trend lines
-2. **Dedicated page**: Multi-year comparison tables, drill-down by account/program, export functionality
-
-**Alternatives Considered:**
-
-- **Dashboard-only**: Rejected per user requirements
-- **Historical page only**: Rejected because users need quick FY switching in daily workflow
-
-### Decision 5: Soft Delete Prevention for Fiscal Years with Programs
-
-**Choice:** Prevent deletion (even soft delete) of fiscal years that have associated programs. Show error with program count.
+**Choice:** Update `FiscalYearSeeder` to create only current year if none exists. Remove auto-creation of past/future years.
 
 **Rationale:**
 
-- Fiscal year is part of program's identity (referenced in ledger scoping)
-- Soft deleting FY would break program display and reporting
-- Better to mark as closed and keep historical record intact
-- If truly needed, admin must manually reassign programs first
+- Per implementation plan: "Clean slate - future years created via UI"
+- Admin should explicitly create fiscal years as needed
+- Prevents assumption about organizational fiscal year structure
+- Each new FY requires COA copying decision (manual trigger)
 
 **Implementation:**
 
 ```php
-// In FiscalYearController@destroy
+// In FiscalYearSeeder
+public function run(): void {
+    if (FiscalYear::count() > 0) {
+        return; // Only seed if empty
+    }
+
+    $currentYear = (int) date('Y');
+    FiscalYear::create([
+        'year' => $currentYear,
+        'start_date' => "{$currentYear}-01-01",
+        'end_date' => "{$currentYear}-12-31",
+        'is_closed' => false,
+    ]);
+}
+```
+
+**Future Years Workflow:**
+
+1. Admin goes to `/admin/fiscal-years`
+2. Clicks "Create New Fiscal Year"
+3. Enters year, start/end dates
+4. Clicks "Copy COA from Previous Year" (optional)
+5. Reviews/edits COA structure
+6. Activates fiscal year
+
+**Alternatives Considered:**
+
+- **Auto-create next year at year-end**: Rejected - admin might want Feb-to-Feb FY
+- **Pre-seed 3 years**: Rejected per implementation plan
+
+### Decision 7: Deletion Prevention with Usage Checks
+
+**Choice:** Prevent deletion of fiscal years that have associated COA accounts or programs. Soft delete also blocked.
+
+**Rationale:**
+
+- Deleting FY with COA would orphan budget allocations
+- Deleting FY with programs would break ledger scoping
+- Better to mark as closed and preserve historical record
+- If deletion truly needed, requires manual cleanup first (admin knows impact)
+
+**Implementation:**
+
+```php
+// In FiscalYearController
 public function destroy(FiscalYear $fiscalYear) {
+    $coaCount = $fiscalYear->coaAccounts()->count();
     $programCount = $fiscalYear->programs()->count();
-    if ($programCount > 0) {
-        return redirect()->back()->with('error',
-            "Cannot delete fiscal year {$fiscalYear->year}. It has {$programCount} associated programs."
+
+    if ($coaCount > 0 || $programCount > 0) {
+        return back()->with('error',
+            "Cannot delete FY {$fiscalYear->year}. " .
+            "Has {$coaCount} COA accounts and {$programCount} programs."
         );
     }
 
     $fiscalYear->delete();
-    return redirect()->route('admin.fiscal-years.index')
-        ->with('success', 'Fiscal year deleted successfully.');
+    return redirect()->route('fiscal-years.index')
+        ->with('success', 'Fiscal year deleted.');
 }
 ```
 
-**Alternatives Considered:**
+**UI Indication:**
 
-- **Cascade soft delete**: Rejected because programs shouldn't be deleted with FY
-- **Orphan programs**: Rejected because programs must always have a fiscal year
-
-### Decision 6: Year Code Auto-Calculated from Start Date
-
-**Choice:** When creating fiscal year, `year` field is auto-calculated from `start_date->format('Y')` and displayed read-only.
-
-**Rationale:**
-
-- User clarification: "year to be used as code is the start date year"
-- Prevents confusion and data entry errors
-- Ensures consistency between year code and date range
-- Simplifies validation (only need to validate date range, year follows)
-
-**UI Flow:**
-
-1. Admin enters start_date (e.g., 2026-06-01)
-2. System auto-fills year = 2026 (read-only field)
-3. Admin enters end_date (e.g., 2027-06-30)
-4. Validation: end_date > start_date ✓
+- Delete button disabled if FY has data
+- Tooltip explains: "Cannot delete - has X accounts and Y programs"
+- For empty FY (e.g., accidentally created), deletion allowed
 
 **Alternatives Considered:**
 
-- **Manual year entry**: Rejected because prone to human error
-- **Year derived from end_date**: Rejected per user clarification
+- **Cascade delete**: Rejected - too dangerous, data loss
+- **Orphan data**: Rejected - violates container model
+- **Archive instead of delete**: Considered, but closed status serves this purpose
 
-## Risks / Trade-offs
+## Data Model Diagrams
 
-### Risk 1: Admin Closes Fiscal Year with Active Programs
+### Entity Relationship (Refined)
 
-**Risk:** Admin closes FY2026 while 12 programs are still active. This could cause confusion or reporting issues.
+```
+┌─────────────────┐
+│  FiscalYear     │
+│  id (PK)        │──┐
+│  year           │  │
+│  start_date     │  │
+│  end_date       │  │
+│  is_closed      │  │
+└─────────────────┘  │
+                     │
+         ┌───────────┴───────────┬───────────────┐
+         │                       │               │
+         ▼                       ▼               ▼
+┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐
+│  CoaAccount      │  │  Program         │  │  BudgetCommitment│
+│  id (PK)         │  │  id (PK)         │  │  id (PK)         │
+│  site_id (FK)    │  │  site_id (FK)    │  │  fiscal_year_id  │
+│  fiscal_year_id ━╋  │  fiscal_year_id ━╋  │  program_id (FK) │
+│  account_code    │  │  program_code    │  │  coa_account_id  │
+│  account_name    │  │  status          │  │  amount          │
+│  ...             │  │  ...             │  │  status          │
+└──────────────────┘  └──────────────────┘  └──────────────────┘
+         │
+         │
+         ▼
+┌──────────────────────┐
+│  CoaBudgetAllocation │
+│  id (PK)             │
+│  coa_account_id (FK)━│
+│  fiscal_year_id (FK)━│
+│  budget_amount       │
+└──────────────────────┘
+```
 
-**Mitigation:**
+**Key Changes from Current:**
 
-- Pre-close validation displays warning with active program count
-- Provide "block new transactions" option to soft-lock active programs
-- Allow closing anyway (user discretion) but require notes field for audit
-- Docs/training emphasize completing programs before year-end
+- **CoaAccount** now has `fiscal_year_id` FK (new!)
+- **Program** uses `fiscal_year_id` FK (changed from integer)
+- **BudgetCommitment** table added (new!)
+- All entities bound to FiscalYear via proper FKs
 
-### Risk 2: Performance Impact of Multi-Year Reporting Queries
+### Budget Flow Diagram
 
-**Risk:** Historical reporting page queries multiple years of data. With 3+ years and thousands of transactions, queries could be slow.
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Fiscal Year Budget                        │
+│                 (From budget_allocations)                    │
+│                                                               │
+│  Total Allocated: $15,000,000                                │
+└───────────┬─────────────────────────────────────────────────┘
+            │
+            ├──► COMMITTED (budget_commitments where status=COMMITTED)
+            │    $8,000,000
+            │     └─► Available = Allocated - Committed
+            │         $7,000,000  ← Can still commit new PRs
+            │
+            └──► REALIZED (actual transactions/payments)
+                 $5,000,000
+                  └─► Outstanding Obligations = Committed - Realized
+                      $3,000,000  ← Approved but not yet paid
+```
 
-**Mitigation:**
+**3-State Model:**
 
-- Use eager loading and indexed queries (fiscal_year column already indexed via FK)
-- Implement pagination for detailed drill-downs
-- Cache year-over-year summary data (invalidate on transaction changes)
-- Provide date range filter to limit query scope
-- Monitor query performance and add composite indexes if needed
+1. **Allocated**: Total budget assigned (from allocations table)
+2. **Committed**: Funds reserved (approved PRs, commitments table)
+3. **Realized**: Funds actually spent (payment/transaction tables)
 
-### Risk 3: Permission Confusion (Who Can Close?)
+**Key Metric:**
 
-**Risk:** Multiple roles might expect access to year-end closing, leading to permission conflicts or audit issues.
+- `Available Balance = Allocated - Committed`
+- NOT `Allocated - Realized` (old 2-state model)
 
-**Mitigation:**
+## Technical Specifications
 
-- Clear permission structure: `fiscal-year.close` (Manager, AVP), `fiscal-year.reopen` (emergency only, AVP)
-- Document role assignments in seed data and RBAC guide
-- UI shows permission requirements on buttons ("Requires: fiscal-year.close")
-- Audit log captures all close/reopen actions with user ID
+### Database Schema Changes
 
-### Risk 4: Closed FY Blocking Legitimate Corrections
+#### Migration 1: Add fiscal_year_id to coa_accounts
 
-**Risk:** FY2026 is closed, but Finance discovers a data entry error in a 2026 program. They cannot correct it.
+```sql
+ALTER TABLE coa_accounts
+ADD COLUMN fiscal_year_id BIGINT UNSIGNED NOT NULL;
 
-**Rationale (Trade-off Accepted):**
+ALTER TABLE coa_accounts
+ADD CONSTRAINT fk_coa_fiscal_year
+FOREIGN KEY (fiscal_year_id) REFERENCES fiscal_years(id) ON DELETE RESTRICT;
 
-- Closed fiscal years should be immutable for audit compliance
-- If corrections needed, admin can reopen FY, make changes, and re-close
-- `fiscal-year.reopen` permission restricted to senior admins
-- Alternative: Transaction reassignment feature (Phase 5, deferred)
-- Audit log captures all reopen actions for compliance
+-- Update unique constraint
+ALTER TABLE coa_accounts DROP CONSTRAINT coa_accounts_site_id_account_code_unique;
+ALTER TABLE coa_accounts ADD UNIQUE (site_id, fiscal_year_id, account_code);
 
-### Risk 5: Seeder Creates Future Years Automatically
+CREATE INDEX idx_coa_fiscal_year ON coa_accounts(fiscal_year_id);
+```
 
-**Risk:** `FiscalYearSeeder` creates current+1 year with assumed dates (Jan-Dec). If org uses June-June, this is wrong.
+#### Migration 2: Change programs fiscal_year to FK
 
-**Mitigation:**
+```sql
+ALTER TABLE programs
+ADD COLUMN fiscal_year_id BIGINT UNSIGNED;
 
-- Update seeder to create only current year if none exists
-- Document that admins should manually create future years via UI
-- Alternative: Make seeder configurable with fiscal year period setting
-- For now: Accept that initial seed might need manual correction
+UPDATE programs p
+SET fiscal_year_id = (SELECT id FROM fiscal_years WHERE year = p.fiscal_year);
 
-## Migration Plan
+ALTER TABLE programs
+ADD CONSTRAINT fk_program_fiscal_year
+FOREIGN KEY (fiscal_year_id) REFERENCES fiscal_years(id) ON DELETE RESTRICT;
 
-**Phase 1: Backend Foundation (No UI)**
+ALTER TABLE programs DROP COLUMN fiscal_year;
+ALTER TABLE programs MODIFY fiscal_year_id BIGINT UNSIGNED NOT NULL;
+```
 
-1. Create `FiscalYearController` with CRUD routes (admin middleware)
-2. Create `FiscalYearService` with closing logic
-3. Create request classes with validation
-4. Add permissions to `RolePermissionSeeder`
-5. Write tests: `FiscalYearManagementTest`, `YearEndClosingTest`
-6. **Rollback:** Routes protected by admin middleware, no public-facing changes
+#### Migration 3: Create budget_commitments table
 
-**Phase 2: Admin UI**
+**File**: See implementation plan for full schema
 
-1. Create `/admin/fiscal-years` pages (index, create, edit, show)
-2. Implement close dialog with checkbox options
-3. Add `FiscalYearSelector` component
-4. **Rollback:** Delete new routes and pages, existing functionality unaffected
+### API Endpoints (New/Modified)
 
-**Phase 3: Program Validation Enhancement**
+```
+POST   /api/fiscal-years/{id}/copy-coa
+  - Request: {source_fiscal_year_id}
+  - Response: {copied_count, target_fiscal_year}
 
-1. Update `StoreProgramRequest` with closed FY validation
-2. Add FY period display to program pages
-3. Add FY filter to program index
-4. **Rollback:** Remove validation rule, revert program pages
+GET    /api/fiscal-years/{id}/budget-metrics
+  - Response: {allocated, committed, realized, available, utilization_rate}
 
-**Phase 4: Historical Reporting**
+POST   /api/budget-commitments
+  - Request: {fiscal_year_id, program_id, coa_account_id, amount, description}
+  - Response: {commitment}
 
-1. Create `/reports/historical` page with year-over-year table
-2. Enhance dashboard with FY selector
-3. Add trend charts to COA index
-4. **Rollback:** Delete reports route, revert dashboard changes
+DELETE /api/budget-commitments/{id}
+  - Changes status to RELEASED, not hard delete
+```
 
-**Phase 5: Documentation & Training**
+### Frontend Components
 
-1. Update admin guide with FY management procedures
-2. Create video walkthrough of year-end closing process
-3. Document permission requirements
+#### Budget Metrics Dashboard
 
-**Deployment Strategy:**
+```tsx
+<div className="grid grid-cols-4 gap-4">
+  <MetricCard title="Allocated" value={allocated} color="blue" />
+  <MetricCard title="Committed" value={committed} color="yellow" />
+  <MetricCard title="Realized" value={realized} color="green" />
+  <MetricCard title="Available" value={available} color="gray" />
+</div>
 
-- Deploy during low-traffic window (weekend)
-- Run migrations (none needed, schema already exists)
-- Seed permissions: `php artisan db:seed --class=RolePermissionSeeder`
-- Notify admins of new functionality
-- Monitor for errors in first week
+<ProgressBar
+  allocated={allocated}
+  sections={[
+    {label: 'Realized', value: realized, color: 'green'},
+    {label: 'Committed (Pending)', value: committed - realized, color: 'yellow'},
+    {label: 'Available', value: allocated - committed, color: 'gray'},
+  ]}
+/>
+```
 
-**Rollback Strategy:**
+#### Fiscal Year Selector (COA Pages)
 
-- If critical issues found, disable admin routes via middleware
-- Existing program/COA functionality unaffected (FY model already in use)
-- Database unchanged, no data loss risk
-- Re-enable after fixes deployed
+```tsx
+<Select
+    value={selectedFiscalYearId}
+    onChange={handleFiscalYearChange}
+    options={fiscalYears.map((fy) => ({
+        value: fy.id,
+        label: `FY ${fy.year} (${fy.is_closed ? 'Closed' : 'Active'})`,
+    }))}
+/>
+```
 
-## Open Questions
+## Testing Strategy
 
-### Q1: Should closed fiscal years be visible in FiscalYearSelector?
+- **Unit Tests**: Budget calculation logic, commitment status transitions
+- **Feature Tests**: COA copying, FY creation with validation, deletion prevention
+- **Migration Tests**: Verify data integrity after schema changes
+- **Integration Tests**: Full COA-to-Program-to-Budget flow within FY scope
 
-**Context:** When users filter programs or COA by fiscal year, should closed years appear in dropdown?
+## Deployment Checklist
 
-**Options:**
-
-- A) Show all years (open + closed), with badge indicating status
-- B) Show open years by default, "Show Closed" checkbox to reveal
-- C) Show last 3 years regardless of status (most common use case)
-
-**Recommendation:** Option A (show all with badges) for transparency. Users may need to reference closed years frequently.
-
-### Q2: What happens to budget allocations when FY closes?
-
-**Context:** `coa_budget_allocations` table links to `fiscal_year_id`. When FY closes, should allocations be locked?
-
-**Current Behavior:** No locks, allocations remain editable.
-
-**Question:** Should `is_closed` prevent editing of budget allocations for that FY?
-
-**Recommendation:** Yes, add validation in `CoaBudgetAllocationController` to check if linked FY is closed. Allow override with `fiscal-year.reopen` permission.
-
-### Q3: PDF Year-End Report Format?
-
-**Context:** Close dialog has "Generate year-end summary report" option. What should PDF contain?
-
-**Recommendation:**
-
-- Header: FY period, close date, closed by
-- Summary: Total programs, total revenue, total expenses, net income
-- Breakdown: Revenue by COA account, Expenses by COA account
-- Program list: All programs with status (completed/active/cancelled)
-- Budget utilization: Allocated vs. actual by site
-- Use Laravel Dompdf library
-
-### Q4: Notification Recipients for "Send Notifications" Option?
-
-**Context:** Close dialog allows sending notifications. Who should receive them?
-
-**Options:**
-
-- A) All users with `fiscal-year.view` permission
-- B) Managers and AVPs only
-- C) PIs of active programs in the closed FY
-- D) Configurable email list in system settings
-
-**Recommendation:** Option C (PIs of active programs) + option B (Managers/AVPs). Use Laravel notifications with database + email channels.
+1. Backup production database
+2. Run migrations in order (fiscal_year_id → programs FK → commitments table)
+3. Verify existing data migrated correctly
+4. Run test suite
+5. Check for orphaned records (should be none)
+6. Update factories for new schema

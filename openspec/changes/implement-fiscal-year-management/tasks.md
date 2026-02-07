@@ -1,233 +1,223 @@
-## 1. Backend Foundation - Controllers & Services
+## 1. Database Schema - Breaking Changes
 
-- [x] 1.1 Create `FiscalYearController` with resource routes (index, create, store, show, edit, update, destroy)
-- [x] 1.2 Add admin middleware to fiscal year routes in `routes/web.php`
-- [x] 1.3 Create `FiscalYearService` class with methods: close(), reopen(), validate(), generateYearEndReport()
-- [x] 1.4 Create `StoreFiscalYearRequest` with validation rules (start_date, end_date, auto-calculate year from start_date)
-- [x] 1.5 Create `UpdateFiscalYearRequest` with validation for editing dates
-- [x] 1.6 Create `CloseFiscalYearRequest` with validation for options array and notes field
-- [x] 1.7 Implement FiscalYearController@close action with pre-close validation
-- [x] 1.8 Implement FiscalYearController@reopen action with permission check
-- [x] 1.9 Add soft delete prevention logic in destroy method (check program count)
+- [ ] 1.1 Create migration: add `fiscal_year_id` to `coa_accounts` table with FK constraint
+- [ ] 1.2 Create migration: update `coa_accounts` unique constraint to include `fiscal_year_id`
+- [ ] 1.3 Create migration: add `fiscal_year_id` to `programs` table
+- [ ] 1.4 Create migration: migrate data from `programs.fiscal_year` integer to `fiscal_year_id` FK
+- [ ] 1.5 Create migration: drop `programs.fiscal_year` column after data migration
+- [ ] 1.6 Create migration: create `budget_commitments` table with full schema
+- [ ] 1.7 Add indexes: `coa_accounts.fiscal_year_id`, `budget_commitments.fiscal_year_id`, `budget_commitments.status`
 
-## 2. Permissions & Authorization
+## 2. Model Updates - Relationships & Scopes
 
-- [x] 2.1 Add fiscal year permissions to `lang/en/permissions.php`: fiscal-year.manage, fiscal-year.view, fiscal-year.close, fiscal-year.reopen
-- [x] 2.2 Add `reports.historical` permission to permissions file
-- [x] 2.3 Add `program.override-closed-fy` permission for creating programs in closed FYs
-- [x] 2.4 Update `RolePermissionSeeder` to assign fiscal-year.\* permissions to Manager and AVP roles
-- [x] 2.5 Assign reports.historical permission to Finance Operation, Manager, and AVP roles
-- [x] 2.6 Create or update `FiscalYearPolicy` with methods: viewAny, create, update, delete, close, reopen
-- [x] 2.7 Register FiscalYearPolicy in `AuthServiceProvider`
+- [ ] 2.1 Update `CoaAccount` model: add `fiscal_year_id` to fillable array
+- [ ] 2.2 Update `CoaAccount` model: add `fiscalYear()` BelongsTo relationship
+- [ ] 2.3 Update `CoaAccount` model: add `scopeForFiscalYear()` query scope
+- [ ] 2.4 Update `Program` model: update `fiscalYear()` relationship to use `fiscal_year_id` FK
+- [ ] 2.5 Update `Program` model: change `fiscal_year_id` in fillable (remove `fiscal_year` integer)
+- [ ] 2.6 Create `BudgetCommitment` model with relationships and status constants
+- [ ] 2.7 Update `FiscalYear` model: add `coaAccounts()` HasMany relationship
+- [ ] 2.8 Update `FiscalYear` model: add `budgetCommitments()` HasMany relationship
+- [ ] 2.9 Update `FiscalYear` model: add `getTotalCommittedAttribute()` accessor
 
-## 3. Year-End Closing Logic
+## 3. Factory Updates - Test Data Generation
 
-- [x] 3.1 Implement FiscalYearService@close() method with transaction wrapper
-- [x] 3.2 Add pre-close validation: count active programs, pending payment requests, unsettled transactions
-- [x] 3.3 Implement "Archive completed programs" action (query Program::completed(), update status to archived)
-- [x] 3.4 Implement "Block new programs" action (add validation in StoreProgramRequest)
-- [ ] 3.5 Implement "Block new transactions" action (add validation in PaymentRequestController and RevenueControllers)
-- [x] 3.6 Implement "Generate year-end report" action (call generateYearEndReport() method)
-- [x] 3.7 Implement "Send notifications" action (notify PIs, Managers, AVPs via Laravel notifications)
-- [x] 3.8 Add audit logging for close action (user_id, timestamp, options, notes, execution results)
-- [x] 3.9 Implement FiscalYearService@reopen() method with audit logging
-- [x] 3.10 Create notification class: FiscalYearClosedNotification with email and database channels
+- [ ] 3.1 Update `CoaAccountFactory`: add `fiscal_year_id` to definition
+- [ ] 3.2 Update `CoaAccountFactory`: create `forFiscalYear($fyId)` state method
+- [ ] 3.3 Update `ProgramFactory`: change `fiscal_year` integer to `fiscal_year_id`
+- [ ] 3.4 Update `ProgramFactory`: create `forFiscalYear($fyId)` state method
+- [ ] 3.5 Create `BudgetCommitmentFactory` with status states (pending, committed, released)
+- [ ] 3.6 Update `FiscalYearFactory`: add relationships seeding (no auto-seed of +1 year)
 
-## 4. Year-End Report Generation
+## 4. Seeder Updates - Clean Slate Approach
 
-- [x] 4.1 Install Laravel Dompdf package (`composer require barryvdh/laravel-dompdf`)
-- [x] 4.2 Create `FiscalYearReportGenerator` service class
-- [x] 4.3 Implement PDF report template view: resources/views/reports/fiscal-year-end.blade.php
-- [x] 4.4 Query and format report data: FY period, total programs, revenue/expense breakdown, budget utilization
-- [x] 4.5 Add program list to PDF with status indicators
-- [x] 4.6 Generate PDF and store in storage/app/fiscal-year-reports/ directory
-- [x] 4.7 Return PDF file path from generateYearEndReport() method
-- [x] 4.8 Add download link in fiscal year show page for generated reports
+- [ ] 4.1 Update `FiscalYearSeeder`: remove auto-creation of current-1, current+1 years
+- [ ] 4.2 Update `FiscalYearSeeder`: only create current year if none exists
+- [ ] 4.3 Update `SiteCoaSeeder`: require fiscal_year_id parameter, create accounts per FY
+- [ ] 4.4 Update `DatabaseSeeder`: ensure fiscal year seeded before COA seeder runs
+- [ ] 4.5 Create data migration seeder: assign existing COA to current fiscal year (one-time)
 
-## 5. Admin UI - Fiscal Year CRUD
+## 5. Service Layer - COA Copying & Budget Calculations
 
-- [x] 5.1 Create Inertia page: resources/js/pages/admin/fiscal-years/index.tsx (list view)
-- [x] 5.2 Create Inertia page: resources/js/pages/admin/fiscal-years/create.tsx (create form)
-- [x] 5.3 Create Inertia page: resources/js/pages/admin/fiscal-years/edit.tsx (edit form)
-- [x] 5.4 Create Inertia page: resources/js/pages/admin/fiscal-years/show.tsx (detail view with close button)
-- [x] 5.5 Implement fiscal year list table with columns: Year, Date Range, Status Badge, Program Count, Actions
-- [x] 5.6 Add search and filter controls: search by year, filter by status (open/closed)
-- [x] 5.7 Implement create form with start_date, end_date inputs; display auto-calculated year read-only
-- [x] 5.8 Add date range validation: end_date > start_date, display error messages
-- [x] 5.9 Implement edit form with warning when fiscal year has programs
-- [x] 5.10 Add delete confirmation with program count check (disable delete if programs exist)
+- [ ] 5.1 Create method: `FiscalYearService::copyCoaStructure($sourceFY, $targetFY)`
+- [ ] 5.2 Implement COA copying logic: copy structure, set is_active=false for new accounts
+- [ ] 5.3 Create method: `FiscalYearService::calculateBudgetMetrics($fiscalYear)`
+- [ ] 5.4 Implement metrics calculation: allocated, committed, realized, available
+- [ ] 5.5 Calculate utilization rate: (committed / allocated) \* 100
+- [ ] 5.6 Update `FiscalYearService::validate()`: check COA count before closing
+- [ ] 5.7 Update `FiscalYearService::close()`: prevent closing if active commitments exist
 
-## 6. Admin UI - Year-End Closing Dialog
+## 6. Request Validation - Fiscal Year Scoping
 
-- [x] 6.1 Create CloseDialogComponent with checkbox options (archive, block_programs, block_transactions, generate_report, send_notifications)
-- [x] 6.2 Add pre-close validation display: active programs count, pending PRs count, unsettled transactions count
-- [x] 6.3 Display warning messages if validation checks fail
-- [x] 6.4 Add notes textarea (optional) for administrator comments
-- [x] 6.5 Implement confirmation dialog: "Are you sure you want to close FY2026?"
-- [x] 6.6 Submit close action via Inertia form to FiscalYearController@close
-- [x] 6.7 Display success message after closure: "Fiscal year 2026 has been closed successfully"
-- [x] 6.8 Show loading indicator during close action execution
-- [x] 6.9 Add reopen button (visible only to users with fiscal-year.reopen permission)
-- [x] 6.10 Implement reopen dialog requiring reason input (mandatory)
+- [ ] 6.1 Update `StoreProgramRequest`: validate `fiscal_year_id` exists (not integer validation)
+- [ ] 6.2 Update `StoreProgramRequest`: check fiscal year is not closed
+- [ ] 6.3 Create `StoreCoaAccountRequest`: add `fiscal_year_id` validation (required, exists)
+- [ ] 6.4 Create `UpdateCoaAccountRequest`: prevent changing `fiscal_year_id` after creation
+- [ ] 6.5 Create `StoreBudgetCommitmentRequest`: validate fiscal_year_id, program_id, amount
+- [ ] 6.6 Create `StoreBudgetCommitment Request`: check available balance before committing
 
-## 7. Fiscal Year Selector Component
+## 7. Controller Updates - Fiscal Year Context
 
-- [x] 7.1 Create reusable component: resources/js/components/FiscalYearSelector.tsx
-- [x] 7.2 Implement dropdown showing all fiscal years in descending order
-- [x] 7.3 Display status badges: "Open" (blue) and "Closed" (gray) next to year codes
-- [x] 7.4 Add tooltip on hover showing full date range (e.g., "FY2026: Jun 1, 2026 - Jun 30, 2027")
-- [x] 7.5 Emit onChange event when user selects different fiscal year
-- [x] 7.6 Persist selected fiscal year in session storage
-- [x] 7.7 Style component with Tailwind CSS consistent with app design
+- [ ] 7.1 Update `CoaAccountController@index`: add fiscal year filter parameter
+- [ ] 7.2 Update `CoaAccountController@index`: scope accounts by selected fiscal year
+- [ ] 7.3 Update `CoaAccountController@store`: validate and save `fiscal_year_id`
+- [ ] 7.4 Update `FiscalYearController@show`: load budget metrics via service
+- [ ] 7.5 Create `FiscalYearController@copyCoaAction`: handle COA copying request
+- [ ] 7.6 Create `FiscalYearController@budgetMetrics`: API endpoint for metrics
+- [ ] 7.7 Update `FiscalYearController@destroy`: check COA count before deletion
+- [ ] 7.8 Create `BudgetCommitmentController`: CRUD operations for commitments
 
-## 8. Program Validation Enhancements
+## 8. Permissions & Policies
 
-- [x] 8.1 Add validation rule in StoreProgramRequest: fiscal year must not be closed (unless override permission)
-- [x] 8.2 Display error message: "Fiscal year {year} is closed. Cannot create programs for closed fiscal years."
-- [x] 8.3 Add "Closed FY" indicator in program create/edit forms (badge or warning text)
-- [x] 8.4 Show override action in activity log when user with permission creates program in closed FY
-- [x] 8.5 Implement permission check: `$user->can('program.override-closed-fy')`
-- [x] 8.6 Add unit test: ProgramValidationTest@test_cannot_create_program_in_closed_fiscal_year
-- [x] 8.7 Add unit test: ProgramValidationTest@test_can_override_closed_fiscal_year_with_permission to prevent program activation if fiscal year is closed
+- [ ] 8.1 Add permission: `fiscal-year.manage` (create, edit, delete FY)
+- [ ] 8.2 Add permission: `fiscal-year.close` (close fiscal year)
+- [ ] 8.3 Add permission: `fiscal-year.reopen` (reopen closed fiscal year)
+- [ ] 8.4 Add permission: `budget-commitment.manage` (create/release commitments)
+- [ ] 8.5 Add permission: `program.override-closed-fy` (create programs in closed FY)
+- [ ] 8.6 Update `RolePermissionSeeder`: assign permissions to Manager, AVP, Finance roles
+- [ ] 8.7 Update or create `FiscalYearPolicy`: viewAny, create, update, delete, close, reopen
+- [ ] 8.8 Create `BudgetCommitmentPolicy`: create, update, delete methods
 
-## 9. Program Pages - Fiscal Year Display
+## 9. Frontend - Fiscal Year Pages
 
-- [ ] 9.1 Add fiscal year period display to program detail page (show/edit pages)
-- [ ] 9.2 Display format: "FY2026: Jun 1, 2026 - Jun 30, 2027" with status badge
-- [x] 9.3 Add fiscal year badge to program list table (ProgramsTable component)
-- [ ] 9.4 Implement tooltip on fiscal year badge hover showing date range
-- [ ] 9.5 Add fiscal year column to program list with sortable header
-- [x] 9.6 Add fiscal year filter dropdown to program index page
-- [ ] 9.7 Implement filter by fiscal year status: "Open FYs Only", "Closed FYs Only", "All"
-- [ ] 9.8 Update ProgramController@index to handle fiscal_year and fy_status query parameters
+- [ ] 9.1 Update `resources/js/pages/admin/fiscal-years/index.tsx`: add COA count column
+- [ ] 9.2 Update `resources/js/pages/admin/fiscal-years/index.tsx`: disable delete if COA exists
+- [ ] 9.3 Update `resources/js/pages/admin/fiscal-years/show.tsx`: add budget metrics cards
+- [ ] 9.4 Create budget metrics component: `BudgetMetricsGrid` (4 cards: Allocated, Committed, Realized, Available)
+- [ ] 9.5 Create budget progress component: `BudgetProgressBar` (visual breakdown of 3 states)
+- [ ] 9.6 Create dialog: `CopyCoaDialog` (select source FY,confirm copy)
+- [ ] 9.7 Add "Copy COA from Previous Year" button to fiscal year show page
+- [ ] 9.8 Update fiscal year create/edit forms: show fiscal year period information
 
-## 10. Historical Reporting - Backend
+## 10. Frontend - COA Pages with Fiscal Year Context
 
-- [x] 10.1 Create `HistoricalReportController` with index method
-- [x] 10.2 Add route: GET /reports/historical (protected by reports.historical permission)
-- [x] 10.3 Implement query to fetch year-over-year summary data (revenue, expenses, net income, budget utilization, program counts)
-- [ ] 10.4 Optimize query performance with eager loading and indexed fields
-- [ ] 10.5 Implement caching for year-over-year summary (cache key: "historical-summary-{site_id}", TTL: 1 day)
-- [x] 10.6 Create method to fetch revenue breakdown by COA account for selected fiscal year
-- [x] 10.7 Create method to fetch expense breakdown by COA account for selected fiscal year
-- [ ] 10.8 Implement Excel export functionality using Laravel Excel package
-- [ ] 10.9 Generate Excel file with worksheets: Summary, Revenue Breakdown, Expense Breakdown, Program List
+- [ ] 10.1 Update `resources/js/pages/coa/index.tsx`: add fiscal year selector dropdown
+- [ ] 10.2 Update COA index: filter accounts by selected `fiscal_year_id`
+- [ ] 10.3 Update COA create form: add fiscal year selector (required field)
+- [ ] 10.4 Update COA create form: disable fiscal year selector after account has transactions
+- [ ] 10.5 Update COA table columns: add "Fiscal Year" column showing FY year
+- [ ] 10.6 Add visual indicator: badge showing if viewing current/past/future FY
+- [ ] 10.7 Create COA empty state: "No accounts for this fiscal year. Copy from previous?"
 
-## 11. Historical Reporting - Frontend
+## 11. Frontend - Program Pages
 
-- [x] 11.1 Create Inertia page: resources/js/pages/reports/historical/index.tsx
-- [x] 11.2 Implement year-over-year comparison table with metrics: Total Revenue, Total Expenses, Net Income, Budget Utilization %, etc.
-- [x] 11.3 Calculate and display YoY % change column with color coding (green for positive, red for negative)
-- [ ] 11.4 Add site filter dropdown (All Sites, Klaten, Magelang)
-- [ ] 11.5 Add fiscal year range selector (default: last 3 years)
-- [ ] 11.6 Implement drill-down modal for revenue/expense account breakdown
-- [ ] 11.7 Create trend line charts using Chart.js or Recharts library
-- [ ] 11.8 Implement multi-metric comparison chart (Revenue, Expenses, Net Income on same chart)
-- [x] 11.9 Add "Export to Excel" button triggering download of historical report
-- [ ] 11.10 Display loading indicator during data fetch and export operations
+- [ ] 11.1 Update program create form: use fiscal_year_id dropdown (not integer input)
+- [ ] 11.2 Update program create form: show fiscal year start/end dates when selected
+- [ ] 11.3 Update program edit form: display fiscal year as read-only (cannot change after creation)
+- [ ] 11.4 Update program detail page: show fiscal year period and status (open/closed)
+- [ ] 11.5 Add validation message: "Cannot create program for closed fiscal year" with override option
+- [ ] 11.6 Update program list filters: filter by fiscal year dropdown
 
-## 12. Dashboard Enhancements
+## 12. Frontend - Budget Commitment UI (Simplified)
 
-- [x] 12.1 Add FiscalYearSelector component to main dashboard header
-- [x] 12.2 Implement fiscal year change handler: reload dashboard data for selected year
-- [x] 12.3 Display current selected fiscal year in dashboard header
-- [x] 12.4 Filter dashboard metrics (revenue, expenses, programs) by selected fiscal year
-- [x] 12.5 Add multi-year trend sparklines to dashboard cards (e.g., last 3 years revenue trend)
-- [x] 12.6 Persist selected fiscal year in session storage for dashboard
+- [ ] 12.1 Create commitment creation form: program, COA account, amount, description
+- [ ] 12.2 Add real-time available balance check: show remaining budget before commitment
+- [ ] 12.3 Create commitments list table: program, account, amount, status, date
+- [ ] 12.4 Add status badges: PENDING (yellow), COMMITTED (green), RELEASED (gray)
+- [ ] 12.5 Add release commitment action: change status to RELEASED
+- [ ] 12.6 Display commitments on fiscal year show page: list of active commitments
+- [ ] 12.7 Display commitments on program show page: commitments for this program
 
-## 13. COA Enhancements
+## 13. Historical Reporting - Cross-Year Comparison
 
-- [x] 13.1 Add FiscalYearSelector to COA index page
-- [x] 13.2 Filter budget allocations by selected fiscal year
-- [x] 13.3 Filter actual amounts (transactions) by selected fiscal year
-- [x] 13.4 Update budget utilization percentage based on selected fiscal year
-- [x] 13.5 Add sparkline chart to each account row showing budget vs actual trend over last 3 years
-- [x] 13.6 Persist selected fiscal year in session storage for COA
-- [ ] 13.7 Add tooltip to sparklines showing year-specific values on hover
+- [ ] 13.1 Create `HistoricalReportController`: index and export methods
+- [ ] 13.2 Implement historical data query: compare budget metrics across multiple FYs
+- [ ] 13.3 Create `resources/js/pages/reports/historical.tsx`: multi-year comparison page
+- [ ] 13.4 Create comparison table: columns for each FY,rows for metrics (Allocated, Committed, Realized)
+- [ ] 13.5 Add trend chart: line chart showing budget utilization over fiscal years
+- [ ] 13.6 Add COA structure comparison: table showing account additions/removals per year
+- [ ] 13.7 Add Excel export functionality: download historical data as spreadsheet
+- [ ] 13.8 Add permission middleware: `reports.historical` on historical routes
 
-## 14. Testing - Backend
+## 14. Year-End Closing - Updated Logic
 
-- [ ] 14.1 Create `FiscalYearManagementTest` (Feature test)
-- [ ] 14.2 Test: Creating fiscal year with calendar year period
-- [ ] 14.3 Test: Creating fiscal year with non-calendar period (Jun-Jun)
-- [ ] 14.4 Test: Preventing duplicate year codes
-- [ ] 14.5 Test: Validating date range (end_date > start_date)
-- [ ] 14.6 Test: Editing fiscal year dates
-- [ ] 14.7 Test: Preventing deletion of fiscal year with programs
-- [ ] 14.8 Test: Successful deletion of fiscal year without programs
-- [ ] 14.9 Test: Permission checks for fiscal year operations
-- [ ] 14.10 Create `YearEndClosingTest` (Feature test)
-- [ ] 14.11 Test: Pre-close validation displays warnings
-- [ ] 14.12 Test: Closing with "archive completed programs" action
-- [ ] 14.13 Test: Closing with "block new programs" action
-- [ ] 14.14 Test: Closing with "generate report" action
-- [ ] 14.15 Test: Closing with "send notifications" action
-- [ ] 14.16 Test: Multiple actions executed in sequence
-- [ ] 14.17 Test: Reopen fiscal year with permission
-- [ ] 14.18 Test: Unauthorized reopen attempt returns 403
-- [ ] 14.19 Test: Audit logging for close and reopen actions
-- [ ] 14.20 Create `HistoricalReportingTest` (Feature test)
-- [ ] 14.21 Test: Year-over-year comparison query returns correct data
-- [ ] 14.22 Test: Revenue breakdown by COA account
-- [ ] 14.23 Test: Expense breakdown by COA account
-- [ ] 14.24 Test: Filtering by site
-- [ ] 14.25 Test: Filtering by fiscal year range
-- [ ] 14.26 Test: Excel export generates file with correct worksheets
-- [ ] 14.27 Test: Permission check for historical reports access
+- [ ] 14.1 Update closing validation: check for active (COMMITTED status) budget commitments
+- [ ] 14.2 Update closing validation: warn if commitments exist that haven't been realized
+- [ ] 14.3 Implement closing action: "Release uncommitted funds" (change COMMITTED to RELEASED)
+- [ ] 14.4 Update closing action: "Archive completed programs" (mark status as archived)
+- [ ] 14.5 Update closing action: "Block new programs" (check is_closed in validation)
+- [ ] 14.6 Update closing dialog UI: show count of active commitments before closing
+- [ ] 14.7 Add audit log entry: record closing options and commitment handling
 
-## 15. Testing - Frontend & Integration
+## 15. Testing - Schema & Data Integrity
 
-- [ ] 15.1 Test: FiscalYearSelector component renders fiscal years with badges
-- [ ] 15.2 Test: Selecting fiscal year triggers data reload
-- [ ] 15.3 Test: Program creation blocked for closed fiscal year (integration test)
-- [ ] 15.4 Test: Program creation allowed with override permission (integration test)
-- [ ] 15.5 Test: Fiscal year badge displays correctly on program list
-- [ ] 15.6 Test: Historical reporting page renders year-over-year table
-- [ ] 15.7 Test: Trend charts display correctly with multi-year data
-- [ ] 15.8 Test: Close dialog checkboxes work correctly
-- [ ] 15.9 Test: Pre-close warnings display when validation fails
-- [ ] 15.10 Test: Confirmation dialog prevents accidental closure
+- [ ] 15.1 Test migration: verify fiscal_year_id column added to coa_accounts
+- [ ] 15.2 Test migration: verify existing COA assigned to current fiscal year
+- [ ] 15.3 Test migration: verify programs.fiscal_year converted to FK correctly
+- [ ] 15.4 Test unique constraint: allow same account_code across different fiscal years
+- [ ] 15.5 Test FK constraint: cannot delete fiscal year with associated COA accounts
+- [ ] 15.6 Test FK constraint: cannot delete fiscal year with associated programs
+- [ ] 15.7 Test rollback: verify down() migrations restore original schema
 
-## 16. Database & Seeder Updates
+## 16. Testing - Business Logic
 
-- [x] 16.1 Update `FiscalYearSeeder` to create only current year if none exists (remove auto-creation of current+1)
-- [x] 16.2 Add comment in seeder documenting that future years should be created via UI
-- [x] 16.3 Create factory: `FiscalYearFactory` for testing purposes
-- [ ] 16.4 Add fiscal year status (open/closed) to existing test seeders (DatabaseSeeder)
+- [ ] 16.1 Test COA copying: verify all accounts copied with correct fiscal_year_id
+- [ ] 16.2 Test COA copying: verify copied accounts have is_active=false
+- [ ] 16.3 Test budget metrics: verify Available = Allocated - Committed calculation
+- [ ] 16.4 Test commitment lifecycle: PENDING → COMMITTED → RELEASED state transitions
+- [ ] 16.5 Test commitment deletion prevention: cannot delete COMMITTED commitments
+- [ ] 16.6 Test over-commitment validation: prevent committing more than available
+- [ ] 16.7 Test fiscal year deletion: verify error when COA or programs exist
+- [ ] 16.8 Test fiscal year scoping: COA queries filtered by fiscal_year_id
+- [ ] 16.9 Test program creation: validate fiscal_year_id exists and is not closed
 
-## 17. Code Formatting & Standards
+## 17. Testing - UI & Integration
 
-- [x] 17.1 Run `vendor/bin/pint --dirty` to format all new PHP files
-- [x] 17.2 Run `npm run lint` to check TypeScript/React files
-- [x] 17.3 Fix any linting errors in new frontend files
-- [x] 17.4 Verify all new files follow Laravel and React best practices
+- [ ] 17.1 Test fiscal year selector: switching FY filters COA list correctly
+- [ ] 17.2 Test COA creation: requires fiscal year selection
+- [ ] 17.3 Test "Copy from Previous Year": creates new accounts for target FY
+- [ ] 17.4 Test budget metrics display: shows 4 cards with correct values
+- [ ] 17.5 Test commitment creation: reduces available balance immediately
+- [ ] 17.6 Test commitment release: restores available balance
+- [ ] 17.7 Test historical report: displays metrics for multiple fiscal years
+- [ ] 17.8 Test closing workflow: prevents closing with active commitments
+- [ ] 17.9 Test program form: cannot select closed fiscal year without permission
 
 ## 18. Documentation
 
-- [ ] 18.1 Add fiscal year management section to `docs/database_schema.md`
-- [ ] 18.2 Document fiscal year CRUD operations in admin guide
-- [ ] 18.3 Document year-end closing process with screenshots
-- [ ] 18.4 Document permission requirements for each role
-- [ ] 18.5 Create troubleshooting guide for common fiscal year issues
-- [ ] 18.6 Document Excel export format and column descriptions
+- [ ] 18.1 Update ERD diagram: show fiscal_year_id on coa_accounts and programs
+- [ ] 18.2 Document budget flow: Allocated → Committed → Realized with examples
+- [ ] 18.3 Document COA copying workflow: when to use, how it works
+- [ ] 18.4 Document migration guide: steps for existing deployments
+- [ ] 18.5 Create admin user guide: how to create new fiscal year and copy COA
+- [ ] 18.6 Document breaking changes: what changed, why, migration path
+- [ ] 18.7 Update API documentation: new endpoints for COA copying and budget metrics
 
-## 19. Deployment Preparation
+## 19. Code Cleanup & Formatting
 
-- [ ] 19.1 Verify no database migrations needed (schema already exists)
-- [ ] 19.2 Update RolePermissionSeeder with new permissions
-- [ ] 19.3 Test deployment on staging environment
-- [ ] 19.4 Run all tests: `php artisan test`
-- [ ] 19.5 Create deployment checklist for production
-- [ ] 19.6 Prepare rollback plan documentation
-- [ ] 19.7 Schedule deployment during low-traffic window
+- [ ] 19.1 Run `vendor/bin/pint --dirty` to format PHP code
+- [ ] 19.2 Run `npm run lint` to check frontend code
+- [ ] 19.3 Remove unused code: old fiscal_year integer handling logic
+- [ ] 19.4 Update comments: clarify fiscal year container model in code comments
+- [ ] 19.5 Check for TODO/FIXME comments related to old architecture
 
-## 20. Post-Deployment
+## 20. Deployment Preparation
 
-- [ ] 20.1 Run `php artisan db:seed --class=RolePermissionSeeder` on production
-- [ ] 20.2 Verify fiscal years are seeded correctly
-- [ ] 20.3 Test fiscal year CRUD operations on production
-- [ ] 20.4 Test year-end closing workflow with test fiscal year
-- [ ] 20.5 Verify historical reporting page loads correctly
-- [ ] 20.6 Monitor application logs for fiscal year related errors
-- [ ] 20.7 Notify administrators of new fiscal year management features
-- [ ] 20.8 Conduct brief training session for admins on year-end closing process
+- [ ] 20.1 Create deployment checklist: backup database, run migrations, verify
+- [ ] 20.2 Test migrations on staging environment with production-like data
+- [ ] 20.3 Create rollback plan: document how to revert changes if needed
+- [ ] 20.4 Update .env.example: add any new configuration variables
+- [ ] 20.5 Generate fresh database with new structure: test seeder flow
+- [ ] 20.6 Performance test: check query performance with fiscal year scoping
+- [ ] 20.7 Load test: verify performance with multiple fiscal years and large COA
+
+## Summary
+
+**New Architecture:**
+
+- **COA Per Fiscal Year**: Each FY has its own complete chart of accounts
+- **Strong FK Relationships**: Programs and COA use proper foreign keys
+- **3-State Budget Tracking**: Allocated → Committed → Realized
+- **COA Templating**: Copy structure from previous year for new FY
+- **Clean Migration**: Existing data migrated to new structure
+
+**Breaking Changes:**
+
+1. `coa_accounts` table: added `fiscal_year_id` FK
+2. `coa_accounts` unique constraint: now includes `fiscal_year_id`
+3. `programs` table: `fiscal_year` integer replaced with `fiscal_year_id` FK
+4. New table: `budget_commitments`
+
+**Total Tasks**: 141 (broken down into 20 sections)
+**Estimated Complexity**: High (architectural refactor with breaking changes)
+**Migration Risk**: Medium (requires careful data migration testing)

@@ -1,10 +1,10 @@
 ---
 name: inertia-react-development
 description: >-
-  Develops Inertia.js v2 React client-side applications. Activates when creating
-  React pages, forms, or navigation; using <Link>, <Form>, useForm, or router;
-  working with deferred props, prefetching, or polling; or when user mentions
-  React with Inertia, React pages, React forms, or React navigation.
+    Develops Inertia.js v2 React client-side applications. Activates when creating
+    React pages, forms, or navigation; using <Link>, <Form>, useForm, or router;
+    working with deferred props, prefetching, or polling; or when user mentions
+    React with Inertia, React pages, React forms, or React navigation.
 ---
 
 # Inertia React Development
@@ -21,27 +21,28 @@ Activate this skill when:
 
 ## Documentation
 
-Use `search-docs` for detailed Inertia v2 React patterns and documentation.
+Use `search-docs` for detailed Inertia v2 React patterns and documentation or use context7 mcp tools with "/websites/inertiajs_v2" library id.
 
 ## Basic Usage
 
 ### Page Components Location
 
-React page components should be placed in the `resources/js/Pages` directory.
+React page components should be placed in the `resources/js/pages` directory.
 
 ### Page Component Structure
 
 <code-snippet name="Basic React Page Component" lang="react">
 
 export default function UsersIndex({ users }) {
-    return (
-        <div>
-            <h1>Users</h1>
-            <ul>
-                {users.map(user => <li key={user.id}>{user.name}</li>)}
-            </ul>
-        </div>
-    )
+return (
+
+<div>
+<h1>Users</h1>
+<ul>
+{users.map(user => <li key={user.id}>{user.name}</li>)}
+</ul>
+</div>
+)
 }
 
 </code-snippet>
@@ -95,14 +96,14 @@ import { Link } from '@inertiajs/react'
 import { router } from '@inertiajs/react'
 
 function handleClick() {
-    router.visit('/users')
+router.visit('/users')
 }
 
 // Or with options
 router.visit('/users', {
-    method: 'post',
-    data: { name: 'John' },
-    onSuccess: () => console.log('Success!'),
+method: 'post',
+data: { name: 'John' },
+onSuccess: () => console.log('Success!'),
 })
 
 </code-snippet>
@@ -118,12 +119,13 @@ The recommended way to build forms is with the `<Form>` component:
 import { Form } from '@inertiajs/react'
 
 export default function CreateUser() {
-    return (
-        <Form action="/users" method="post">
-            {({ errors, processing, wasSuccessful }) => (
-                <>
-                    <input type="text" name="name" />
-                    {errors.name && <div>{errors.name}</div>}
+return (
+
+<Form action="/users" method="post">
+{({ errors, processing, wasSuccessful }) => (
+<>
+<input type="text" name="name" />
+{errors.name && <div>{errors.name}</div>}
 
                     <input type="email" name="email" />
                     {errors.email && <div>{errors.email}</div>}
@@ -137,6 +139,7 @@ export default function CreateUser() {
             )}
         </Form>
     )
+
 }
 
 </code-snippet>
@@ -179,6 +182,7 @@ import { Form } from '@inertiajs/react'
             {wasSuccessful && <div>Saved!</div>}
         </>
     )}
+
 </Form>
 
 </code-snippet>
@@ -213,6 +217,7 @@ import { Form } from '@inertiajs/react'
             </button>
         </>
     )}
+
 </Form>
 
 </code-snippet>
@@ -228,11 +233,11 @@ For more programmatic control or to follow existing conventions, use the `useFor
 import { useForm } from '@inertiajs/react'
 
 export default function CreateUser() {
-    const { data, setData, post, processing, errors, reset } = useForm({
-        name: '',
-        email: '',
-        password: '',
-    })
+const { data, setData, post, processing, errors, reset } = useForm({
+name: '',
+email: '',
+password: '',
+})
 
     function submit(e) {
         e.preventDefault()
@@ -269,6 +274,7 @@ export default function CreateUser() {
             </button>
         </form>
     )
+
 }
 
 </code-snippet>
@@ -282,24 +288,25 @@ Use deferred props to load data after initial page render:
 <code-snippet name="Deferred Props with Empty State" lang="react">
 
 export default function UsersIndex({ users }) {
-    // users will be undefined initially, then populated
-    return (
-        <div>
-            <h1>Users</h1>
-            {!users ? (
-                <div className="animate-pulse">
-                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                </div>
-            ) : (
-                <ul>
-                    {users.map(user => (
-                        <li key={user.id}>{user.name}</li>
-                    ))}
-                </ul>
-            )}
-        </div>
-    )
+// users will be undefined initially, then populated
+return (
+
+<div>
+<h1>Users</h1>
+{!users ? (
+<div className="animate-pulse">
+<div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+<div className="h-4 bg-gray-200 rounded w-1/2"></div>
+</div>
+) : (
+<ul>
+{users.map(user => (
+<li key={user.id}>{user.name}</li>
+))}
+</ul>
+)}
+</div>
+)
 }
 
 </code-snippet>
@@ -314,10 +321,10 @@ import { router } from '@inertiajs/react'
 import { useEffect } from 'react'
 
 export default function Dashboard({ stats }) {
-    useEffect(() => {
-        const interval = setInterval(() => {
-            router.reload({ only: ['stats'] })
-        }, 5000) // Poll every 5 seconds
+useEffect(() => {
+const interval = setInterval(() => {
+router.reload({ only: ['stats'] })
+}, 5000) // Poll every 5 seconds
 
         return () => clearInterval(interval)
     }, [])
@@ -328,6 +335,7 @@ export default function Dashboard({ stats }) {
             <div>Active Users: {stats.activeUsers}</div>
         </div>
     )
+
 }
 
 </code-snippet>
@@ -341,11 +349,12 @@ Load more data when user scrolls to a specific element:
 import { WhenVisible } from '@inertiajs/react'
 
 export default function UsersList({ users }) {
-    return (
-        <div>
-            {users.data.map(user => (
-                <div key={user.id}>{user.name}</div>
-            ))}
+return (
+
+<div>
+{users.data.map(user => (
+<div key={user.id}>{user.name}</div>
+))}
 
             {users.next_page_url && (
                 <WhenVisible
@@ -356,6 +365,7 @@ export default function UsersList({ users }) {
             )}
         </div>
     )
+
 }
 
 </code-snippet>

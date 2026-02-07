@@ -1,54 +1,71 @@
 ## Why
 
-The application currently has a `FiscalYear` model with database foundation and basic filtering, but lacks comprehensive management capabilities required by the PRD (LIFE-015 through LIFE-019). System administrators cannot create/manage fiscal years through the UI, there is no year-end closing workflow, and historical reporting across multiple fiscal years is limited. This prevents proper financial period management and compliance with organizational fiscal year policies that may differ from calendar years (e.g., June-to-June fiscal years).
+The application requires fiscal year to function as a **primary organizational container** rather than just a timeline filter. Currently, COA accounts and programs exist at the site level with weak fiscal year binding, preventing true year-over-year isolation, evolution of COA structure per fiscal year, and proper budget commitment tracking (Allocated → Committed → Realized flow). This architectural limitation blocks implementation of the full PRD vision where fiscal year is the top-level grouping boundary and nothing can exist without fiscal year context.
 
 ## What Changes
 
-- **New**: Admin UI for fiscal year CRUD operations with flexible date ranges
-- **New**: Year-end closing workflow with user-selectable actions (archive programs, generate reports, block new transactions)
-- **New**: Historical reporting page with year-over-year comparison across fiscal years
-- **New**: Permission-based access control for fiscal year operations (close, reopen, manage)
-- **Enhanced**: Existing dashboards and COA pages with fiscal year selector and multi-year trend charts
-- **Enhanced**: Program creation/editing to validate against closed fiscal years and display FY period information
-- **Enhanced**: Budget allocation tracking scoped by fiscal year (already implemented in `coa_budget_allocations` table)
+- **Breaking**: Add `fiscal_year_id` foreign key to `coa_accounts` table - each fiscal year gets its own complete COA structure
+- **Breaking**: Change `programs.fiscal_year` from integer to `fiscal_year_id` foreign key - enforce referential integrity
+- **New**: `budget_commitments` table for tracking 3-state budget flow: Allocated → Committed → Realized
+- **New**: COA templating/copying mechanism to create new fiscal year's COA from previous year
+- **New**: Admin UI for fiscal year CRUD operations with budget metrics dashboard
+- **New**: Year-end closing workflow with validation and user-selectable actions
+- **New**: Historical reporting with cross-year COA comparison
+- **Enhanced**: Budget tracking to show Available = Allocated - Committed (not Allocated - Realized)
+- **Migration**: Clean slate approach - existing COA assigned to current fiscal year, new years use copying workflow
 
 ## Capabilities
 
 ### New Capabilities
 
-- `fiscal-year-management`: Complete CRUD operations for fiscal years including creation with custom start/end dates, editing, soft deletion prevention when programs exist, and listing with usage statistics
-- `year-end-closing`: Year-end closing process with pre-close validation (active programs, pending PRs, unsettled transactions), user-selectable closing actions (archive completed programs, block new transactions, generate reports), confirmation workflow, and audit logging
-- `historical-reporting`: Multi-year financial analysis including year-over-year comparison tables for revenue/expenses/net income, trend charts across fiscal years, and Excel export for historical data
+- `fiscal-year-container-model`: Fiscal year as primary boundary - all data scoped to fiscal year via foreign keys, COA accounts bound to fiscal year, programs use proper FK relationship
+- `coa-per-fiscal-year`: Each fiscal year has its own COA structure with templating/copying from previous year, allows COA evolution year-over-year, complete isolation of chart structure
+- `commitment-tracking`: Three-state budget model (Allocated from budget_allocations, Committed from budget_commitments, Realized from actual transactions), Available balance calculated as Allocated - Committed
+- `fiscal-year-management`: Complete CRUD operations with flexible date ranges, budget metrics dashboard (Allocated/Committed/Realized/Available), soft deletion prevention when programs/COA exist
+- `year-end-closing`: Pre-close validation, user-selectable closing actions, confirmation workflow, audit logging
+- `historical-reporting`: Multi-year financial analysis with year-over-year comparison, cross-year COA structure comparison
 
 ### Modified Capabilities
 
-- `program-core`: Add fiscal year binding validation (prevent program creation for closed FY unless override permission), display FY period on program pages, and filter programs by FY open/closed status
-- `program-budgeting`: Clarify that budget tracking follows program's fiscal year regardless of transaction date (programs are "stamped" with their FY at creation and all ledgers stay in that FY)
+- `coa-management`: Now requires fiscal year context for all operations, COA creation scoped to fiscal year, unique constraint includes fiscal_year_id (allows same account code across years)
+- `program-management`: Fiscal year binding via FK (not integer), validation prevents closed FY unless override, cannot delete FY with active programs
+- `budget-tracking`: Available balance = Allocated - Committed (reserved funds), commitment lifecycle (PENDING → COMMITTED → RELEASED), realization tracking separate from commitment
 
 ## Impact
 
 **Backend**:
-- New controller: `FiscalYearController` (CRUD + close/reopen actions)
-- New service: `FiscalYearService` (closing logic, validation, report generation)
-- New request classes: `StoreFiscalYearRequest`, `CloseFiscalYearRequest`
-- Updated controllers: `ProgramController` (FY validation), `CoaAccountController` (historical data queries)
-- New permissions: `fiscal-year.manage`, `fiscal-year.close`, `fiscal-year.reopen`, `fiscal-year.view`, `reports.historical`
+
+- Breaking migration: add `fiscal_year_id` to `coa_accounts`, change `programs.fiscal_year` to `fiscal_year_id` FK
+- New table: `budget_commitments` (fiscal_year_id, program_id, coa_account_id, amount, status, etc.)
+- New model: `BudgetCommitment` with relationships and status constants
+- Updated models: `CoaAccount` (fiscalYear relationship), `Program` (FK relationship), `FiscalYear` (new relationships)
+- New service methods: `FiscalYearService::copyCoaStructure()`, `calculateBudgetMetrics()`
+- Updated controllers: `CoaAccountController` (require FY context), `FiscalYearController` (budget metrics, COA copying)
+- New permissions: `fiscal-year.manage`, `fiscal-year.close`, `reports.historical`, `program.override-closed-fy`
 
 **Frontend**:
-- New admin pages: `/admin/fiscal-years` (index, create, edit, show with close dialog)
-- New reports page: `/reports/historical` (year-over-year comparison)
-- New component: `FiscalYearSelector` (reusable dropdown with open/closed badges)
-- Enhanced pages: Program create/edit forms (FY validation messages), main dashboard (FY selector), COA index (multi-year trend charts)
+
+- New pages: `/admin/fiscal-years` (CRUD with metrics), `/reports/historical` (cross-year comparison)
+- Enhanced pages: COA index (fiscal year selector, filter by FY), Program forms (FY validation)
+- New components: Budget metrics cards (4-state display), COA copy workflow dialog
+- Dashboard updates: Show Allocated/Committed/Realized/Available, utilization progress bar
 
 **Database**:
-- No schema changes needed (foundation already exists in `fiscal_years` table)
-- Optional: Add `blocking_rules` JSONB column to store per-FY rules (block_new_programs, block_new_transactions)
+
+- **Breaking**: `coa_accounts` unique constraint becomes `['site_id', 'fiscal_year_id', 'account_code']`
+- **Breaking**: `programs.fiscal_year` column dropped, replaced with `fiscal_year_id` FK
+- New table: `budget_commitments` with indexes on `fiscal_year_id`, `program_id`, `status`
+- Migration strategy: Assign existing COA to current FY, migrate program fiscal_year integers to FK via year matching
 
 **Testing**:
-- Existing: `CoaFiscalYearScopingTest` validates budget/actual scoping by FY
-- New: `FiscalYearManagementTest`, `YearEndClosingTest`, `HistoricalReportingTest`
+
+- Update: `CoaFiscalYearScopingTest` (test FK scoping)
+- New: `BudgetCommitmentTest`, `CoaCopyingTest`, `FiscalYearContainerTest`
+- Migration tests: Verify data integrity after migration
 
 **Dependencies**:
-- Leverages existing `FiscalYear` model, relationships, and scopes
-- Integrates with existing approval workflows and permission system
-- Uses established Inertia.js patterns for admin UI
+
+- Requires clean database migration (existing deployments need migration plan)
+- Future integration point for PR/PO system (commitment sources)
+- COA factory updates to include `fiscal_year_id`
+- Program factory updates to use `fiscal_year_id` FK
