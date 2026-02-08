@@ -27,6 +27,7 @@ class CoaAccount extends Model
 
     protected $fillable = [
         'site_id',
+        'fiscal_year_id',
         'account_code',
         'abbreviation',
         'account_name',
@@ -85,6 +86,14 @@ class CoaAccount extends Model
     public function site(): BelongsTo
     {
         return $this->belongsTo(Site::class);
+    }
+
+    /**
+     * Get the fiscal year this COA account belongs to.
+     */
+    public function fiscalYear(): BelongsTo
+    {
+        return $this->belongsTo(FiscalYear::class);
     }
 
     /**

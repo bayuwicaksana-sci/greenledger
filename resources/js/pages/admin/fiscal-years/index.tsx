@@ -134,6 +134,7 @@ export default function FiscalYearsIndex({
                                 <TableHead>Date Range</TableHead>
                                 <TableHead>Status</TableHead>
                                 <TableHead>Programs</TableHead>
+                                <TableHead>COA Accounts</TableHead>
                                 <TableHead className="text-right">
                                     Actions
                                 </TableHead>
@@ -143,7 +144,7 @@ export default function FiscalYearsIndex({
                             {fiscalYears.length === 0 ? (
                                 <TableRow>
                                     <TableCell
-                                        colSpan={5}
+                                        colSpan={6}
                                         className="text-center text-muted-foreground"
                                     >
                                         No fiscal years found
@@ -180,6 +181,10 @@ export default function FiscalYearsIndex({
                                         <TableCell>
                                             {fy.programs_count || 0} programs
                                         </TableCell>
+                                        <TableCell>
+                                            {fy.coa_accounts_count || 0}{' '}
+                                            accounts
+                                        </TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-2">
                                                 <Link href={show(fy.id).url}>
@@ -206,6 +211,8 @@ export default function FiscalYearsIndex({
                                                     }
                                                     disabled={
                                                         (fy.programs_count ||
+                                                            0) > 0 ||
+                                                        (fy.coa_accounts_count ||
                                                             0) > 0
                                                     }
                                                 >

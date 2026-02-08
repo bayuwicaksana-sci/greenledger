@@ -1,24 +1,3 @@
-import { Head, Link, router } from '@inertiajs/react';
-import {
-    getCoreRowModel,
-    getFilteredRowModel,
-    getSortedRowModel,
-    useReactTable,
-    type ColumnDef,
-    type SortingState,
-    type VisibilityState,
-} from '@tanstack/react-table';
-import {
-    ArrowUpDown,
-    ChevronDown,
-    Edit,
-    LayoutTemplate,
-    Plus,
-    Search,
-    Trash2,
-    Upload,
-} from 'lucide-react';
-import { useMemo, useState } from 'react';
 import { CoaTreeView } from '@/components/config/coa/CoaTreeView';
 import { ImportDialog } from '@/components/config/coa/ImportDialog';
 import { TemplateDialog } from '@/components/config/coa/TemplateDialog';
@@ -43,12 +22,34 @@ import {
 import MainLayout from '@/layouts/main-layout';
 import config from '@/routes/config';
 import type { BreadcrumbItem, CoaAccount, FiscalYear, Site } from '@/types';
+import { Head, Link, router } from '@inertiajs/react';
+import {
+    getCoreRowModel,
+    getFilteredRowModel,
+    getSortedRowModel,
+    useReactTable,
+    type ColumnDef,
+    type SortingState,
+    type VisibilityState,
+} from '@tanstack/react-table';
+import {
+    ArrowUpDown,
+    ChevronDown,
+    Edit,
+    LayoutTemplate,
+    Plus,
+    Search,
+    Trash2,
+    Upload,
+} from 'lucide-react';
+import { useMemo, useState } from 'react';
 
 interface Props {
     accounts: CoaAccount[];
     sites: Site[];
     fiscalYears: FiscalYear[];
     selectedFiscalYear: number;
+    currentFiscalYearId: number;
 }
 
 function formatCurrency(value: number): string {
@@ -61,7 +62,13 @@ function formatCurrency(value: number): string {
     });
 }
 
-export default function ChartOfAccounts({ accounts, sites = [], fiscalYears = [], selectedFiscalYear }: Props) {
+export default function ChartOfAccounts({
+    accounts,
+    sites = [],
+    fiscalYears = [],
+    selectedFiscalYear,
+    currentFiscalYearId,
+}: Props) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Chart of Accounts',
@@ -82,7 +89,11 @@ export default function ChartOfAccounts({ accounts, sites = [], fiscalYears = []
     const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
 
     const handleFiscalYearChange = (value: string) => {
-        router.get(config.coa.index(), { fiscal_year: value }, { preserveScroll: true });
+        router.get(
+            config.coa.index(),
+            { fiscal_year: value },
+            { preserveScroll: true },
+        );
     };
 
     const handleDialogSuccess = () => {
@@ -91,8 +102,13 @@ export default function ChartOfAccounts({ accounts, sites = [], fiscalYears = []
 
     const filteredAccounts = useMemo(() => {
         return accounts.filter((a) => {
-            if (selectedSiteId !== 'all' && a.site_id.toString() !== selectedSiteId) return false;
-            if (selectedCategory !== 'all' && a.category !== selectedCategory) return false;
+            if (
+                selectedSiteId !== 'all' &&
+                a.site_id.toString() !== selectedSiteId
+            )
+                return false;
+            if (selectedCategory !== 'all' && a.category !== selectedCategory)
+                return false;
             return true;
         });
     }, [accounts, selectedSiteId, selectedCategory]);
@@ -213,6 +229,34 @@ export default function ChartOfAccounts({ accounts, sites = [], fiscalYears = []
             },
         },
         {
+            id: 'fiscal_year',
+            accessorKey: 'fiscal_year',
+            header: 'Fiscal Year',
+            cell: ({ row }) => {
+                const account = row.original;
+                const fyYear = account.fiscal_year?.year || selectedFiscalYear;
+                const isCurrent =
+                    account.fiscal_year_id === currentFiscalYearId;
+                const isPast = account.fiscal_year_id < currentFiscalYearId;
+
+                return (
+                    <div className="flex items-center gap-2">
+                        <span>{fyYear}</span>
+                        {isCurrent && (
+                            <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                                Current
+                            </span>
+                        )}
+                        {isPast && (
+                            <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                                Past
+                            </span>
+                        )}
+                    </div>
+                );
+            },
+        },
+        {
             accessorKey: 'is_active',
             header: 'Status',
             cell: ({ row }) => {
@@ -220,13 +264,25 @@ export default function ChartOfAccounts({ accounts, sites = [], fiscalYears = []
                 const approvalStatus = row.original.approval_status;
 
                 if (approvalStatus === 'pending_approval') {
-                    return <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300">Pending</span>;
+                    return (
+                        <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900 dark:text-amber-300">
+                            Pending
+                        </span>
+                    );
                 }
                 if (approvalStatus === 'draft') {
-                    return <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">Draft</span>;
+                    return (
+                        <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                            Draft
+                        </span>
+                    );
                 }
                 if (approvalStatus === 'rejected') {
-                    return <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">Rejected</span>;
+                    return (
+                        <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900 dark:text-red-300">
+                            Rejected
+                        </span>
+                    );
                 }
 
                 return isActive ? (
@@ -242,15 +298,28 @@ export default function ChartOfAccounts({ accounts, sites = [], fiscalYears = []
             cell: ({ row }) => {
                 const budget = row.original.allocated_budget;
                 const actual = row.original.actual_amount;
-                if (budget <= 0) return <span className="block text-right text-muted-foreground">—</span>;
+                if (budget <= 0)
+                    return (
+                        <span className="block text-right text-muted-foreground">
+                            —
+                        </span>
+                    );
                 const pct = Math.round((actual / budget) * 100);
-                const colorClass = pct > 90 ? 'bg-red-500' : pct > 70 ? 'bg-amber-500' : 'bg-green-500';
+                const colorClass =
+                    pct > 90
+                        ? 'bg-red-500'
+                        : pct > 70
+                          ? 'bg-amber-500'
+                          : 'bg-green-500';
                 return (
                     <div className="flex items-center justify-end gap-2">
-                        <div className="w-16 overflow-hidden rounded-full bg-muted h-2">
-                            <div className={`h-full ${colorClass}`} style={{ width: `${Math.min(pct, 100)}%` }} />
+                        <div className="h-2 w-16 overflow-hidden rounded-full bg-muted">
+                            <div
+                                className={`h-full ${colorClass}`}
+                                style={{ width: `${Math.min(pct, 100)}%` }}
+                            />
                         </div>
-                        <span className="text-xs text-right">{pct}%</span>
+                        <span className="text-right text-xs">{pct}%</span>
                     </div>
                 );
             },
@@ -423,7 +492,8 @@ export default function ChartOfAccounts({ accounts, sites = [], fiscalYears = []
                                         key={fy.id}
                                         value={fy.year.toString()}
                                     >
-                                        {fy.year}{fy.is_closed ? ' (Closed)' : ''}
+                                        {fy.year}
+                                        {fy.is_closed ? ' (Closed)' : ''}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
@@ -436,9 +506,13 @@ export default function ChartOfAccounts({ accounts, sites = [], fiscalYears = []
                                 <SelectValue placeholder="All Categories" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Categories</SelectItem>
+                                <SelectItem value="all">
+                                    All Categories
+                                </SelectItem>
                                 <SelectItem value="PROGRAM">Program</SelectItem>
-                                <SelectItem value="NON_PROGRAM">Non-Program</SelectItem>
+                                <SelectItem value="NON_PROGRAM">
+                                    Non-Program
+                                </SelectItem>
                             </SelectContent>
                         </Select>
                         <DropdownMenu>
@@ -490,7 +564,62 @@ export default function ChartOfAccounts({ accounts, sites = [], fiscalYears = []
                         </div> */}
                     </div>
 
-                    <CoaTreeView accounts={filteredAccounts} sites={sites} columnVisibility={columnVisibility} />
+                    {filteredAccounts.length === 0 ? (
+                        <div className="rounded-md border bg-muted/50 p-12">
+                            <div className="flex flex-col items-center justify-center gap-4 text-center">
+                                <div className="rounded-full bg-muted p-3">
+                                    <svg
+                                        className="h-6 w-6 text-muted-foreground"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                        />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold">
+                                        No accounts for this fiscal year
+                                    </h3>
+                                    <p className="mt-1 text-sm text-muted-foreground">
+                                        Get started by creating accounts or
+                                        copying from a previous fiscal year.
+                                    </p>
+                                </div>
+                                <div className="mt-2 flex gap-3">
+                                    <Link href={config.coa.create()}>
+                                        <Button>
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            Create Account
+                                        </Button>
+                                    </Link>
+                                    {fiscalYears.length > 1 && (
+                                        <Button
+                                            variant="outline"
+                                            onClick={() =>
+                                                setTemplateDialogOpen(true)
+                                            }
+                                        >
+                                            <LayoutTemplate className="mr-2 h-4 w-4" />
+                                            Copy from Previous Year
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <CoaTreeView
+                            accounts={filteredAccounts}
+                            sites={sites}
+                            columnVisibility={columnVisibility}
+                            currentFiscalYearId={currentFiscalYearId}
+                        />
+                    )}
                     {/* {viewMode === 'tree' ? (
                         <CoaTreeView
                             accounts={filteredAccounts}

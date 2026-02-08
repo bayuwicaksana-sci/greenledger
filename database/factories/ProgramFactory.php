@@ -20,19 +20,12 @@ class ProgramFactory extends Factory
      */
     public function definition(): array
     {
-        $year = now()->year;
-
-        FiscalYear::firstOrCreate(
-            ['year' => $year],
-            ['start_date' => "{$year}-01-01", 'end_date' => "{$year}-12-31", 'is_closed' => false],
-        );
-
         return [
             'site_id' => Site::factory(),
+            'fiscal_year_id' => FiscalYear::factory(),
             'program_code' => $this->faker->unique()->bothify('PROG-####'),
             'program_name' => $this->faker->sentence(3),
             'description' => $this->faker->paragraph(),
-            'fiscal_year' => $year,
             'total_budget' => $this->faker->randomFloat(2, 10000, 1000000),
             'status' => Program::STATUS_ACTIVE,
             'start_date' => $this->faker->date(),
@@ -40,6 +33,17 @@ class ProgramFactory extends Factory
             'created_by' => User::factory(),
             'updated_by' => User::factory(),
         ];
+    }
+
+    /**
+     * Scope program to a specific fiscal year.
+     */
+    public function forFiscalYear(int|FiscalYear $fiscalYear): static
+    {
+        $fiscalYearId =
+            $fiscalYear instanceof FiscalYear ? $fiscalYear->id : $fiscalYear;
+
+        return $this->state(fn () => ['fiscal_year_id' => $fiscalYearId]);
     }
 
     public function draft(): static

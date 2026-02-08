@@ -40,7 +40,11 @@ class StoreProgramRequest extends FormRequest
             ],
             'program_name' => ['required', 'string', 'max:350'],
             'description' => ['nullable', 'string'],
-            'fiscal_year' => ['required', 'integer', 'min:2020', 'max:2099'],
+            'fiscal_year_id' => [
+                'required',
+                'integer',
+                'exists:fiscal_years,id',
+            ],
             'total_budget' => ['required', 'numeric', 'min:0'],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
@@ -279,12 +283,9 @@ class StoreProgramRequest extends FormRequest
             }
 
             // Validate fiscal year is not closed (unless user has override permission)
-            $fiscalYearCode = $this->input('fiscal_year');
-            if ($fiscalYearCode) {
-                $fiscalYear = FiscalYear::where(
-                    'year',
-                    $fiscalYearCode,
-                )->first();
+            $fiscalYearId = $this->input('fiscal_year_id');
+            if ($fiscalYearId) {
+                $fiscalYear = FiscalYear::find($fiscalYearId);
 
                 if ($fiscalYear && $fiscalYear->is_closed) {
                     // Check if user has override permission
@@ -293,8 +294,8 @@ class StoreProgramRequest extends FormRequest
                         $validator
                             ->errors()
                             ->add(
-                                'fiscal_year',
-                                "Fiscal year {$fiscalYearCode} is closed. Cannot create programs for closed fiscal years.",
+                                'fiscal_year_id',
+                                "Fiscal year {$fiscalYear->year} is closed. Cannot create programs for closed fiscal years.",
                             );
                     }
                 }

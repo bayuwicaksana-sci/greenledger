@@ -23,11 +23,35 @@ class CoaAccountController extends Controller
      */
     public function index(Request $request)
     {
-        $selectedYear = (int) ($request->input('fiscal_year') ?? date('Y'));
-        $fiscalYearId = FiscalYear::where('year', $selectedYear)->value('id');
+        // Get fiscal year parameter - can be year integer or fiscal_year_id
+        $fiscalYearParam = $request->input('fiscal_year');
+
+        if ($fiscalYearParam) {
+            // Try to find by ID first, then by year
+            $fiscalYear =
+                FiscalYear::find($fiscalYearParam) ??
+                FiscalYear::where('year', $fiscalYearParam)->first();
+        } else {
+            // Default to current open fiscal year
+            $fiscalYear = FiscalYear::where('is_closed', false)
+                ->orderByDesc('year')
+                ->first();
+        }
+
+        if (! $fiscalYear) {
+            // Fallback to latest fiscal year
+            $fiscalYear = FiscalYear::orderByDesc('year')->first();
+        }
+
+        $fiscalYearId = $fiscalYear?->id;
 
         $accounts = CoaAccount::query()
-            ->with(['site', 'approvalInstances' => fn ($q) => $q->latest()])
+            ->with([
+                'site',
+                'fiscalYear',
+                'approvalInstances' => fn ($q) => $q->latest(),
+            ])
+            ->where('fiscal_year_id', $fiscalYearId)
             ->select('coa_accounts.*')
             ->selectRaw(
                 'COALESCE((
@@ -43,22 +67,28 @@ class CoaAccountController extends Controller
                         COALESCE((SELECT SUM(prs.split_amount)
                                   FROM payment_request_splits prs
                                   INNER JOIN programs p ON p.id = prs.program_id
-                                  WHERE prs.coa_account_id = coa_accounts.id AND p.fiscal_year = ?
+                                  WHERE prs.coa_account_id = coa_accounts.id AND p.fiscal_year_id = ?
                         ), 0)
                     WHEN account_type = ? THEN
                         COALESCE((SELECT SUM(rh.total_revenue)
                                   FROM revenue_harvest rh
                                   INNER JOIN programs p ON p.id = rh.program_id
-                                  WHERE rh.coa_account_id = coa_accounts.id AND p.fiscal_year = ?
+                                  WHERE rh.coa_account_id = coa_accounts.id AND p.fiscal_year_id = ?
                         ), 0)
                         + COALESCE((SELECT SUM(rts.contract_value)
                                     FROM revenue_testing_services rts
                                     INNER JOIN programs p ON p.id = rts.program_id
-                                    WHERE rts.coa_account_id = coa_accounts.id AND p.fiscal_year = ?
+                                    WHERE rts.coa_account_id = coa_accounts.id AND p.fiscal_year_id = ?
                         ), 0)
                     ELSE 0
                 END AS actual_amount',
-                ['EXPENSE', $selectedYear, 'REVENUE', $selectedYear, $selectedYear],
+                [
+                    'EXPENSE',
+                    $fiscalYearId,
+                    'REVENUE',
+                    $fiscalYearId,
+                    $fiscalYearId,
+                ],
             )
             ->orderBy('account_code', 'asc')
             ->get()
@@ -74,18 +104,39 @@ class CoaAccountController extends Controller
         return Inertia::render('config/coa/Index', [
             'accounts' => $accounts,
             'sites' => \App\Models\Site::all(),
-            'fiscalYears' => FiscalYear::orderByDesc('year')->get(['id', 'year', 'is_closed']),
-            'selectedFiscalYear' => $selectedYear,
+            'fiscalYears' => FiscalYear::orderByDesc('year')->get([
+                'id',
+                'year',
+                'is_closed',
+            ]),
+            'selectedFiscalYear' => $fiscalYear?->year,
+            'selectedFiscalYearId' => $fiscalYear?->id,
+            'currentFiscalYearId' => FiscalYear::where('is_closed', false)
+                ->orderByDesc('year')
+                ->value('id'),
         ]);
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
+        // Get current open fiscal year or requested one
+        $selectedFiscalYearId =
+            $request->get('fiscal_year_id') ??
+            FiscalYear::where('is_closed', false)
+                ->orderByDesc('year')
+                ->value('id');
+
         return Inertia::render('config/coa/Create', [
             'sites' => \App\Models\Site::all(),
+            'fiscalYears' => FiscalYear::orderByDesc('year')->get([
+                'id',
+                'year',
+                'is_closed',
+            ]),
+            'selectedFiscalYearId' => $selectedFiscalYearId,
             'standardAccounts' => config(
                 'coa_templates.standard_agricultural.accounts',
                 [],
@@ -96,14 +147,15 @@ class CoaAccountController extends Controller
                 'account_name',
                 'account_type',
                 'site_id',
+                'fiscal_year_id',
                 'hierarchy_level',
             )
+                ->where('fiscal_year_id', $selectedFiscalYearId)
                 ->where('is_active', true)
                 ->get(),
-            'existingCodes' => CoaAccount::select(
-                'site_id',
-                'account_code',
-            )->get(),
+            'existingCodes' => CoaAccount::select('site_id', 'account_code')
+                ->where('fiscal_year_id', $selectedFiscalYearId)
+                ->get(),
         ]);
     }
 
@@ -128,10 +180,19 @@ class CoaAccountController extends Controller
 
         $account = CoaAccount::create($data);
 
-        $workflow = ApprovalWorkflow::active()->forModel(CoaAccount::class)->first();
+        $workflow = ApprovalWorkflow::active()
+            ->forModel(CoaAccount::class)
+            ->first();
         if ($workflow) {
-            $instance = $this->workflowEngine->initializeWorkflow($account, $workflow, $request->user());
-            $this->workflowEngine->submitForApproval($instance, $request->user());
+            $instance = $this->workflowEngine->initializeWorkflow(
+                $account,
+                $workflow,
+                $request->user(),
+            );
+            $this->workflowEngine->submitForApproval(
+                $instance,
+                $request->user(),
+            );
         }
 
         return redirect()
@@ -191,10 +252,19 @@ class CoaAccountController extends Controller
                 $account = CoaAccount::create($accountData);
 
                 // Trigger approval workflow if active
-                $workflow = ApprovalWorkflow::active()->forModel(CoaAccount::class)->first();
+                $workflow = ApprovalWorkflow::active()
+                    ->forModel(CoaAccount::class)
+                    ->first();
                 if ($workflow) {
-                    $instance = $this->workflowEngine->initializeWorkflow($account, $workflow, $request->user());
-                    $this->workflowEngine->submitForApproval($instance, $request->user());
+                    $instance = $this->workflowEngine->initializeWorkflow(
+                        $account,
+                        $workflow,
+                        $request->user(),
+                    );
+                    $this->workflowEngine->submitForApproval(
+                        $instance,
+                        $request->user(),
+                    );
                 }
 
                 // Store mapping if temp_id exists
@@ -262,29 +332,38 @@ class CoaAccountController extends Controller
     public function edit(CoaAccount $coa)
     {
         $instance = $coa->approvalInstances()->latest()->first();
+        $coa->load('fiscalYear');
 
         return Inertia::render('config/coa/Edit', [
-            'account' => array_merge($coa->only([
-                'id',
-                'site_id',
-                'account_code',
-                'account_name',
-                'abbreviation',
-                'account_type',
-                'short_description',
-                'parent_account_id',
-                'is_active',
-                'initial_budget',
-                'first_transaction_at',
-                'category',
-                'sub_category',
-                'typical_usage',
-                'tax_applicable',
-            ]), [
-                'approval_status' => $instance
-                    ? $this->resolveApprovalStatus($instance)
-                    : null,
-            ]),
+            'account' => array_merge(
+                $coa->only([
+                    'id',
+                    'site_id',
+                    'account_code',
+                    'account_name',
+                    'abbreviation',
+                    'account_type',
+                    'short_description',
+                    'parent_account_id',
+                    'is_active',
+                    'initial_budget',
+                    'first_transaction_at',
+                    'category',
+                    'sub_category',
+                    'typical_usage',
+                    'tax_applicable',
+                ]),
+                [
+                    'fiscal_year' => $coa->fiscalYear->only([
+                        'id',
+                        'year',
+                        'is_closed',
+                    ]),
+                    'approval_status' => $instance
+                        ? $this->resolveApprovalStatus($instance)
+                        : null,
+                ],
+            ),
             'sites' => \App\Models\Site::all(),
             'parents' => CoaAccount::select(
                 'id',
@@ -293,6 +372,7 @@ class CoaAccountController extends Controller
                 'account_type',
                 'hierarchy_level',
             )
+                ->where('fiscal_year_id', $coa->fiscal_year_id)
                 ->where('is_active', true)
                 ->where('id', '!=', $coa->id) // Prevent self-parenting
                 ->get(),

@@ -1,5 +1,3 @@
-import { Head, Link, useForm } from '@inertiajs/react';
-import { ArrowLeft } from 'lucide-react';
 import {
     index,
     update,
@@ -17,7 +15,9 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import MainLayout from '@/layouts/main-layout';
-import type { BreadcrumbItem, Site } from '@/types';
+import type { BreadcrumbItem, FiscalYear, Site } from '@/types';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { ArrowLeft } from 'lucide-react';
 
 interface ParentAccount {
     id: number;
@@ -29,6 +29,7 @@ interface ParentAccount {
 interface CoaAccount {
     id: number;
     site_id: number;
+    fiscal_year: FiscalYear;
     account_code: string;
     account_name: string;
     abbreviation?: string;
@@ -48,7 +49,13 @@ interface CoaAccount {
 
 const SUB_CATEGORY_OPTIONS: Record<string, string[]> = {
     PROGRAM: ['Research', 'Knowledge'],
-    NON_PROGRAM: ['Administrative', 'Financial', 'Operational', 'Research', 'Knowledge'],
+    NON_PROGRAM: [
+        'Administrative',
+        'Financial',
+        'Operational',
+        'Research',
+        'Knowledge',
+    ],
 };
 
 interface EditProps {
@@ -109,16 +116,24 @@ export default function Edit({ account, sites, parents }: EditProps) {
                                     className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                                         account.approval_status === 'approved'
                                             ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                                            : account.approval_status === 'pending_approval'
+                                            : account.approval_status ===
+                                                'pending_approval'
                                               ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300'
-                                              : account.approval_status === 'rejected'
+                                              : account.approval_status ===
+                                                  'rejected'
                                                 ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
                                                 : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
                                     }`}
                                 >
-                                    {account.approval_status === 'approved' ? 'Approved' :
-                                     account.approval_status === 'pending_approval' ? 'Pending Approval' :
-                                     account.approval_status === 'rejected' ? 'Rejected' : 'Draft'}
+                                    {account.approval_status === 'approved'
+                                        ? 'Approved'
+                                        : account.approval_status ===
+                                            'pending_approval'
+                                          ? 'Pending Approval'
+                                          : account.approval_status ===
+                                              'rejected'
+                                            ? 'Rejected'
+                                            : 'Draft'}
                                 </span>
                             )}
                         </div>
@@ -158,10 +173,7 @@ export default function Edit({ account, sites, parents }: EditProps) {
                                     id="account_code"
                                     value={data.account_code}
                                     onChange={(e) =>
-                                        setData(
-                                            'account_code',
-                                            e.target.value,
-                                        )
+                                        setData('account_code', e.target.value)
                                     }
                                     placeholder="e.g. 5211"
                                     disabled={isLocked}
@@ -188,10 +200,7 @@ export default function Edit({ account, sites, parents }: EditProps) {
                                     id="account_name"
                                     value={data.account_name}
                                     onChange={(e) =>
-                                        setData(
-                                            'account_name',
-                                            e.target.value,
-                                        )
+                                        setData('account_name', e.target.value)
                                     }
                                     placeholder="e.g. Fertilizer Expenses"
                                 />
@@ -211,10 +220,7 @@ export default function Edit({ account, sites, parents }: EditProps) {
                                     id="abbreviation"
                                     value={data.abbreviation}
                                     onChange={(e) =>
-                                        setData(
-                                            'abbreviation',
-                                            e.target.value,
-                                        )
+                                        setData('abbreviation', e.target.value)
                                     }
                                     placeholder="Optional"
                                 />
@@ -307,15 +313,35 @@ export default function Edit({ account, sites, parents }: EditProps) {
                                 </Select>
                             </div>
 
+                            {/* Fiscal Year (read-only) */}
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                    <Label>Fiscal Year</Label>
+                                    {isLocked && (
+                                        <span className="rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                                            Locked
+                                        </span>
+                                    )}
+                                </div>
+                                <Input
+                                    value={`${account.fiscal_year.year}${account.fiscal_year.is_closed ? ' (Closed)' : ''}`}
+                                    disabled
+                                    className="bg-muted"
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    {isLocked
+                                        ? 'Fiscal year cannot be changed after transactions have been recorded'
+                                        : 'Accounts cannot be moved between fiscal years'}
+                                </p>
+                            </div>
+
                             {/* Parent Account */}
                             <div className="space-y-2">
                                 <Label htmlFor="parent_account_id">
                                     Parent Account
                                 </Label>
                                 <Select
-                                    value={
-                                        data.parent_account_id || 'none'
-                                    }
+                                    value={data.parent_account_id || 'none'}
                                     onValueChange={(val) =>
                                         setData(
                                             'parent_account_id',
@@ -413,9 +439,7 @@ export default function Edit({ account, sites, parents }: EditProps) {
                             <div className="space-y-2">
                                 <Label htmlFor="is_active">Status</Label>
                                 <Select
-                                    value={
-                                        data.is_active ? 'true' : 'false'
-                                    }
+                                    value={data.is_active ? 'true' : 'false'}
                                     onValueChange={(val) =>
                                         setData('is_active', val === 'true')
                                     }
@@ -474,18 +498,26 @@ export default function Edit({ account, sites, parents }: EditProps) {
                                         <SelectValue placeholder="Select category" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="PROGRAM">Program</SelectItem>
-                                        <SelectItem value="NON_PROGRAM">Non-Program</SelectItem>
+                                        <SelectItem value="PROGRAM">
+                                            Program
+                                        </SelectItem>
+                                        <SelectItem value="NON_PROGRAM">
+                                            Non-Program
+                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
                                 {errors.category && (
-                                    <p className="text-sm text-destructive">{errors.category}</p>
+                                    <p className="text-sm text-destructive">
+                                        {errors.category}
+                                    </p>
                                 )}
                             </div>
 
                             {/* Sub-Category */}
                             <div className="space-y-2">
-                                <Label htmlFor="sub_category">Sub-Category</Label>
+                                <Label htmlFor="sub_category">
+                                    Sub-Category
+                                </Label>
                                 <Select
                                     value={data.sub_category || ''}
                                     onValueChange={(val) =>
@@ -496,8 +528,14 @@ export default function Edit({ account, sites, parents }: EditProps) {
                                         <SelectValue placeholder="Select sub-category" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {(SUB_CATEGORY_OPTIONS[data.category] || []).map((opt) => (
-                                            <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                        {(
+                                            SUB_CATEGORY_OPTIONS[
+                                                data.category
+                                            ] || []
+                                        ).map((opt) => (
+                                            <SelectItem key={opt} value={opt}>
+                                                {opt}
+                                            </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
@@ -505,7 +543,9 @@ export default function Edit({ account, sites, parents }: EditProps) {
 
                             {/* Typical Usage */}
                             <div className="space-y-2">
-                                <Label htmlFor="typical_usage">Typical Usage</Label>
+                                <Label htmlFor="typical_usage">
+                                    Typical Usage
+                                </Label>
                                 <Input
                                     id="typical_usage"
                                     value={data.typical_usage}
@@ -518,7 +558,9 @@ export default function Edit({ account, sites, parents }: EditProps) {
 
                             {/* Tax Applicable */}
                             <div className="space-y-2">
-                                <Label htmlFor="tax_applicable">Tax Applicable</Label>
+                                <Label htmlFor="tax_applicable">
+                                    Tax Applicable
+                                </Label>
                                 <div className="flex items-center space-x-2">
                                     <Switch
                                         id="tax_applicable"

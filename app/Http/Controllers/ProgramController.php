@@ -62,11 +62,23 @@ class ProgramController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(Site $site)
+    public function create(Site $site, Request $request)
     {
+        // Get current open fiscal year or requested one
+        $selectedFiscalYearId =
+            $request->get('fiscal_year_id') ??
+            FiscalYear::where('is_closed', false)
+                ->orderByDesc('year')
+                ->value('id');
+
         return Inertia::render('programs/create', [
             'site_code' => $site->site_code,
-            'current_year' => now()->year,
+            'fiscalYears' => FiscalYear::orderByDesc('year')->get([
+                'id',
+                'year',
+                'is_closed',
+            ]),
+            'selectedFiscalYearId' => $selectedFiscalYearId,
             'users' => User::select('id', 'name', 'email')->get(),
             'commodities' => Commodity::where('is_active', true)->get(),
             'active_programs' => Program::where('site_id', $site->id)
@@ -215,7 +227,12 @@ class ProgramController extends Controller
             abort(404);
         }
 
-        $program->load(['treatments', 'budgetItems', 'activities']);
+        $program->load([
+            'fiscalYear',
+            'treatments',
+            'budgetItems',
+            'activities',
+        ]);
 
         // Serialize media for frontend
         $referenceFiles = $program

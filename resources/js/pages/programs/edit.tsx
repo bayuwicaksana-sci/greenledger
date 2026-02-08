@@ -1,5 +1,3 @@
-import { Head, router, useForm } from '@inertiajs/react';
-import type { FormEventHandler } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -22,6 +20,8 @@ import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import programRoutes from '@/routes/programs';
 import type { BreadcrumbItem, Program } from '@/types';
+import { Head, router, useForm } from '@inertiajs/react';
+import type { FormEventHandler } from 'react';
 
 export default function ProgramEdit({
     site_code,
@@ -50,7 +50,6 @@ export default function ProgramEdit({
         program_code: program.program_code,
         program_name: program.program_name,
         description: program.description || '',
-        fiscal_year: program.fiscal_year.toString(),
         total_budget: program.total_budget.toString(),
         start_date: program.start_date || '',
         end_date: program.end_date || '',
@@ -101,26 +100,16 @@ export default function ProgramEdit({
                                         )}
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="fiscal_year">
-                                            Fiscal Year
-                                        </Label>
+                                        <Label>Fiscal Year</Label>
                                         <Input
-                                            id="fiscal_year"
-                                            type="number"
-                                            value={data.fiscal_year}
-                                            onChange={(e) =>
-                                                setData(
-                                                    'fiscal_year',
-                                                    e.target.value,
-                                                )
-                                            }
-                                            required
+                                            value={`${program.fiscal_year.year}${program.fiscal_year.is_closed ? ' (Closed)' : ''}`}
+                                            disabled
+                                            className="bg-muted"
                                         />
-                                        {errors.fiscal_year && (
-                                            <p className="text-sm text-red-500">
-                                                {errors.fiscal_year}
-                                            </p>
-                                        )}
+                                        <p className="text-xs text-muted-foreground">
+                                            Programs cannot be moved between
+                                            fiscal years
+                                        </p>
                                     </div>
                                 </div>
 

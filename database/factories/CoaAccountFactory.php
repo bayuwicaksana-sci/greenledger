@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\FiscalYear;
 use App\Models\Site;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -19,6 +20,7 @@ class CoaAccountFactory extends Factory
     {
         return [
             'site_id' => Site::factory(),
+            'fiscal_year_id' => FiscalYear::factory(),
             'account_code' => $this->faker->numerify('####'),
             'account_name' => $this->faker->words(3, true),
             'account_type' => $this->faker->randomElement([
@@ -42,5 +44,16 @@ class CoaAccountFactory extends Factory
             ]),
             'tax_applicable' => false,
         ];
+    }
+
+    /**
+     * Scope COA account to a specific fiscal year.
+     */
+    public function forFiscalYear(int|FiscalYear $fiscalYear): static
+    {
+        $fiscalYearId =
+            $fiscalYear instanceof FiscalYear ? $fiscalYear->id : $fiscalYear;
+
+        return $this->state(fn () => ['fiscal_year_id' => $fiscalYearId]);
     }
 }

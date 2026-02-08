@@ -45,7 +45,9 @@ class UpdateCoaAccountRequest extends FormRequest
                 'unique:coa_accounts,account_code,'.
                 $coaId.
                 ',id,site_id,'.
-                $siteId,
+                $siteId.
+                ',fiscal_year_id,'.
+                $coa->fiscal_year_id,
             ];
 
             $rules['account_type'] = [
@@ -71,10 +73,21 @@ class UpdateCoaAccountRequest extends FormRequest
             ];
         }
 
-        $rules['budget_control'] = ['boolean'];
+        // CRITICAL: fiscal_year_id cannot be changed after creation
+        $rules['fiscal_year_id'] = [
+            'sometimes',
+            'required',
+            'integer',
+            'in:'.$coa->fiscal_year_id,
+        ];
 
-        // Category is NOT locked by transactions (only code and type are)
-        $rules['category'] = ['sometimes', 'required', 'string', 'in:PROGRAM,NON_PROGRAM'];
+        $rules['budget_control'] = ['boolean'];
+        $rules['category'] = [
+            'sometimes',
+            'required',
+            'string',
+            'in:PROGRAM,NON_PROGRAM',
+        ];
         $rules['sub_category'] = ['sometimes', 'nullable', 'string', 'max:50'];
         $rules['typical_usage'] = ['sometimes', 'nullable', 'string'];
         $rules['tax_applicable'] = ['sometimes', 'boolean'];
@@ -90,11 +103,12 @@ class UpdateCoaAccountRequest extends FormRequest
         $coa = $this->route('coa');
 
         return [
-            'account_code.unique' => 'An account with this code already exists for the selected site.',
+            'account_code.unique' => 'An account with this code already exists for the selected site and fiscal year.',
             'account_code.in' => 'Account code cannot be changed after transactions have been recorded.',
             'account_type.in' => $coa->isLocked()
                 ? 'Account type cannot be changed after transactions have been recorded.'
                 : 'Account type must be one of ASSET, LIABILITY, EQUITY, REVENUE, or EXPENSE.',
+            'fiscal_year_id.in' => 'Fiscal year cannot be changed after account creation.',
             'parent_account_id.exists' => 'The selected parent account does not exist.',
         ];
     }

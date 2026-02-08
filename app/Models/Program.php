@@ -37,7 +37,7 @@ class Program extends Model implements HasMedia
         'program_code',
         'program_name',
         'description',
-        'fiscal_year',
+        'fiscal_year_id',
         'status',
         'total_budget',
         'start_date',
@@ -120,11 +120,11 @@ class Program extends Model implements HasMedia
     }
 
     /**
-     * Get the fiscal year for this program.
+     * Get the fiscal year this program belongs to.
      */
     public function fiscalYear(): BelongsTo
     {
-        return $this->belongsTo(FiscalYear::class, 'fiscal_year', 'year');
+        return $this->belongsTo(FiscalYear::class, 'fiscal_year_id');
     }
 
     /**
@@ -270,8 +270,7 @@ class Program extends Model implements HasMedia
      */
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('plot_map')
-            ->singleFile();
+        $this->addMediaCollection('plot_map')->singleFile();
 
         $this->addMediaCollection('reference_files');
     }

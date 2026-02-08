@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\CoaAccount;
+use App\Models\FiscalYear;
 use Illuminate\Support\Facades\DB;
 
 class CoaAccountTemplateService
@@ -18,12 +19,15 @@ class CoaAccountTemplateService
     }
 
     /**
-     * Check which accounts from a template already exist for a given site.
+     * Check which accounts from a template already exist for a given site and fiscal year.
      *
      * @return array<string, bool> Map of account_code -> exists
      */
-    public function checkConflicts(string $templateKey, int $siteId): array
-    {
+    public function checkConflicts(
+        string $templateKey,
+        int $siteId,
+        int $fiscalYearId,
+    ): array {
         $templates = $this->getTemplates();
         $template = $templates[$templateKey] ?? null;
 
@@ -37,6 +41,7 @@ class CoaAccountTemplateService
             $baseCode = $account['code'];
 
             $conflicts[$account['code']] = CoaAccount::where('site_id', $siteId)
+                ->where('fiscal_year_id', $fiscalYearId)
                 ->where('account_code', $baseCode)
                 ->exists();
         }
@@ -45,7 +50,7 @@ class CoaAccountTemplateService
     }
 
     /**
-     * Apply a template to a site, creating all accounts in the correct hierarchy order.
+     * Apply a template to a site for a specific fiscal year, creating all accounts in the correct hierarchy order.
      *
      * @return int Number of accounts created.
      *
@@ -54,6 +59,7 @@ class CoaAccountTemplateService
     public function applyTemplate(
         string $templateKey,
         int $siteId,
+        int $fiscalYearId,
         bool $skipExisting = false,
         ?int $createdBy = null,
     ): int {
@@ -66,12 +72,24 @@ class CoaAccountTemplateService
             );
         }
 
-        $conflicts = $this->checkConflicts($templateKey, $siteId);
+        $conflicts = $this->checkConflicts(
+            $templateKey,
+            $siteId,
+            $fiscalYearId,
+        );
         $hasConflicts = in_array(true, $conflicts, true);
 
         if ($hasConflicts && ! $skipExisting) {
             throw new \InvalidArgumentException(
                 'Template has conflicting accounts. Use skipExisting to skip them.',
+            );
+        }
+
+        // Verify fiscal year exists
+        $fiscalYear = FiscalYear::find($fiscalYearId);
+        if (! $fiscalYear) {
+            throw new \InvalidArgumentException(
+                "Fiscal year with ID {$fiscalYearId} not found.",
             );
         }
 
@@ -82,6 +100,7 @@ class CoaAccountTemplateService
         return DB::transaction(function () use (
             $template,
             $siteId,
+            $fiscalYearId,
             $skipExisting,
             $createdBy,
         ) {
@@ -99,6 +118,7 @@ class CoaAccountTemplateService
 
                 // Check if exists
                 $exists = CoaAccount::where('site_id', $siteId)
+                    ->where('fiscal_year_id', $fiscalYearId)
                     ->where('account_code', $baseCode)
                     ->exists();
 
@@ -106,6 +126,7 @@ class CoaAccountTemplateService
                     if ($skipExisting) {
                         // Find existing to link children
                         $existing = CoaAccount::where('site_id', $siteId)
+                            ->where('fiscal_year_id', $fiscalYearId)
                             ->where('account_code', $baseCode)
                             ->first();
                         if ($existing) {
@@ -138,6 +159,7 @@ class CoaAccountTemplateService
 
                 $created = CoaAccount::create([
                     'site_id' => $siteId,
+                    'fiscal_year_id' => $fiscalYearId,
                     'account_code' => $baseCode,
                     'abbreviation' => $abbr,
                     'account_name' => $account['name'],

@@ -1,10 +1,12 @@
+import type { FiscalYear } from './fiscal_year';
+
 export interface Program {
     id: number;
     site_id: number;
     program_code: string;
     program_name: string;
     description: string | null;
-    fiscal_year: number;
+    fiscal_year: FiscalYear;
     status: 'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'ARCHIVED';
     total_budget: number;
     start_date: string | null;

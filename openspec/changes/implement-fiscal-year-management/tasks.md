@@ -1,71 +1,71 @@
 ## 1. Database Schema - Breaking Changes
 
-- [ ] 1.1 Create migration: add `fiscal_year_id` to `coa_accounts` table with FK constraint
-- [ ] 1.2 Create migration: update `coa_accounts` unique constraint to include `fiscal_year_id`
-- [ ] 1.3 Create migration: add `fiscal_year_id` to `programs` table
-- [ ] 1.4 Create migration: migrate data from `programs.fiscal_year` integer to `fiscal_year_id` FK
-- [ ] 1.5 Create migration: drop `programs.fiscal_year` column after data migration
-- [ ] 1.6 Create migration: create `budget_commitments` table with full schema
-- [ ] 1.7 Add indexes: `coa_accounts.fiscal_year_id`, `budget_commitments.fiscal_year_id`, `budget_commitments.status`
+- [x] 1.1 Create migration: add `fiscal_year_id` to `coa_accounts` table with FK constraint
+- [x] 1.2 Create migration: update `coa_accounts` unique constraint to include `fiscal_year_id`
+- [x] 1.3 Create migration: add `fiscal_year_id` to `programs` table
+- [x] 1.4 Create migration: migrate data from `programs.fiscal_year` integer to `fiscal_year_id` FK
+- [x] 1.5 Create migration: drop `programs.fiscal_year` column after data migration
+- [x] 1.6 Create migration: create `budget_commitments` table with full schema
+- [x] 1.7 Add indexes: `coa_accounts.fiscal_year_id`, `budget_commitments.fiscal_year_id`, `budget_commitments.status`
 
 ## 2. Model Updates - Relationships & Scopes
 
-- [ ] 2.1 Update `CoaAccount` model: add `fiscal_year_id` to fillable array
-- [ ] 2.2 Update `CoaAccount` model: add `fiscalYear()` BelongsTo relationship
-- [ ] 2.3 Update `CoaAccount` model: add `scopeForFiscalYear()` query scope
-- [ ] 2.4 Update `Program` model: update `fiscalYear()` relationship to use `fiscal_year_id` FK
-- [ ] 2.5 Update `Program` model: change `fiscal_year_id` in fillable (remove `fiscal_year` integer)
-- [ ] 2.6 Create `BudgetCommitment` model with relationships and status constants
-- [ ] 2.7 Update `FiscalYear` model: add `coaAccounts()` HasMany relationship
-- [ ] 2.8 Update `FiscalYear` model: add `budgetCommitments()` HasMany relationship
-- [ ] 2.9 Update `FiscalYear` model: add `getTotalCommittedAttribute()` accessor
+- [x] 2.1 Update `CoaAccount` model: add `fiscal_year_id` to fillable array
+- [x] 2.2 Update `CoaAccount` model: add `fiscalYear()` BelongsTo relationship
+- [x] 2.3 Update `CoaAccount` model: add `scopeForFiscalYear()` query scope
+- [x] 2.4 Update `Program` model: update `fiscalYear()` relationship to use `fiscal_year_id` FK
+- [x] 2.5 Update `Program` model: change `fiscal_year_id` in fillable (remove `fiscal_year` integer)
+- [x] 2.6 Create `BudgetCommitment` model with relationships and status constants
+- [x] 2.7 Update `FiscalYear` model: add `coaAccounts()` HasMany relationship
+- [x] 2.8 Update `FiscalYear` model: add `budgetCommitments()` HasMany relationship
+- [x] 2.9 Update `FiscalYear` model: add `getTotalCommittedAttribute()` accessor
 
 ## 3. Factory Updates - Test Data Generation
 
-- [ ] 3.1 Update `CoaAccountFactory`: add `fiscal_year_id` to definition
-- [ ] 3.2 Update `CoaAccountFactory`: create `forFiscalYear($fyId)` state method
-- [ ] 3.3 Update `ProgramFactory`: change `fiscal_year` integer to `fiscal_year_id`
-- [ ] 3.4 Update `ProgramFactory`: create `forFiscalYear($fyId)` state method
-- [ ] 3.5 Create `BudgetCommitmentFactory` with status states (pending, committed, released)
-- [ ] 3.6 Update `FiscalYearFactory`: add relationships seeding (no auto-seed of +1 year)
+- [x] 3.1 Update `CoaAccountFactory`: add `fiscal_year_id` to definition
+- [x] 3.2 Update `CoaAccountFactory`: create `forFiscalYear($fyId)` state method
+- [x] 3.3 Update `ProgramFactory`: change `fiscal_year` integer to `fiscal_year_id`
+- [x] 3.4 Update `ProgramFactory`: create `forFiscalYear($fyId)` state method
+- [x] 3.5 Create `BudgetCommitmentFactory` with status states (pending, committed, released)
+- [x] 3.6 Update `FiscalYearFactory`: add relationships seeding (no auto-seed of +1 year)
 
 ## 4. Seeder Updates - Clean Slate Approach
 
-- [ ] 4.1 Update `FiscalYearSeeder`: remove auto-creation of current-1, current+1 years
-- [ ] 4.2 Update `FiscalYearSeeder`: only create current year if none exists
-- [ ] 4.3 Update `SiteCoaSeeder`: require fiscal_year_id parameter, create accounts per FY
-- [ ] 4.4 Update `DatabaseSeeder`: ensure fiscal year seeded before COA seeder runs
-- [ ] 4.5 Create data migration seeder: assign existing COA to current fiscal year (one-time)
+- [x] 4.1 Update `FiscalYearSeeder`: remove auto-creation of current-1, current+1 years
+- [x] 4.2 Update `FiscalYearSeeder`: only create current year if none exists
+- [x] 4.3 Update `SiteCoaSeeder`: require fiscal_year_id parameter, create accounts per FY
+- [x] 4.4 Update `DatabaseSeeder`: ensure fiscal year seeded before COA seeder runs
+- [x] 4.5 Create data migration seeder: assign existing COA to current fiscal year (one-time)
 
 ## 5. Service Layer - COA Copying & Budget Calculations
 
-- [ ] 5.1 Create method: `FiscalYearService::copyCoaStructure($sourceFY, $targetFY)`
-- [ ] 5.2 Implement COA copying logic: copy structure, set is_active=false for new accounts
-- [ ] 5.3 Create method: `FiscalYearService::calculateBudgetMetrics($fiscalYear)`
-- [ ] 5.4 Implement metrics calculation: allocated, committed, realized, available
-- [ ] 5.5 Calculate utilization rate: (committed / allocated) \* 100
-- [ ] 5.6 Update `FiscalYearService::validate()`: check COA count before closing
-- [ ] 5.7 Update `FiscalYearService::close()`: prevent closing if active commitments exist
+- [x] 5.1 Create method: `FiscalYearService::copyCoaStructure($sourceFY, $targetFY)`
+- [x] 5.2 Implement COA copying logic: copy structure, set is_active=false for new accounts
+- [x] 5.3 Create method: `FiscalYearService::calculateBudgetMetrics($fiscalYear)`
+- [x] 5.4 Implement metrics calculation: allocated, committed, realized, available
+- [x] 5.5 Calculate utilization rate: (committed / allocated) \* 100
+- [x] 5.6 Update `FiscalYearService::validate()`: check COA count before closing
+- [x] 5.7 Update `FiscalYearService::close()`: prevent closing if active commitments exist
 
 ## 6. Request Validation - Fiscal Year Scoping
 
-- [ ] 6.1 Update `StoreProgramRequest`: validate `fiscal_year_id` exists (not integer validation)
-- [ ] 6.2 Update `StoreProgramRequest`: check fiscal year is not closed
-- [ ] 6.3 Create `StoreCoaAccountRequest`: add `fiscal_year_id` validation (required, exists)
-- [ ] 6.4 Create `UpdateCoaAccountRequest`: prevent changing `fiscal_year_id` after creation
-- [ ] 6.5 Create `StoreBudgetCommitmentRequest`: validate fiscal_year_id, program_id, amount
-- [ ] 6.6 Create `StoreBudgetCommitment Request`: check available balance before committing
+- [x] 6.1 Update `StoreProgramRequest`: validate `fiscal_year_id` exists (not integer validation)
+- [x] 6.2 Update `StoreProgramRequest`: check fiscal year is not closed
+- [x] 6.3 Create `StoreCoaAccountRequest`: add `fiscal_year_id` validation (required, exists)
+- [x] 6.4 Create `UpdateCoaAccountRequest`: prevent changing `fiscal_year_id` after creation
+- [x] 6.5 Create `StoreBudgetCommitmentRequest`: validate fiscal_year_id, program_id, amount
+- [x] 6.6 Create `StoreBudgetCommitmentRequest`: check available balance before committing
 
 ## 7. Controller Updates - Fiscal Year Context
 
-- [ ] 7.1 Update `CoaAccountController@index`: add fiscal year filter parameter
-- [ ] 7.2 Update `CoaAccountController@index`: scope accounts by selected fiscal year
-- [ ] 7.3 Update `CoaAccountController@store`: validate and save `fiscal_year_id`
-- [ ] 7.4 Update `FiscalYearController@show`: load budget metrics via service
-- [ ] 7.5 Create `FiscalYearController@copyCoaAction`: handle COA copying request
-- [ ] 7.6 Create `FiscalYearController@budgetMetrics`: API endpoint for metrics
-- [ ] 7.7 Update `FiscalYearController@destroy`: check COA count before deletion
-- [ ] 7.8 Create `BudgetCommitmentController`: CRUD operations for commitments
+- [x] 7.1 Update `CoaAccountController@index`: add fiscal year filter parameter
+- [x] 7.2 Update `CoaAccountController@index`: scope accounts by selected fiscal year
+- [x] 7.3 Update `CoaAccountController@store`: validate and save `fiscal_year_id`
+- [x] 7.4 Update `FiscalYearController@show`: load budget metrics via service
+- [x] 7.5 Create `FiscalYearController@copyCoaAction`: handle COA copying request
+- [x] 7.6 Create `FiscalYearController@budgetMetrics`: API endpoint for metrics
+- [x] 7.7 Update `FiscalYearController@destroy`: check COA count before deletion
+- [x] 7.8 Create `BudgetCommitmentController`: CRUD operations for commitments
 
 ## 8. Permissions & Policies
 
@@ -80,8 +80,8 @@
 
 ## 9. Frontend - Fiscal Year Pages
 
-- [ ] 9.1 Update `resources/js/pages/admin/fiscal-years/index.tsx`: add COA count column
-- [ ] 9.2 Update `resources/js/pages/admin/fiscal-years/index.tsx`: disable delete if COA exists
+- [x] 9.1 Update `resources/js/pages/admin/fiscal-years/index.tsx`: add COA count column
+- [x] 9.2 Update `resources/js/pages/admin/fiscal-years/index.tsx`: disable delete if COA exists
 - [ ] 9.3 Update `resources/js/pages/admin/fiscal-years/show.tsx`: add budget metrics cards
 - [ ] 9.4 Create budget metrics component: `BudgetMetricsGrid` (4 cards: Allocated, Committed, Realized, Available)
 - [ ] 9.5 Create budget progress component: `BudgetProgressBar` (visual breakdown of 3 states)
@@ -91,19 +91,19 @@
 
 ## 10. Frontend - COA Pages with Fiscal Year Context
 
-- [ ] 10.1 Update `resources/js/pages/coa/index.tsx`: add fiscal year selector dropdown
-- [ ] 10.2 Update COA index: filter accounts by selected `fiscal_year_id`
-- [ ] 10.3 Update COA create form: add fiscal year selector (required field)
-- [ ] 10.4 Update COA create form: disable fiscal year selector after account has transactions
-- [ ] 10.5 Update COA table columns: add "Fiscal Year" column showing FY year
-- [ ] 10.6 Add visual indicator: badge showing if viewing current/past/future FY
-- [ ] 10.7 Create COA empty state: "No accounts for this fiscal year. Copy from previous?"
+- [x] 10.1 Update `resources/js/pages/coa/index.tsx`: add fiscal year selector dropdown
+- [x] 10.2 Update COA index: filter accounts by selected `fiscal_year_id`
+- [x] 10.3 Update COA create form: add fiscal year selector (required field)
+- [x] 10.4 Update COA create form: disable fiscal year selector after account has transactions
+- [x] 10.5 Update COA table columns: add "Fiscal Year" column showing FY year
+- [x] 10.6 Add visual indicator: badge showing if viewing current/past/future FY
+- [x] 10.7 Create COA empty state: "No accounts for this fiscal year. Copy from previous?"
 
 ## 11. Frontend - Program Pages
 
-- [ ] 11.1 Update program create form: use fiscal_year_id dropdown (not integer input)
+- [x] 11.1 Update program create form: use fiscal_year_id dropdown (not integer input)
 - [ ] 11.2 Update program create form: show fiscal year start/end dates when selected
-- [ ] 11.3 Update program edit form: display fiscal year as read-only (cannot change after creation)
+- [x] 11.3 Update program edit form: display fiscal year as read-only (cannot change after creation)
 - [ ] 11.4 Update program detail page: show fiscal year period and status (open/closed)
 - [ ] 11.5 Add validation message: "Cannot create program for closed fiscal year" with override option
 - [ ] 11.6 Update program list filters: filter by fiscal year dropdown

@@ -24,17 +24,26 @@ class StoreCoaAccountRequest extends FormRequest
     public function rules(): array
     {
         $siteId = $this->input('site_id');
+        $fiscalYearId = $this->input('fiscal_year_id');
 
         return [
             'site_id' => ['required', 'exists:sites,id'],
+            'fiscal_year_id' => [
+                'required',
+                'integer',
+                'exists:fiscal_years,id',
+            ],
             'account_code' => [
                 'required',
                 'string',
                 'max:20',
                 Rule::unique('coa_accounts')->where(function ($query) use (
                     $siteId,
+                    $fiscalYearId,
                 ) {
-                    return $query->where('site_id', $siteId);
+                    return $query
+                        ->where('site_id', $siteId)
+                        ->where('fiscal_year_id', $fiscalYearId);
                 }),
             ],
             'account_name' => ['required', 'string', 'max:255'],
@@ -44,6 +53,7 @@ class StoreCoaAccountRequest extends FormRequest
                 'in:ASSET,LIABILITY,EQUITY,REVENUE,EXPENSE',
             ],
             'short_description' => ['nullable', 'string'],
+            'abbreviation' => ['nullable', 'string', 'max:10'],
             'parent_account_id' => ['nullable', 'exists:coa_accounts,id'],
             'is_active' => ['boolean'],
             'budget_control' => ['boolean'],

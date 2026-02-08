@@ -1,7 +1,3 @@
-import { Link, router } from '@inertiajs/react';
-import { type VisibilityState } from '@tanstack/react-table';
-import { ChevronDown, ChevronRight, Edit, Trash2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Table,
@@ -13,11 +9,16 @@ import {
 } from '@/components/ui/table';
 import config from '@/routes/config';
 import type { CoaAccount, Site } from '@/types';
+import { Link, router } from '@inertiajs/react';
+import { type VisibilityState } from '@tanstack/react-table';
+import { ChevronDown, ChevronRight, Edit, Trash2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 
 interface CoaTreeViewProps {
     accounts: CoaAccount[];
     sites: Site[];
     columnVisibility: VisibilityState;
+    currentFiscalYearId: number;
 }
 
 function formatCurrency(value: number): string {
@@ -37,6 +38,7 @@ function TreeRow({
     onToggle,
     depth,
     columnVisibility,
+    currentFiscalYearId,
 }: {
     account: CoaAccount;
     childrenMap: Map<number | null, CoaAccount[]>;
@@ -44,6 +46,7 @@ function TreeRow({
     onToggle: (id: number) => void;
     depth: number;
     columnVisibility: VisibilityState;
+    currentFiscalYearId: number;
 }) {
     const children = childrenMap.get(account.id) || [];
     const hasChildren = children.length > 0;
@@ -198,6 +201,23 @@ function TreeRow({
                         {formatCurrency(account.balance)}
                     </TableCell>
                 )}
+                {isVisible('fiscal_year') && (
+                    <TableCell>
+                        <div className="flex items-center gap-2">
+                            <span>{account.fiscal_year?.year || ''}</span>
+                            {account.fiscal_year_id === currentFiscalYearId && (
+                                <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                                    Current
+                                </span>
+                            )}
+                            {account.fiscal_year_id < currentFiscalYearId && (
+                                <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                                    Past
+                                </span>
+                            )}
+                        </div>
+                    </TableCell>
+                )}
                 <TableCell>
                     <div className="flex justify-end gap-2">
                         <Link href={config.coa.edit(account.id)}>
@@ -235,6 +255,7 @@ function TreeRow({
                         onToggle={onToggle}
                         depth={depth + 1}
                         columnVisibility={columnVisibility}
+                        currentFiscalYearId={currentFiscalYearId}
                     />
                 ))}
         </>
@@ -251,9 +272,14 @@ const HIDEABLE_COLUMNS = [
     'allocated_budget',
     'actual_amount',
     'balance',
+    'fiscal_year',
 ] as const;
 
-export function CoaTreeView({ accounts, columnVisibility }: CoaTreeViewProps) {
+export function CoaTreeView({
+    accounts,
+    columnVisibility,
+    currentFiscalYearId,
+}: CoaTreeViewProps) {
     const childrenMap = useMemo(() => {
         const map = new Map<number | null, CoaAccount[]>();
         for (const account of accounts) {
@@ -327,6 +353,9 @@ export function CoaTreeView({ accounts, columnVisibility }: CoaTreeViewProps) {
                                 Balance
                             </TableHead>
                         )}
+                        {isVisible('fiscal_year') && (
+                            <TableHead>Fiscal Year</TableHead>
+                        )}
                         <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -341,6 +370,7 @@ export function CoaTreeView({ accounts, columnVisibility }: CoaTreeViewProps) {
                                 onToggle={handleToggle}
                                 depth={0}
                                 columnVisibility={columnVisibility}
+                                currentFiscalYearId={currentFiscalYearId}
                             />
                         ))
                     ) : (

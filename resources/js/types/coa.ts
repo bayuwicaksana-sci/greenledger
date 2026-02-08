@@ -1,8 +1,10 @@
+import type { FiscalYear } from './fiscal_year';
 import type { Site } from './site';
 
 export type CoaAccount = {
     id: number;
     site_id: number;
+    fiscal_year_id: number;
     account_code: string;
     account_name: string;
     account_type: 'REVENUE' | 'EXPENSE';
@@ -18,6 +20,13 @@ export type CoaAccount = {
     sub_category: string | null;
     typical_usage: string | null;
     tax_applicable: boolean;
-    approval_status: 'draft' | 'pending_approval' | 'approved' | 'rejected' | 'cancelled' | null;
+    approval_status:
+        | 'draft'
+        | 'pending_approval'
+        | 'approved'
+        | 'rejected'
+        | 'cancelled'
+        | null;
+    fiscal_year?: FiscalYear;
     site?: Site;
 };

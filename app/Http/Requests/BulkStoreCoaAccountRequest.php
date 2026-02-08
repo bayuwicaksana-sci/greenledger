@@ -25,6 +25,10 @@ class BulkStoreCoaAccountRequest extends FormRequest
     {
         return [
             'accounts' => ['required', 'array', 'min:1', 'max:50'],
+            'accounts.*.fiscal_year_id' => [
+                'required',
+                'exists:fiscal_years,id',
+            ],
             'accounts.*.site_id' => ['required', 'exists:sites,id'],
             'accounts.*.account_code' => ['required', 'string', 'max:255'],
             'accounts.*.account_name' => ['required', 'string', 'max:255'],
@@ -44,7 +48,11 @@ class BulkStoreCoaAccountRequest extends FormRequest
             'accounts.*.is_active' => ['boolean'],
             'accounts.*.budget_control' => ['boolean'],
             'accounts.*.initial_budget' => ['nullable', 'numeric', 'min:0'],
-            'accounts.*.category' => ['required', 'string', 'in:PROGRAM,NON_PROGRAM'],
+            'accounts.*.category' => [
+                'required',
+                'string',
+                'in:PROGRAM,NON_PROGRAM',
+            ],
             'accounts.*.sub_category' => ['nullable', 'string', 'max:50'],
             'accounts.*.typical_usage' => ['nullable', 'string'],
             'accounts.*.tax_applicable' => ['boolean'],
@@ -94,14 +102,11 @@ class BulkStoreCoaAccountRequest extends FormRequest
             }
 
             // Validate parent_temp_id references
-            $tempIds = collect($accounts)
-                ->pluck('_temp_id')
-                ->filter()
-                ->all();
+            $tempIds = collect($accounts)->pluck('_temp_id')->filter()->all();
 
             foreach ($accounts as $index => $account) {
                 $parentTempId = $account['parent_temp_id'] ?? null;
-                if ($parentTempId && ! in_array($parentTempId, $tempIds)) {
+                if ($parentTempId && !in_array($parentTempId, $tempIds)) {
                     $validator
                         ->errors()
                         ->add(
@@ -123,12 +128,17 @@ class BulkStoreCoaAccountRequest extends FormRequest
             'accounts.array' => 'Accounts must be an array.',
             'accounts.min' => 'At least one account is required.',
             'accounts.max' => 'Cannot create more than 50 accounts at once.',
-            'accounts.*.site_id.required' => 'Site is required for all accounts.',
+            'accounts.*.site_id.required' =>
+                'Site is required for all accounts.',
             'accounts.*.site_id.exists' => 'Selected site does not exist.',
-            'accounts.*.account_code.required' => 'Account code is required for all accounts.',
-            'accounts.*.account_name.required' => 'Account name is required for all accounts.',
-            'accounts.*.account_type.required' => 'Account type is required for all accounts.',
-            'accounts.*.account_type.in' => 'Account type must be REVENUE or EXPENSE.',
+            'accounts.*.account_code.required' =>
+                'Account code is required for all accounts.',
+            'accounts.*.account_name.required' =>
+                'Account name is required for all accounts.',
+            'accounts.*.account_type.required' =>
+                'Account type is required for all accounts.',
+            'accounts.*.account_type.in' =>
+                'Account type must be REVENUE or EXPENSE.',
         ];
     }
 }

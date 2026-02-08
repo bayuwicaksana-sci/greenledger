@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\FiscalYear;
 use App\Models\Site;
 use App\Services\CoaAccountTemplateService;
 use Illuminate\Database\Seeder;
@@ -18,6 +19,21 @@ class SiteCoaSeeder extends Seeder
      */
     public function run(): void
     {
+        // Get the current fiscal year (required for COA accounts)
+        $fiscalYear = FiscalYear::where('is_closed', false)
+            ->orderBy('year', 'desc')
+            ->first();
+
+        if (! $fiscalYear) {
+            $this->command->error(
+                'No open fiscal year found. Run FiscalYearSeeder first.',
+            );
+
+            return;
+        }
+
+        $this->command->info("Using fiscal year: {$fiscalYear->year}");
+
         $sites = Site::all();
 
         if ($sites->isEmpty()) {
@@ -40,11 +56,11 @@ class SiteCoaSeeder extends Seeder
             );
 
             try {
-                // Determine if we should really skip existing or force update?
-                // Usually seeds skipExisting = true so they are idempotent.
+                // Apply template to site for the current fiscal year
                 $count = $this->templateService->applyTemplate(
                     $templateKey,
                     $site->id,
+                    $fiscalYear->id,
                     true, // skipExisting
                 );
 
