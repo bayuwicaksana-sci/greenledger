@@ -1,3 +1,4 @@
+import { useState, type FormEventHandler } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -7,25 +8,34 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import programRoutes from '@/routes/programs';
 import type { BreadcrumbItem, FiscalYear } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
-import type { FormEventHandler } from 'react';
-import BoQManager from './partials/BoQManager';
-import ExperimentalDesignForm from './partials/ExperimentalDesignForm';
-import HarvestPlanningForm from './partials/HarvestPlanningForm';
-import NonProgramForm from './partials/NonProgramForm';
-import ScientificBackgroundForm from './partials/ScientificBackgroundForm';
+import { Stepper, type Step } from '@/components/ui/stepper';
+import {
+    validateStep1,
+    validateStep2,
+    validateStep3,
+    validateStep4,
+    validateStep5,
+    validateStep6,
+} from './utils/stepValidation';
+
+// Step Components
+import ProgramStep1BasicInfo from './partials/stepper/ProgramStep1BasicInfo';
+import ProgramStep2Team from './partials/stepper/ProgramStep2Team';
+import ProgramStep3Scientific from './partials/stepper/ProgramStep3Scientific';
+import ProgramStep4Experimental from './partials/stepper/ProgramStep4Experimental';
+import ProgramStep5Budget from './partials/stepper/ProgramStep5Budget';
+import ProgramStep6Documents from './partials/stepper/ProgramStep6Documents';
+
+interface CoaAccount {
+    id: number;
+    account_code: string;
+    account_name: string;
+    short_description: string | null;
+}
 
 export default function ProgramCreate({
     site_code,
@@ -36,6 +46,7 @@ export default function ProgramCreate({
     active_programs,
     budget_categories,
     budget_phases,
+    coa_accounts,
 }: {
     site_code: string;
     fiscalYears: FiscalYear[];
@@ -45,6 +56,7 @@ export default function ProgramCreate({
     active_programs: any[];
     budget_categories: any[];
     budget_phases: any[];
+    coa_accounts: CoaAccount[];
 }) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
@@ -58,36 +70,43 @@ export default function ProgramCreate({
     ];
 
     const { data, setData, post, processing, errors } = useForm({
-        classification: 'PROGRAM', // Default to Research Program
+        classification: 'PROGRAM',
         program_code: '',
         program_name: '',
         description: '',
         fiscal_year_id: selectedFiscalYearId.toString(),
-        total_budget: '0',
+        total_budget: 0,
         start_date: '',
         end_date: '',
         status: 'DRAFT',
 
-        // Research specific
+        program_type: 'SINGLE_YEAR',
+
         program_category: '',
         commodity_id: '',
         research_associate_id: '',
         research_officer_id: '',
+        support_team_member_ids: [],
 
-        // Non-Program specific
+        planting_start_date: '',
+        estimated_duration_days: '',
+
+        prerequisite_program_id: '',
+        dependency_note: '',
+
         non_program_category: '',
 
-        // Nested data
         scientific_background: {},
         experimental_design: {},
         harvest_planning: {},
         budget_items: [],
         treatments: [],
+        activities: [],
 
-        // Flattened fields mapped to nested forms
         background_text: '',
         problem_statement: '',
         hypothesis: '',
+        objectives: [],
         journal_references: '',
 
         trial_design: '',
@@ -105,247 +124,241 @@ export default function ProgramCreate({
         harvest_frequency_unit: '',
         harvest_event_count: '',
         first_harvest_date: '',
+
+        plot_map: null,
+        reference_files: [],
     });
+
+    const [currentStep, setCurrentStep] = useState(0);
+    const [completedSteps, setCompletedSteps] = useState<Set<number>>(
+        new Set(),
+    );
+
+    // Define steps based on classification
+    const programSteps: Step[] = [
+        {
+            id: 'basic',
+            title: 'Basic Information',
+            description: 'Program details',
+        },
+        { id: 'team', title: 'Team & Timeline', description: 'Research team' },
+        {
+            id: 'scientific',
+            title: 'Scientific Background',
+            description: 'Research context',
+        },
+        {
+            id: 'experimental',
+            title: 'Experimental Design',
+            description: 'Trial setup',
+        },
+        {
+            id: 'budget',
+            title: 'Budget & Activities',
+            description: 'Financial planning',
+        },
+        {
+            id: 'documents',
+            title: 'Supporting Documents',
+            description: 'File uploads',
+        },
+    ];
+
+    const nonProgramSteps: Step[] = [
+        {
+            id: 'basic',
+            title: 'Basic Information',
+            description: 'Activity details',
+        },
+        {
+            id: 'budget',
+            title: 'Budget & Activities',
+            description: 'Financial planning',
+        },
+        {
+            id: 'documents',
+            title: 'Supporting Documents',
+            description: 'File uploads',
+        },
+    ];
+
+    const steps =
+        data.classification === 'PROGRAM' ? programSteps : nonProgramSteps;
+
+    // Step validation
+    const canProceed = (step: number): boolean => {
+        if (data.classification === 'PROGRAM') {
+            switch (step) {
+                case 0:
+                    return validateStep1(data).isValid;
+                case 1:
+                    return validateStep2(data).isValid;
+                case 2:
+                    return validateStep3(data).isValid;
+                case 3:
+                    return validateStep4(data).isValid;
+                case 4:
+                    return validateStep5(data).isValid;
+                case 5:
+                    return validateStep6(data).isValid;
+                default:
+                    return true;
+            }
+        } else {
+            // NON_PROGRAM
+            switch (step) {
+                case 0:
+                    return validateStep1(data).isValid;
+                case 1:
+                    return validateStep5(data).isValid;
+                case 2:
+                    return validateStep6(data).isValid;
+                default:
+                    return true;
+            }
+        }
+    };
+
+    const handleNext = () => {
+        if (canProceed(currentStep)) {
+            setCompletedSteps((prev) => new Set([...prev, currentStep]));
+            setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
+        }
+    };
+
+    const handlePrevious = () => {
+        setCurrentStep((prev) => Math.max(prev - 1, 0));
+    };
+
+    const handleStepClick = (stepIndex: number) => {
+        // Only allow clicking on completed steps or current step
+        if (completedSteps.has(stepIndex) || stepIndex === currentStep) {
+            setCurrentStep(stepIndex);
+        }
+    };
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
         post(programRoutes.store.url({ site: site_code }));
     };
 
+    // Render current step
+    const renderStep = () => {
+        const formProps = { data, setData, errors };
+
+        if (data.classification === 'PROGRAM') {
+            switch (currentStep) {
+                case 0:
+                    return (
+                        <ProgramStep1BasicInfo
+                            form={formProps}
+                            fiscalYears={fiscalYears}
+                            commodities={commodities}
+                        />
+                    );
+                case 1:
+                    return (
+                        <ProgramStep2Team
+                            form={formProps}
+                            users={users}
+                            activePrograms={active_programs}
+                        />
+                    );
+                case 2:
+                    return <ProgramStep3Scientific form={formProps} />;
+                case 3:
+                    return <ProgramStep4Experimental form={formProps} />;
+                case 4:
+                    return (
+                        <ProgramStep5Budget
+                            form={formProps}
+                            budgetCategories={budget_categories}
+                            budgetPhases={budget_phases}
+                            coaAccounts={coa_accounts}
+                        />
+                    );
+                case 5:
+                    return <ProgramStep6Documents form={formProps} />;
+                default:
+                    return null;
+            }
+        } else {
+            // NON_PROGRAM
+            switch (currentStep) {
+                case 0:
+                    return (
+                        <ProgramStep1BasicInfo
+                            form={formProps}
+                            fiscalYears={fiscalYears}
+                            commodities={commodities}
+                        />
+                    );
+                case 1:
+                    return (
+                        <ProgramStep5Budget
+                            form={formProps}
+                            budgetCategories={budget_categories}
+                            budgetPhases={budget_phases}
+                            coaAccounts={coa_accounts}
+                        />
+                    );
+                case 2:
+                    return <ProgramStep6Documents form={formProps} />;
+                default:
+                    return null;
+            }
+        }
+    };
+
+    // Reset step when classification changes
+    const handleClassificationChange = (value: string) => {
+        setData('classification', value);
+        setCurrentStep(0);
+        setCompletedSteps(new Set());
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Create Program" />
-            <div className="flex flex-col gap-4 p-4">
-                <div className="mx-auto w-full max-w-4xl">
-                    <form onSubmit={submit}>
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Create New Program</CardTitle>
-                                <CardDescription>
-                                    Create a new Research Program or Non-Program
-                                    Activity.
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
-                                {/* Classification Selection */}
-                                <div className="space-y-2 rounded-lg bg-muted p-4">
-                                    <Label htmlFor="classification">
-                                        Classification
-                                    </Label>
-                                    <Select
-                                        value={data.classification}
-                                        onValueChange={(value) =>
-                                            setData('classification', value)
-                                        }
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select Classification" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="PROGRAM">
-                                                Research Program
-                                            </SelectItem>
-                                            <SelectItem value="NON_PROGRAM">
-                                                Non-Program Activity
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+            <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+                <form onSubmit={submit}>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Create New Program</CardTitle>
+                            <CardDescription>
+                                {data.classification === 'PROGRAM'
+                                    ? 'Complete all 6 steps to create a research program'
+                                    : 'Complete all 3 steps to create a non-program activity'}
+                            </CardDescription>
+                        </CardHeader>
 
-                                {/* Core Info */}
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="program_code">
-                                            Code
-                                        </Label>
-                                        <Input
-                                            id="program_code"
-                                            value={data.program_code}
-                                            onChange={(e) =>
-                                                setData(
-                                                    'program_code',
-                                                    e.target.value,
-                                                )
-                                            }
-                                            placeholder="e.g. KLT-2026-001"
-                                            required
-                                        />
-                                        {errors.program_code && (
-                                            <p className="text-sm text-red-500">
-                                                {errors.program_code}
-                                            </p>
-                                        )}
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="fiscal_year_id">
-                                            Fiscal Year
-                                        </Label>
-                                        <Select
-                                            value={data.fiscal_year_id}
-                                            onValueChange={(value) =>
-                                                setData('fiscal_year_id', value)
-                                            }
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select Fiscal Year" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {fiscalYears.map((fy) => (
-                                                    <SelectItem
-                                                        key={fy.id}
-                                                        value={fy.id.toString()}
-                                                        disabled={fy.is_closed}
-                                                    >
-                                                        {fy.year}
-                                                        {fy.is_closed &&
-                                                            ' (Closed)'}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        {errors.fiscal_year_id && (
-                                            <p className="text-sm text-red-500">
-                                                {errors.fiscal_year_id}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
+                        <CardContent className="space-y-8">
+                            {/* Stepper Progress Indicator */}
+                            <Stepper
+                                steps={steps}
+                                currentStep={currentStep}
+                                completedSteps={completedSteps}
+                                onStepClick={handleStepClick}
+                            />
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="program_name">
-                                        {data.classification === 'PROGRAM'
-                                            ? 'Research Title'
-                                            : 'Activity Title'}
-                                    </Label>
-                                    <Input
-                                        id="program_name"
-                                        value={data.program_name}
-                                        onChange={(e) =>
-                                            setData(
-                                                'program_name',
-                                                e.target.value,
-                                            )
-                                        }
-                                        required
-                                    />
-                                    {errors.program_name && (
-                                        <p className="text-sm text-red-500">
-                                            {errors.program_name}
-                                        </p>
-                                    )}
-                                </div>
+                            {/* Step Content */}
+                            <div className="min-h-[400px]">{renderStep()}</div>
+                        </CardContent>
 
-                                {/* Type Specific Forms */}
-                                {data.classification === 'PROGRAM' ? (
-                                    <>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <Label htmlFor="program_category">
-                                                    Category
-                                                </Label>
-                                                <Select
-                                                    value={
-                                                        data.program_category
-                                                    }
-                                                    onValueChange={(value) =>
-                                                        setData(
-                                                            'program_category',
-                                                            value,
-                                                        )
-                                                    }
-                                                >
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Select Category" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="RESEARCH">
-                                                            Research
-                                                        </SelectItem>
-                                                        <SelectItem value="TRIAL">
-                                                            Trial
-                                                        </SelectItem>
-                                                        <SelectItem value="PRODUCTION">
-                                                            Production
-                                                        </SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="commodity_id">
-                                                    Commodity
-                                                </Label>
-                                                <Select
-                                                    value={data.commodity_id?.toString()}
-                                                    onValueChange={(value) =>
-                                                        setData(
-                                                            'commodity_id',
-                                                            value,
-                                                        )
-                                                    }
-                                                >
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Select Commodity" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {commodities.map(
-                                                            (c) => (
-                                                                <SelectItem
-                                                                    key={c.id}
-                                                                    value={c.id.toString()}
-                                                                >
-                                                                    {c.name}
-                                                                </SelectItem>
-                                                            ),
-                                                        )}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                        </div>
+                        <CardFooter className="flex justify-between border-t pt-6">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={handlePrevious}
+                                disabled={currentStep === 0}
+                            >
+                                Previous
+                            </Button>
 
-                                        <ScientificBackgroundForm
-                                            form={
-                                                { data, setData, errors } as any
-                                            }
-                                        />
-                                        <ExperimentalDesignForm
-                                            form={
-                                                { data, setData, errors } as any
-                                            }
-                                        />
-                                        <HarvestPlanningForm
-                                            form={
-                                                { data, setData, errors } as any
-                                            }
-                                        />
-                                    </>
-                                ) : (
-                                    <NonProgramForm
-                                        form={{ data, setData, errors } as any}
-                                    />
-                                )}
-
-                                {/* Budget (Shared) */}
-                                <div className="space-y-2">
-                                    <Label htmlFor="total_budget">
-                                        Total Budget (Auto-calculated from BoQ)
-                                    </Label>
-                                    <Input
-                                        id="total_budget"
-                                        value={data.total_budget}
-                                        readOnly
-                                        className="bg-muted"
-                                    />
-                                </div>
-                                <BoQManager
-                                    form={{ data, setData, errors } as any}
-                                    categories={budget_categories}
-                                    phases={budget_phases}
-                                />
-                            </CardContent>
-                            <CardFooter className="flex justify-end gap-2">
+                            <div className="flex gap-2">
                                 <Button
-                                    variant="outline"
                                     type="button"
+                                    variant="outline"
                                     onClick={() =>
                                         router.get(
                                             programRoutes.index.url({
@@ -356,15 +369,26 @@ export default function ProgramCreate({
                                 >
                                     Cancel
                                 </Button>
-                                <Button type="submit" disabled={processing}>
-                                    {processing
-                                        ? 'Creating...'
-                                        : 'Create Program'}
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                    </form>
-                </div>
+
+                                {currentStep === steps.length - 1 ? (
+                                    <Button type="submit" disabled={processing}>
+                                        {processing
+                                            ? 'Creating...'
+                                            : 'Create Program'}
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        type="button"
+                                        onClick={handleNext}
+                                        disabled={!canProceed(currentStep)}
+                                    >
+                                        Next
+                                    </Button>
+                                )}
+                            </div>
+                        </CardFooter>
+                    </Card>
+                </form>
             </div>
         </AppLayout>
     );

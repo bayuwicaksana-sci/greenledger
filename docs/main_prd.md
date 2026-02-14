@@ -2,7 +2,7 @@
 
 **Finance & Accounting Application**
 
-_Multi-Site Budget Management & Financial System_
+_GreenLedger : Multi-Site Budget Management & Financial System_
 
 # **Table of Contents**
 
@@ -808,4 +808,4 @@ With expanded scope, timeline extended to 7-8 months with phased delivery:
 
 **_--- End of Product Requirements Document ---_**
 
-_Multi-Site Finance & Accounting System_
+_GreenLedger : Multi-Site Finance & Accounting System_

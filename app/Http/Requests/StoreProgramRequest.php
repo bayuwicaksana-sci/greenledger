@@ -199,11 +199,6 @@ class StoreProgramRequest extends FormRequest
             'activities' => ['nullable', 'array'],
             'activities.*.activity_name' => ['required', 'string', 'max:200'],
             'activities.*.description' => ['nullable', 'string'],
-            'activities.*.budget_allocation' => [
-                'required',
-                'numeric',
-                'min:0',
-            ],
             'activities.*.planned_start_date' => ['nullable', 'date'],
             'activities.*.planned_end_date' => [
                 'nullable',
@@ -213,6 +208,10 @@ class StoreProgramRequest extends FormRequest
 
             // Budget items (nested)
             'budget_items' => ['nullable', 'array'],
+            'budget_items.*.activity_id' => [
+                'nullable',
+                'integer',
+            ],
             'budget_items.*.category_id' => [
                 'required',
                 'integer',
@@ -232,6 +231,13 @@ class StoreProgramRequest extends FormRequest
             'budget_items.*.unit' => ['required', 'string', 'max:50'],
             'budget_items.*.qty' => ['required', 'numeric', 'min:0'],
             'budget_items.*.unit_price' => ['required', 'numeric', 'min:0'],
+            'budget_items.*.coa_account_id' => [
+                'nullable',
+                'integer',
+                'exists:coa_accounts,id',
+            ],
+            'budget_items.*.days' => ['nullable', 'integer', 'min:0'],
+            'budget_items.*.estimated_realization_date' => ['nullable', 'date'],
             'budget_items.*.notes' => ['nullable', 'string'],
 
             // Files

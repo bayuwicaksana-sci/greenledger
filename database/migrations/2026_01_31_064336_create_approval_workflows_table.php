@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -21,6 +22,17 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
         });
+
+        // MySQL-only generated column for unique active workflow per model_type
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement(
+                'ALTER TABLE approval_workflows ADD COLUMN active_model_type VARCHAR(255) GENERATED ALWAYS AS (IF(is_active = 1, model_type, NULL)) STORED',
+            );
+
+            Schema::table('approval_workflows', function (Blueprint $table) {
+                $table->unique('active_model_type', 'unique_active_workflow');
+            });
+        }
     }
 
     /**

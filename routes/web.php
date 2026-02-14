@@ -30,7 +30,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Site API (JSON endpoints)
     Route::middleware('permission:users.view.site|users.view.all')->get(
         'api/sites',
-        [\App\Http\Controllers\SiteController::class, 'index'],
+        [\App\Http\Controllers\SiteController::class, 'apiIndex'],
     );
 
     // Role Management API (JSON endpoints)
@@ -163,9 +163,36 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'index',
         ])->name('main-dashboard');
 
-        Route::get('research-stations', function () {
-            return Inertia::render('research-stations/index');
-        })->name('research-stations');
+        // Research Stations (Sites Management)
+        Route::prefix('research-stations')
+            ->name('research-stations.')
+            ->group(function () {
+                Route::get('/', [
+                    \App\Http\Controllers\SiteController::class,
+                    'index',
+                ])->name('index');
+
+                Route::get('/create', [
+                    \App\Http\Controllers\SiteController::class,
+                    'create',
+                ])
+                    ->name('create')
+                    ->middleware('permission:sites.create');
+
+                Route::post('/', [
+                    \App\Http\Controllers\SiteController::class,
+                    'store',
+                ])
+                    ->name('store')
+                    ->middleware('permission:sites.create');
+
+                Route::get('/suggest-code', [
+                    \App\Http\Controllers\SiteController::class,
+                    'suggestCode',
+                ])
+                    ->name('suggest-code')
+                    ->middleware('permission:sites.create');
+            });
 
         // Global Configuration Routes
         Route::prefix('config')
@@ -750,14 +777,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 Route::prefix('config')
                     ->name('config.')
                     ->group(function () {
-                        Route::get('sites', function (Site $site) {
-                            Inertia::share('site_code', $site->site_code);
-
-                            return Inertia::render('config/sites');
-                        })
-                            ->name('sites')
-                            ->middleware('permission:sites.view.all');
-
                         Route::get('buyers-clients', function (Site $site) {
                             Inertia::share('site_code', $site->site_code);
 

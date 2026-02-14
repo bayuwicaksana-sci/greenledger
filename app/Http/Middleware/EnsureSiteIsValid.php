@@ -24,6 +24,10 @@ class EnsureSiteIsValid
             return response('Not Found', 404);
         }
 
+        if ($request->user()->hasPermissionTo('sites.view.all')) {
+            return $next($request);
+        }
+
         // Check if user has access to this site
         $hasAccess = $request->user()->sites->contains('id', $findSite->id);
 

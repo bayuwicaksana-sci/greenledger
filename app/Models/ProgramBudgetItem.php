@@ -12,14 +12,18 @@ class ProgramBudgetItem extends Model
 
     protected $fillable = [
         'program_id',
+        'activity_id',
         'category_id',
         'phase_id',
+        'coa_account_id',
         'item_description',
         'specification',
         'unit',
         'qty',
         'unit_price',
         'subtotal',
+        'days',
+        'estimated_realization_date',
         'notes',
         'sort_order',
     ];
@@ -30,6 +34,7 @@ class ProgramBudgetItem extends Model
             'qty' => 'decimal:2',
             'unit_price' => 'decimal:2',
             'subtotal' => 'decimal:2',
+            'estimated_realization_date' => 'date',
         ];
     }
 
@@ -39,6 +44,14 @@ class ProgramBudgetItem extends Model
     public function program(): BelongsTo
     {
         return $this->belongsTo(Program::class);
+    }
+
+    /**
+     * Activity this budget item belongs to (nullable - can be unassigned).
+     */
+    public function activity(): BelongsTo
+    {
+        return $this->belongsTo(Activity::class);
     }
 
     /**
@@ -55,5 +68,13 @@ class ProgramBudgetItem extends Model
     public function phase(): BelongsTo
     {
         return $this->belongsTo(ProgramBudgetPhase::class, 'phase_id');
+    }
+
+    /**
+     * Get the COA account for this budget item.
+     */
+    public function coaAccount(): BelongsTo
+    {
+        return $this->belongsTo(CoaAccount::class);
     }
 }

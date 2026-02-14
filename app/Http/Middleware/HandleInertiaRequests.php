@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Helpers\NavigationHelper;
+use App\Models\Site;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -59,7 +60,9 @@ class HandleInertiaRequests extends Middleware
             'navigation' => $request->user()
                 ? NavigationHelper::getFilteredNavigation()
                 : [],
-            'sites' => $request->user()?->sites->toArray() ?? null,
+            'sites' => $request->user()?->hasPermissionTo('sites.view.all')
+                ? Site::all()->toArray()
+                : $request->user()?->sites->toArray() ?? null,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') ||
                 $request->cookie('sidebar_state') === 'true',
         ];

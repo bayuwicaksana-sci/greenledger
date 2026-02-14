@@ -25,7 +25,6 @@ class Activity extends Model
         'program_id',
         'activity_name',
         'description',
-        'budget_allocation',
         'planned_start_date',
         'planned_end_date',
         'actual_start_date',
@@ -39,7 +38,6 @@ class Activity extends Model
     protected function casts(): array
     {
         return [
-            'budget_allocation' => 'decimal:2',
             'planned_start_date' => 'date',
             'planned_end_date' => 'date',
             'actual_start_date' => 'date',
@@ -53,6 +51,14 @@ class Activity extends Model
     public function program(): BelongsTo
     {
         return $this->belongsTo(Program::class);
+    }
+
+    /**
+     * Budget items assigned to this activity.
+     */
+    public function budgetItems(): HasMany
+    {
+        return $this->hasMany(ProgramBudgetItem::class, 'activity_id');
     }
 
     /**
@@ -85,5 +91,21 @@ class Activity extends Model
     public function updatedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    /**
+     * Calculate total budget from BoQ items.
+     */
+    public function getBudgetAttribute(): float
+    {
+        return $this->budgetItems()->sum('subtotal');
+    }
+
+    /**
+     * Get budget as formatted string for display.
+     */
+    public function getFormattedBudgetAttribute(): string
+    {
+        return 'Rp '.number_format($this->budget, 0, ',', '.');
     }
 }

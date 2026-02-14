@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreProgramRequest;
+use App\Models\CoaAccount;
 use App\Models\Commodity;
 use App\Models\FiscalYear;
 use App\Models\Program;
@@ -92,6 +93,12 @@ class ProgramController extends Controller
                 'sort_order',
             )->get(),
             'budget_phases' => ProgramBudgetPhase::orderBy('sort_order')->get(),
+            'coa_accounts' => CoaAccount::where('site_id', $site->id)
+                ->where('is_active', true)
+                ->where('account_type', 'EXPENSE')
+                ->select('id', 'fiscal_year_id', 'account_code', 'account_name', 'short_description')
+                ->orderBy('account_code')
+                ->get(),
         ]);
     }
 
@@ -139,12 +146,12 @@ class ProgramController extends Controller
             }
         }
 
-        // Create activities
+        // Create activities and store them for BoQ item assignment
+        $createdActivities = [];
         foreach ($activities as $index => $activity) {
-            $program->activities()->create([
+            $createdActivities[$index] = $program->activities()->create([
                 'activity_name' => $activity['activity_name'],
                 'description' => $activity['description'] ?? null,
-                'budget_allocation' => $activity['budget_allocation'],
                 'planned_start_date' => $activity['planned_start_date'] ?? null,
                 'planned_end_date' => $activity['planned_end_date'] ?? null,
                 'status' => 'PLANNED',
@@ -167,15 +174,26 @@ class ProgramController extends Controller
 
         // Create budget items (subtotal recalculated server-side)
         foreach ($budgetItems as $index => $item) {
+            // Convert activity_id from form index to actual activity ID
+            $activityId = null;
+            if (isset($item['activity_id']) && $item['activity_id'] !== '' && $item['activity_id'] !== null) {
+                $activityIndex = (int) $item['activity_id'];
+                $activityId = $createdActivities[$activityIndex]->id ?? null;
+            }
+
             ProgramBudgetItem::create([
                 'program_id' => $program->id,
+                'activity_id' => $activityId,
                 'category_id' => $item['category_id'],
                 'phase_id' => $item['phase_id'],
+                'coa_account_id' => $item['coa_account_id'] ?? null,
                 'item_description' => $item['item_description'],
                 'specification' => $item['specification'] ?? null,
                 'unit' => $item['unit'],
                 'qty' => $item['qty'],
                 'unit_price' => $item['unit_price'],
+                'days' => $item['days'] ?? null,
+                'estimated_realization_date' => $item['estimated_realization_date'] ?? null,
                 'subtotal' => (float) $item['qty'] * (float) $item['unit_price'],
                 'notes' => $item['notes'] ?? null,
                 'sort_order' => $index,

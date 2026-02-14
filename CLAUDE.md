@@ -1,4 +1,83 @@
 <laravel-boost-guidelines>
+=== .ai/01_project-context rules ===
+
+# Project Goals
+
+**GreenLedger** - Agriculture Science Division Financial Management System
+
+# **EXECUTIVE SUMMARY**
+
+## **Background**
+
+The Agriculture Science Division is currently facing significant challenges in managing operational finances. As a highly mobile research division with field teams spread across multiple sites (Klaten and Magelang), a manual Excel-based system is no longer adequate to support the operational complexity and high accountability requirements.
+
+## **Pain Points**
+
+- The manual Excel system is not scalable for mobile teams and multi-site operations
+- Documentation is unstructured and difficult to archive with a proper audit trail
+- Workflow approvals via email cause bottlenecks and loss of documentation
+- There is no real-time budget monitoring or visibility for decision-making
+- The settlement process is not properly controlled (no timeout, no tracking)
+- Coordination between Jakarta (FO) and Sites (FA Klaten/Magelang) is not efficient
+
+## **Proposed Solutions**
+
+Development of an integrated financial management system specifically designed for the needs of a legally established research foundation organization with the following characteristics:
+
+- Configurable multi-level approval workflow
+- Real-time budget monitoring per research topic and sub-division
+- Automated settlement tracking with SLA enforcement (2-7 days)
+- Flexible payment mechanisms (Cash Advance, Reimbursement, Direct Payment)
+- Asset tracking for fixed assets and non-consumable items
+- Comprehensive audit trail for compliance and accountability
+- Integrated communication (in-app chat) between requester and finance team
+
+## **Expected Benefits**
+
+| Aspect                     | Benefit                                                                                    |
+| :------------------------- | :----------------------------------------------------------------------------------------- |
+| **Operational Efficiency** | Reduction in approval process time by up to 70% through automated workflow                 |
+| **Visibility & Control**   | Real-time budget monitoring per topic and sub-division for decision making                 |
+| **Compliance**             | Complete audit trail and automated document archiving in accordance with retention policy  |
+| **Accountability**         | Enforced settlement SLA with auto-blocking mechanism for non-compliance                    |
+| **Collaboration**          | Seamless coordination between FO (Jakarta) and FA (Sites) through integrated communication |
+
+=== .ai/02_additional-packages rules ===
+
+# Additional packages that will actively being used during developement
+
+---
+
+## Composer Packages
+
+- inertiajs/inertia-laravel - v2 - Use context7 mcp tools with "/websites/inertiajs_v2" library id to get the latest docs
+- spatie/laravel-permission - v6 - Use context7 mcp tools with "/websites/spatie_be_laravel-permission_v6" library id to get the latest docs
+- spatie/laravel-activitylog - v4 - Use context7 mcp tools with "/spatie/laravel-activitylog" library id to get the latest docs
+- spatie/laravel-model-states - v2 - Use context7 mcp tools with "/spatie/laravel-model-states" library id to get the latest docs
+- spatie/laravel-medialibrary - v11 - Use context7 mcp tools with "/spatie/laravel-medialibrary" library id to get the latest docs
+- spatie/eloquent-sortable - v4 - Use context7 mcp tools with "/spatie/eloquent-sortable" library id to get the latest docs
+- barryvdh/laravel-dompdf - v3 - Use context7 mcp tools with "/barryvdh/laravel-dompdf" library id to get the latest docs
+
+## NPM Packages
+
+- @inertiajs/react - v2 - Use context7 mcp tools with "/websites/inertiajs_v2" library id to get the latest docs
+- @dnd-kit/core - v6 - Use context7 mcp tools with "/websites/dndkit" library id to get the latest docs
+- @tanstack/react-table - v8 - Use context7 mcp tools with "/websites/tanstack_table" library id to get the latest docs
+- @tiptap/react - v3 - Use context7 mcp tools with "/websites/tiptap_dev" library id to get the latest docs
+- vite-plugin-pwa - v1 - Use context7 mcp tools with "/websites/vite-pwa-org_netlify_app" library id to get the latest docs
+
+---
+
+- Always use context7 mcp tools without me telling you to do so to get latest docs for any packages before implementation, even for packages that is not yet being specified.
+
+=== .ai/03_additional-code-guidelines rules ===
+
+# Additional Code Guidelines
+
+## Table
+
+- Always use @tanstack/react-table v8 for table implementation, use shadcn mcp tools to see how to implement DataTable with @tanstack/react-table
+
 === foundation rules ===
 
 # Laravel Boost Guidelines
@@ -16,7 +95,9 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - laravel/prompts (PROMPTS) - v0
 - laravel/reverb (REVERB) - v1
 - laravel/wayfinder (WAYFINDER) - v0
+- laravel/boost (BOOST) - v2
 - laravel/mcp (MCP) - v0
+- laravel/pail (PAIL) - v1
 - laravel/pint (PINT) - v1
 - laravel/sail (SAIL) - v1
 - pestphp/pest (PEST) - v4
@@ -84,6 +165,7 @@ This project has domain-specific skills available. You MUST activate the relevan
 
 - You should use the `tinker` tool when you need to execute PHP to debug code or query Eloquent models directly.
 - Use the `database-query` tool when you only need to read from the database.
+- Use the `database-schema` tool to inspect table structure before writing migrations or models.
 
 ## Reading Browser Logs With the `browser-logs` Tool
 
@@ -114,7 +196,7 @@ This project has domain-specific skills available. You MUST activate the relevan
 ## Constructors
 
 - Use PHP 8 constructor property promotion in `__construct()`.
-    - <code-snippet>public function __construct(public GitHub $github) { }</code-snippet>
+    - `public function __construct(public GitHub $github) { }`
 - Do not allow empty `__construct()` methods with zero parameters unless the constructor is private.
 
 ## Type Declarations
@@ -122,12 +204,13 @@ This project has domain-specific skills available. You MUST activate the relevan
 - Always use explicit return type declarations for methods and functions.
 - Use appropriate PHP type hints for method parameters.
 
-<code-snippet name="Explicit Return Types and Method Params" lang="php">
+<!-- Explicit Return Types and Method Params -->
+```php
 protected function isAccessible(User $user, ?string $path = null): bool
 {
     ...
 }
-</code-snippet>
+```
 
 ## Enums
 
@@ -140,6 +223,13 @@ protected function isAccessible(User $user, ?string $path = null): bool
 ## PHPDoc Blocks
 
 - Add useful array shape type definitions when appropriate.
+
+=== herd rules ===
+
+# Laravel Herd
+
+- The application is served by Laravel Herd and will be available at: `https?://[kebab-case-project-dir].test`. Use the `get-absolute-url` tool to generate valid URLs for the user.
+- You must not run any commands to make the site available via HTTP(S). It is always available through Laravel Herd.
 
 === tests rules ===
 
@@ -257,6 +347,46 @@ Wayfinder generates TypeScript functions for Laravel routes. Import from `@/acti
 - Query Merging: `show(1, { mergeQuery: { page: 2, sort: null } })` merges with current URL, `null` removes params.
 - Inertia: Use `.form()` with `<Form>` component or `form.submit(store())` with useForm.
 
+=== boost/core rules ===
+
+# Laravel Boost
+
+- Laravel Boost is an MCP server that comes with powerful tools designed specifically for this application. Use them.
+
+## Artisan
+
+- Use the `list-artisan-commands` tool when you need to call an Artisan command to double-check the available parameters.
+
+## URLs
+
+- Whenever you share a project URL with the user, you should use the `get-absolute-url` tool to ensure you're using the correct scheme, domain/IP, and port.
+
+## Tinker / Debugging
+
+- You should use the `tinker` tool when you need to execute PHP to debug code or query Eloquent models directly.
+- Use the `database-query` tool when you only need to read from the database.
+- Use the `database-schema` tool to inspect table structure before writing migrations or models.
+
+## Reading Browser Logs With the `browser-logs` Tool
+
+- You can read browser logs, errors, and exceptions using the `browser-logs` tool from Boost.
+- Only recent browser logs will be useful - ignore old logs.
+
+## Searching Documentation (Critically Important)
+
+- Boost comes with a powerful `search-docs` tool you should use before trying other approaches when working with Laravel or Laravel ecosystem packages. This tool automatically passes a list of installed packages and their versions to the remote Boost API, so it returns only version-specific documentation for the user's circumstance. You should pass an array of packages to filter on if you know you need docs for particular packages.
+- Search the documentation before making code changes to ensure we are taking the correct approach.
+- Use multiple, broad, simple, topic-based queries at once. For example: `['rate limiting', 'routing rate limiting', 'routing']`. The most relevant results will be returned first.
+- Do not add package names to queries; package information is already shared. For example, use `test resource table`, not `filament 4 test resource table`.
+
+### Available Search Syntax
+
+1. Simple Word Searches with auto-stemming - query=authentication - finds 'authenticate' and 'auth'.
+2. Multiple Words (AND Logic) - query=rate limit - finds knowledge containing both "rate" AND "limit".
+3. Quoted Phrases (Exact Position) - query="infinite scroll" - words must be adjacent and in that order.
+4. Mixed Queries - query=middleware "rate limit" - "middleware" AND exact phrase "rate limit".
+5. Multiple Queries - queries=["authentication", "middleware"] - ANY of these terms.
+
 === pint/core rules ===
 
 # Laravel Pint Code Formatter
@@ -295,4 +425,5 @@ Wayfinder generates TypeScript functions for Laravel routes. Import from `@/acti
 - Fortify is a headless authentication backend that provides authentication routes and controllers for Laravel applications.
 - IMPORTANT: Always use the `search-docs` tool for detailed Laravel Fortify patterns and documentation.
 - IMPORTANT: Activate `developing-with-fortify` skill when working with Fortify authentication features.
+
 </laravel-boost-guidelines>

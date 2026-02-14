@@ -61,7 +61,6 @@ export interface Activity {
     program_id: number;
     activity_name: string;
     description: string | null;
-    budget_allocation: number;
     planned_start_date: string | null;
     planned_end_date: string | null;
     actual_start_date: string | null;
@@ -70,6 +69,7 @@ export interface Activity {
     sort_order: number | null;
     created_at: string;
     updated_at: string;
+    budget?: number; // Calculated from BoQ items on backend
 }
 
 export interface ProgramWithRelations extends Omit<Program, 'created_by'> {
@@ -109,13 +109,17 @@ export interface ProgramBudgetPhase {
 export interface ProgramBudgetItem {
     id: number;
     program_id: number;
+    activity_id: number | null;
     category_id: number;
     phase_id: number;
+    coa_account_id: number | null;
     item_description: string;
     specification: string | null;
     unit: string;
     qty: number;
     unit_price: number;
+    days: number | null;
+    estimated_realization_date: string | null;
     subtotal: number;
     notes: string | null;
     sort_order: number;
@@ -135,13 +139,17 @@ export interface TreatmentFormData {
 }
 
 export interface BudgetItemFormData {
+    activity_id: string;
     category_id: string;
     phase_id: string;
+    coa_account_id: string;
     item_description: string;
     specification: string;
     unit: string;
     qty: string;
     unit_price: string;
+    days: string;
+    estimated_realization_date: string;
     subtotal: number;
     notes: string;
 }
