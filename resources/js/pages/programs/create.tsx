@@ -20,6 +20,7 @@ import {
     validateStep4,
     validateStep5,
     validateStep6,
+    validateAllSteps,
 } from './utils/stepValidation';
 
 // Step Components
@@ -220,10 +221,10 @@ export default function ProgramCreate({
     };
 
     const handleNext = () => {
-        if (canProceed(currentStep)) {
-            setCompletedSteps((prev) => new Set([...prev, currentStep]));
-            setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
-        }
+        // Mark current step as completed (for visual indicator)
+        setCompletedSteps((prev) => new Set([...prev, currentStep]));
+        // Always allow moving to next step (skippable form)
+        setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
     };
 
     const handlePrevious = () => {
@@ -231,16 +232,23 @@ export default function ProgramCreate({
     };
 
     const handleStepClick = (stepIndex: number) => {
-        // Only allow clicking on completed steps or current step
-        if (completedSteps.has(stepIndex) || stepIndex === currentStep) {
-            setCurrentStep(stepIndex);
-        }
+        // Allow clicking on any step (skippable form)
+        setCurrentStep(stepIndex);
     };
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
         post(programRoutes.store.url({ site: site_code }));
     };
+
+    const saveAsDraft = () => {
+        // Save with DRAFT status without validation
+        const draftData = { ...data, status: 'DRAFT' };
+        router.post(programRoutes.store.url({ site: site_code }), draftData);
+    };
+
+    // Check if all required fields are filled for final submission
+    const canSubmit = validateAllSteps(data, data.classification).isValid;
 
     // Render current step
     const renderStep = () => {
@@ -333,6 +341,16 @@ export default function ProgramCreate({
                         </CardHeader>
 
                         <CardContent className="space-y-8">
+                            {/* Info Banner */}
+                            <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-950/20">
+                                <p className="text-sm text-blue-700 dark:text-blue-300">
+                                    <strong>Note:</strong> You can skip steps and save
+                                    your progress as a draft. The "Create Program"
+                                    button will only be enabled when all required
+                                    fields are filled.
+                                </p>
+                            </div>
+
                             {/* Stepper Progress Indicator */}
                             <Stepper
                                 steps={steps}
@@ -370,18 +388,26 @@ export default function ProgramCreate({
                                     Cancel
                                 </Button>
 
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    onClick={saveAsDraft}
+                                    disabled={processing}
+                                >
+                                    {processing ? 'Saving...' : 'Save as Draft'}
+                                </Button>
+
                                 {currentStep === steps.length - 1 ? (
-                                    <Button type="submit" disabled={processing}>
+                                    <Button
+                                        type="submit"
+                                        disabled={processing || !canSubmit}
+                                    >
                                         {processing
                                             ? 'Creating...'
                                             : 'Create Program'}
                                     </Button>
                                 ) : (
-                                    <Button
-                                        type="button"
-                                        onClick={handleNext}
-                                        disabled={!canProceed(currentStep)}
-                                    >
+                                    <Button type="button" onClick={handleNext}>
                                         Next
                                     </Button>
                                 )}
